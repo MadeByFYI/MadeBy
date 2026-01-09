@@ -1,0 +1,66 @@
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { DomainList } from "@/components/identity/DomainList";
+
+export default async function DomainsSettingsPage() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
+  const identity = await prisma.identity.findUnique({
+    where: { userId: session.user.id },
+    include: {
+      domains: { orderBy: { createdAt: "desc" } },
+    },
+  });
+
+  if (!identity) {
+    redirect("/settings/identity");
+  }
+
+  return (
+    <main className="min-h-screen relative overflow-hidden bg-white">
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 via-transparent to-transparent pointer-events-none" />
+
+      <div className="relative py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <Link
+              href="/settings/identity"
+              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Identity Settings
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900">Domains</h1>
+            <p className="text-gray-600 mt-2">
+              Manage your domains and verify ownership via DNS
+            </p>
+          </div>
+
+          {/* Domain List */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                Your Domains
+              </h2>
+            </div>
+            <div className="p-6">
+              <DomainList initialDomains={identity.domains} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
