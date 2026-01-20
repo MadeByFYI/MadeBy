@@ -70,6 +70,29 @@ model User {
   sessions Session[]
   contents Content[]
   identity Identity?
+  apiKeys  ApiKey[]
+}
+
+// API Keys for programmatic access
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String                    // User-provided name for the key
+  keyHash     String    @unique         // SHA-256 hash of the full key
+  keyPrefix   String                    // First 8 chars for display (e.g., "mk_abc123")
+
+  scopes      String?   @db.Text        // JSON array of scopes (null = full access)
+
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?                 // Null = never expires
+
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?                 // Null = active, set when revoked
+
+  @@index([userId])
+  @@index([keyHash])
 }
 
 model Content {
@@ -81,13 +104,33 @@ model Content {
   originalUrl   String?
   thumbnailUrl  String?
   attribution   String?     @db.Text
-  collaborators String?     @db.Text // JSON array
-  aiToolsUsed   String?     @db.Text // JSON array
+  collaborators String?     @db.Text // JSON array (deprecated, use contributors)
+  aiToolsUsed   String?     @db.Text // JSON array (deprecated, use contributors)
   owner         String?     // Name or @handle of content owner
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   userId        String?
   user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Cryptographic hash for content verification
+  contentHash       String?        // The hash value (hex-encoded)
+  hashAlgorithm     HashAlgorithm? // Algorithm used (SHA256, SHA512, etc.)
+  hashTarget        HashTarget?    // What was hashed (FILE, URL_CONTENT, etc.)
+  hashCreatedAt     DateTime?      // When the hash was computed
+  hashInputSize     Int?           // Size in bytes of the input that was hashed
+  hashInputFilename String?        // Original filename if FILE target
+
+  // Git version control reference
+  gitCommitHash     String?        // Git commit SHA (full 40-char or short form)
+  gitRepositoryUrl  String?        // URL to the repository (GitHub, GitLab, etc.)
+
+  // Structured contributors (human and AI)
+  contributors  ContentContributor[]
+  // Content provenance verification (C2PA, SynthID, etc.)
+  provenance    ContentProvenance[]
+
+  @@index([contentHash])
+  @@index([gitCommitHash])
 }
 
 enum ContentType {
@@ -96,10 +139,114 @@ enum ContentType {
   WITH_AI
 }
 
+// Cryptographic hash algorithms
+enum HashAlgorithm {
+  SHA256
+  SHA384
+  SHA512
+  SHA3_256
+  SHA3_512
+  BLAKE2B
+  BLAKE3
+  MD5         // Not recommended, legacy support only
+}
+
+// What the hash was computed from
+enum HashTarget {
+  FILE              // Hash of uploaded file bytes
+  URL_CONTENT       // Hash of content fetched from originalUrl
+  TEXT_CONTENT      // Hash of text/description field
+  COMBINED          // Hash of multiple elements combined
+}
+
+// AI Provider companies
+enum AIProvider {
+  ANTHROPIC    // Claude
+  OPENAI       // ChatGPT, GPT-4, DALL-E
+  GOOGLE       // Gemini, Imagen
+  META         // Llama
+  MISTRAL      // Mistral
+  COHERE       // Command
+  STABILITY    // Stable Diffusion
+  MIDJOURNEY   // Midjourney
+  ADOBE        // Firefly
+  OTHER
+}
+
+// Known AI models (expandable)
+enum AIModel {
+  // Anthropic
+  CLAUDE_OPUS
+  CLAUDE_SONNET
+  CLAUDE_HAIKU
+  // OpenAI - Text
+  GPT_4
+  GPT_4_TURBO
+  GPT_4O
+  O1
+  O1_MINI
+  // OpenAI - Image
+  DALL_E_2
+  DALL_E_3
+  // Google - Text
+  GEMINI_PRO
+  GEMINI_ULTRA
+  // Google - Image
+  IMAGEN
+  IMAGEN_2
+  // Meta
+  LLAMA_3
+  // Stability AI
+  STABLE_DIFFUSION
+  STABLE_DIFFUSION_XL
+  STABLE_DIFFUSION_3
+  // Midjourney
+  MIDJOURNEY_V5
+  MIDJOURNEY_V6
+  // Adobe
+  FIREFLY
+  // Generic
+  OTHER
+}
+
+// Role in content creation
+enum ContributorRole {
+  CREATOR       // Primary creator
+  ASSISTANT     // Assisted in creation
+  EDITOR        // Edited/refined content
+  GENERATOR     // Generated content (AI)
+}
+
+// Attestation verification level
+enum AttestationLevel {
+  SELF_REPORTED           // User claims this, no proof
+  LOCAL_LOG               // Extracted from local logs (e.g., Claude Code)
+  PROVIDER_CORROBORATED   // Cross-referenced with provider usage data
+  PROVIDER_VERIFIED       // Provider confirmed via API (future)
+}
+
+// Source of attestation data
+enum AttestationSource {
+  CLAUDE_CODE_LOG     // Extracted from ~/.claude/ logs
+  API_RESPONSE        // Direct from API response header
+  USER_SUBMITTED      // User manually provided
+  PROVIDER_EXPORT     // From provider's usage export
+  C2PA_METADATA       // Extracted from C2PA manifest in content
+  SYNTHID_DETECTED    // Detected via SynthID watermark analysis
+}
+
+// Type of provider credential
+enum CredentialType {
+  ADMIN_API_KEY     // For usage verification (sk-ant-admin...)
+  OAUTH_TOKEN       // OAuth access token
+  READ_ONLY_KEY     // Limited scope key
+}
+
 // Identity enums
 enum IdentityType {
   INDIVIDUAL
   CORPORATE
+  AI
 }
 
 enum Visibility {
@@ -134,7 +281,17 @@ model Identity {
   phones         IdentityPhone[]
   domains        IdentityDomain[]
 
+  // AI-specific config (only for AI identities)
+  aiConfig            IdentityAIConfig?
+  // AIs operated by this identity (for INDIVIDUAL/CORPORATE identities)
+  operatedAIs         IdentityAIConfig[] @relation("AIOperator")
+  // Content contributions
+  contributions       ContentContributor[]
+  // Provider credentials for verification
+  providerCredentials ProviderCredential[]
+
   @@index([handle])
+  @@index([identityType])
 }
 
 // Mailing address (one per identity)
@@ -223,4 +380,172 @@ model IdentityDomain {
 
   @@unique([identityId, domain])
   @@index([domain])
+}
+
+// AI-specific configuration for Identity (1:1 with Identity when identityType=AI)
+model IdentityAIConfig {
+  id         String   @id @default(cuid())
+  identityId String   @unique
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+
+  provider     AIProvider
+  model        AIModel
+  modelVersion String?     // e.g., "claude-opus-4-5-20251101"
+
+  // The human/org operator who controls this AI identity
+  operatorId String?
+  operator   Identity? @relation("AIOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+
+  // Provider verification
+  providerAccountId  String?
+  providerVerified   VerificationStatus @default(UNVERIFIED)
+  providerVerifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([provider])
+  @@index([operatorId])
+}
+
+// Links identities to content with their role and attestations
+model ContentContributor {
+  id        String  @id @default(cuid())
+  contentId String
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+
+  role        ContributorRole
+  isPrimary   Boolean @default(false)
+  description String?          // e.g., "Generated initial draft"
+
+  // AI attestations for this contribution
+  attestations AIAttestation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contentId, identityId])
+  @@index([identityId])
+}
+
+// Individual proof records for AI contributions
+model AIAttestation {
+  id            String             @id @default(cuid())
+  contributorId String
+  contributor   ContentContributor @relation(fields: [contributorId], references: [id], onDelete: Cascade)
+
+  // Core attestation data (from Claude Code logs, etc.)
+  requestId String   // e.g., "req_011CXHpqhqPeagN968JWobmN"
+  sessionId String?  // e.g., "12245934-4934-4d56-b1f0-f757c7839a9f"
+  timestamp DateTime // When the API call was made
+
+  // Model information
+  provider     AIProvider
+  model        AIModel
+  modelVersion String? // e.g., "claude-opus-4-5-20251101"
+
+  // Source of this attestation
+  source       AttestationSource
+  sourceDetail String? // e.g., file path, API endpoint
+
+  // Verification status
+  level              AttestationLevel @default(SELF_REPORTED)
+  verifiedAt         DateTime?
+  verificationDetail String? // Details about verification
+
+  createdAt DateTime @default(now())
+
+  @@index([requestId])
+  @@index([provider])
+  @@index([timestamp])
+}
+
+// Stored provider credentials for verification (encrypted)
+model ProviderCredential {
+  id         String   @id @default(cuid())
+  identityId String
+  identity   Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+
+  provider       AIProvider
+  credentialType CredentialType
+
+  // Encrypted storage
+  encryptedKey   String  @db.Text // Encrypted API key or token
+  keyFingerprint String? // For identification without decryption
+
+  // Scope/permissions
+  scopes String? @db.Text // JSON array of granted scopes
+
+  // Status
+  isActive   Boolean   @default(true)
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([identityId, provider, credentialType])
+}
+
+// Type of content provenance verification
+enum ProvenanceType {
+  C2PA          // Coalition for Content Provenance and Authenticity
+  SYNTHID       // Google DeepMind watermark
+  ADOBE_CR      // Adobe Content Credentials
+  IPTC          // IPTC photo metadata
+  EXIF          // EXIF metadata
+  OTHER
+}
+
+// Verification result for provenance check
+enum ProvenanceStatus {
+  DETECTED      // Watermark/metadata was found
+  NOT_DETECTED  // No watermark/metadata found
+  TAMPERED      // Evidence of tampering detected
+  INVALID       // Invalid or corrupted data
+  PENDING       // Analysis in progress
+}
+
+// Content provenance verification results (C2PA, SynthID, etc.)
+model ContentProvenance {
+  id        String  @id @default(cuid())
+  contentId String
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  provenanceType ProvenanceType
+  status         ProvenanceStatus
+
+  // C2PA specific fields
+  c2paManifest     String? @db.Text // JSON: Full C2PA manifest
+  c2paClaimGenerator String?        // e.g., "Adobe Photoshop 25.0"
+  c2paSignature    String?          // Signature from manifest
+  c2paCertChain    String? @db.Text // Certificate chain
+  c2paIssuer       String?          // Certificate issuer
+
+  // SynthID specific fields
+  synthidConfidence Float?          // 0-1 confidence score
+  synthidVersion    String?         // SynthID version detected
+  synthidProvider   String?         // e.g., "Google DeepMind"
+
+  // General provenance fields
+  detectedAt      DateTime          // When analysis was performed
+  generatorModel  AIModel?          // Detected AI model if identifiable
+  generatorProvider AIProvider?     // Detected provider if identifiable
+  rawMetadata     String? @db.Text  // JSON: Raw extracted metadata
+
+  // Verification
+  verificationMethod String?        // How verification was performed
+  verificationUrl    String?        // External verification URL if any
+  verificationDetail String? @db.Text // Additional verification info
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contentId])
+  @@index([provenanceType])
+  @@index([status])
+  @@index([generatorProvider])
 }

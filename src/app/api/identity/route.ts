@@ -1,26 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { IdentityType } from "@/generated/prisma";
+import { authenticateRequest } from "@/lib/api-keys";
+import { IdentityType, AIProvider, AIModel } from "@/generated/prisma";
 
 // Handle validation regex: 3-30 chars, alphanumeric + hyphens, can't start/end with hyphen
 const HANDLE_REGEX = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 
 // GET: Fetch current user's identity
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const identity = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       include: {
         mailingAddress: true,
         emails: { orderBy: { isPrimary: "desc" } },
         phones: { orderBy: { isPrimary: "desc" } },
         domains: { orderBy: { createdAt: "desc" } },
+        aiConfig: true,
+        providerCredentials: {
+          select: {
+            id: true,
+            provider: true,
+            credentialType: true,
+            isActive: true,
+            lastUsedAt: true,
+          },
+        },
       },
     });
 
@@ -37,13 +47,13 @@ export async function GET() {
 // POST: Create identity for current user
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { handle, identityType, displayName, bio, avatarUrl } = body;
+    const { handle, identityType, displayName, bio, avatarUrl, aiConfig } = body;
 
     // Validate handle format if provided
     if (handle) {
@@ -72,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Check if identity already exists for this user
     const existing = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
     });
 
     if (existing) {
@@ -85,26 +95,38 @@ export async function POST(request: NextRequest) {
     // Create identity with the user's login email as the primary email
     const identity = await prisma.identity.create({
       data: {
-        userId: session.user.id,
+        userId: authResult.userId,
         handle: handle?.toLowerCase() || null,
         identityType: (identityType as IdentityType) || "INDIVIDUAL",
         displayName: displayName || null,
         bio: bio || null,
         avatarUrl: avatarUrl || null,
         // Add user's login email as primary email
-        emails: session.user.email
+        emails: authResult.user?.email
           ? {
               create: {
-                email: session.user.email.toLowerCase(),
+                email: authResult.user.email.toLowerCase(),
                 isPrimary: true,
                 visibility: "PRIVATE",
                 verified: "VERIFIED", // Trust the login email as verified
               },
             }
           : undefined,
+        // Create AI config if this is an AI identity
+        aiConfig:
+          identityType === "AI" && aiConfig
+            ? {
+                create: {
+                  provider: aiConfig.provider as AIProvider,
+                  model: aiConfig.model as AIModel,
+                  modelVersion: aiConfig.modelVersion || null,
+                },
+              }
+            : undefined,
       },
       include: {
         emails: true,
+        aiConfig: true,
       },
     });
 
@@ -121,17 +143,18 @@ export async function POST(request: NextRequest) {
 // PATCH: Update identity
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { handle, identityType, displayName, bio, avatarUrl } = body;
+    const { handle, identityType, displayName, bio, avatarUrl, aiConfig } = body;
 
     // Check if identity exists
     const existing = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
+      include: { aiConfig: true },
     });
 
     if (!existing) {
@@ -155,7 +178,7 @@ export async function PATCH(request: NextRequest) {
       const handleExists = await prisma.identity.findFirst({
         where: {
           handle: normalizedHandle,
-          NOT: { userId: session.user.id },
+          NOT: { userId: authResult.userId },
         },
       });
       if (handleExists) {
@@ -166,8 +189,43 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // Handle AI config updates
+    let aiConfigUpdate = {};
+    if (identityType === "AI" && aiConfig) {
+      if (existing.aiConfig) {
+        // Update existing AI config
+        aiConfigUpdate = {
+          aiConfig: {
+            update: {
+              provider: aiConfig.provider as AIProvider,
+              model: aiConfig.model as AIModel,
+              modelVersion: aiConfig.modelVersion || null,
+            },
+          },
+        };
+      } else {
+        // Create new AI config
+        aiConfigUpdate = {
+          aiConfig: {
+            create: {
+              provider: aiConfig.provider as AIProvider,
+              model: aiConfig.model as AIModel,
+              modelVersion: aiConfig.modelVersion || null,
+            },
+          },
+        };
+      }
+    } else if (identityType !== "AI" && existing.aiConfig) {
+      // Remove AI config if switching away from AI type
+      aiConfigUpdate = {
+        aiConfig: {
+          delete: true,
+        },
+      };
+    }
+
     const identity = await prisma.identity.update({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       data: {
         ...(handle !== undefined && {
           handle: handle === "" ? null : handle.toLowerCase(),
@@ -176,6 +234,10 @@ export async function PATCH(request: NextRequest) {
         ...(displayName !== undefined && { displayName: displayName || null }),
         ...(bio !== undefined && { bio: bio || null }),
         ...(avatarUrl !== undefined && { avatarUrl: avatarUrl || null }),
+        ...aiConfigUpdate,
+      },
+      include: {
+        aiConfig: true,
       },
     });
 

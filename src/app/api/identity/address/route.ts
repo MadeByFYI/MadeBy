@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 import { Visibility } from "@/generated/prisma";
 
 // GET: Get mailing address for current user's identity
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const identity = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       include: { mailingAddress: true },
     });
 
@@ -36,8 +36,8 @@ export async function GET() {
 // POST: Create mailing address
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const identity = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       include: { mailingAddress: true },
     });
 
@@ -97,8 +97,8 @@ export async function POST(request: NextRequest) {
 // PATCH: Update mailing address
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -106,7 +106,7 @@ export async function PATCH(request: NextRequest) {
     const { street1, street2, city, state, postalCode, country, visibility } = body;
 
     const identity = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       include: { mailingAddress: true },
     });
 
@@ -148,15 +148,15 @@ export async function PATCH(request: NextRequest) {
 }
 
 // DELETE: Remove mailing address
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const identity = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       include: { mailingAddress: true },
     });
 

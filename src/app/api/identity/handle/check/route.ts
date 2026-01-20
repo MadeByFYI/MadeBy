@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 
 // Reserved routes that cannot be used as handles
 const RESERVED_HANDLES = [
@@ -31,8 +31,8 @@ const HANDLE_REGEX = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       where: { handle: normalizedHandle },
     });
 
-    if (existingIdentity && existingIdentity.userId !== session.user.id) {
+    if (existingIdentity && existingIdentity.userId !== authResult.userId) {
       return NextResponse.json({
         available: false,
         reason: "taken",

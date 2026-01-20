@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 import { Visibility } from "@/generated/prisma";
 
 // PATCH: Update email address, visibility, or primary status
@@ -9,8 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,7 +24,7 @@ export async function PATCH(
       include: { identity: true },
     });
 
-    if (!identityEmail || identityEmail.identity.userId !== session.user.id) {
+    if (!identityEmail || identityEmail.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
 
@@ -40,7 +40,7 @@ export async function PATCH(
     }
 
     // Prevent changing the login email address
-    const isLoginEmail = session.user.email?.toLowerCase() === identityEmail.email.toLowerCase();
+    const isLoginEmail = authResult.user?.email?.toLowerCase() === identityEmail.email.toLowerCase();
     if (isLoginEmail && email !== undefined && email.toLowerCase() !== identityEmail.email.toLowerCase()) {
       return NextResponse.json(
         { error: "Cannot change your login email address. Add a new email instead." },
@@ -77,8 +77,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -90,12 +90,12 @@ export async function DELETE(
       include: { identity: true },
     });
 
-    if (!identityEmail || identityEmail.identity.userId !== session.user.id) {
+    if (!identityEmail || identityEmail.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
 
     // Prevent deleting the login email address
-    const isLoginEmail = session.user.email?.toLowerCase() === identityEmail.email.toLowerCase();
+    const isLoginEmail = authResult.user?.email?.toLowerCase() === identityEmail.email.toLowerCase();
     if (isLoginEmail) {
       return NextResponse.json(
         { error: "Cannot delete your login email address" },

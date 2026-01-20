@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 import { randomBytes } from "crypto";
 
 // Generate a verification token
@@ -11,8 +11,8 @@ function generateToken(): string {
 // POST: Send verification email
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       include: { identity: true },
     });
 
-    if (!email || email.identity.userId !== session.user.id) {
+    if (!email || email.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Email not found" }, { status: 404 });
     }
 

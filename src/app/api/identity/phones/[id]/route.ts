@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 import { Visibility } from "@/generated/prisma";
 
 // PATCH: Update phone number, visibility, or primary status
@@ -9,8 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,7 +24,7 @@ export async function PATCH(
       include: { identity: true },
     });
 
-    if (!identityPhone || identityPhone.identity.userId !== session.user.id) {
+    if (!identityPhone || identityPhone.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Phone not found" }, { status: 404 });
     }
 
@@ -68,8 +68,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -81,7 +81,7 @@ export async function DELETE(
       include: { identity: true },
     });
 
-    if (!identityPhone || identityPhone.identity.userId !== session.user.id) {
+    if (!identityPhone || identityPhone.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Phone not found" }, { status: 404 });
     }
 

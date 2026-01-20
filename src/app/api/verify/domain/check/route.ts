@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 import dns from "dns/promises";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       include: { identity: true },
     });
 
-    if (!domain || domain.identity.userId !== session.user.id) {
+    if (!domain || domain.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Domain not found" }, { status: 404 });
     }
 

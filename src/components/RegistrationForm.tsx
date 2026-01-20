@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 type ContentType = "HUMAN" | "AI" | "WITH_AI";
+type HashAlgorithm = "SHA256" | "SHA384" | "SHA512" | "SHA3_256" | "BLAKE3" | "";
+type HashTarget = "FILE" | "URL_CONTENT" | "TEXT_CONTENT" | "";
 
 interface FormData {
   title: string;
@@ -16,7 +18,23 @@ interface FormData {
   collaborators: string[];
   aiToolsUsed: string[];
   owner: string;
+  // Hash fields
+  contentHash: string;
+  hashAlgorithm: HashAlgorithm;
+  hashTarget: HashTarget;
+  hashInputSize: number | null;
+  hashInputFilename: string;
+  // Git fields
+  gitCommitHash: string;
+  gitRepositoryUrl: string;
 }
+
+const HASH_ALGORITHMS: { value: HashAlgorithm; label: string; description: string }[] = [
+  { value: "", label: "None", description: "No hash verification" },
+  { value: "SHA256", label: "SHA-256", description: "Recommended" },
+  { value: "SHA384", label: "SHA-384", description: "Higher security" },
+  { value: "SHA512", label: "SHA-512", description: "Highest security" },
+];
 
 interface RegistrationFormProps {
   defaultCreatorName?: string;
@@ -78,7 +96,21 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
     collaborators: [],
     aiToolsUsed: [],
     owner: "",
+    // Hash fields
+    contentHash: "",
+    hashAlgorithm: "",
+    hashTarget: "",
+    hashInputSize: null,
+    hashInputFilename: "",
+    // Git fields
+    gitCommitHash: "",
+    gitRepositoryUrl: "",
   });
+
+  // File upload and hashing state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isHashing, setIsHashing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [collaboratorInput, setCollaboratorInput] = useState("");
   const [aiToolInput, setAiToolInput] = useState("");
@@ -292,6 +324,112 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
     }));
   };
 
+  // Compute hash from file using Web Crypto API
+  const computeFileHash = async (file: File, algorithm: HashAlgorithm): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Map our algorithm names to Web Crypto API names
+    const cryptoAlgorithm = {
+      "SHA256": "SHA-256",
+      "SHA384": "SHA-384",
+      "SHA512": "SHA-512",
+      "SHA3_256": "SHA-256", // Fallback, SHA-3 not supported in Web Crypto
+      "BLAKE3": "SHA-256",   // Fallback, BLAKE3 not supported in Web Crypto
+    }[algorithm] || "SHA-256";
+
+    const hashBuffer = await crypto.subtle.digest(cryptoAlgorithm, arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return hashHex;
+  };
+
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    // If an algorithm is selected, compute hash immediately
+    if (formData.hashAlgorithm) {
+      await computeAndSetHash(file, formData.hashAlgorithm);
+    } else {
+      // Just store file info without hash
+      setFormData(prev => ({
+        ...prev,
+        hashTarget: "FILE",
+        hashInputSize: file.size,
+        hashInputFilename: file.name,
+        contentHash: "",
+      }));
+    }
+  };
+
+  // Compute hash and update form
+  const computeAndSetHash = async (file: File, algorithm: HashAlgorithm) => {
+    if (!algorithm) return;
+
+    setIsHashing(true);
+    try {
+      const hash = await computeFileHash(file, algorithm);
+      setFormData(prev => ({
+        ...prev,
+        contentHash: hash,
+        hashAlgorithm: algorithm,
+        hashTarget: "FILE",
+        hashInputSize: file.size,
+        hashInputFilename: file.name,
+      }));
+    } catch (err) {
+      console.error("Failed to compute hash:", err);
+      setError("Failed to compute file hash");
+    } finally {
+      setIsHashing(false);
+    }
+  };
+
+  // Handle algorithm change
+  const handleAlgorithmChange = async (algorithm: HashAlgorithm) => {
+    setFormData(prev => ({ ...prev, hashAlgorithm: algorithm }));
+
+    if (selectedFile && algorithm) {
+      await computeAndSetHash(selectedFile, algorithm);
+    } else if (!algorithm) {
+      // Clear hash if algorithm is removed
+      setFormData(prev => ({
+        ...prev,
+        contentHash: "",
+        hashTarget: "",
+        hashInputSize: null,
+        hashInputFilename: "",
+      }));
+    }
+  };
+
+  // Clear file selection
+  const clearFileSelection = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setFormData(prev => ({
+      ...prev,
+      contentHash: "",
+      hashTarget: "",
+      hashInputSize: null,
+      hashInputFilename: "",
+    }));
+  };
+
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -302,9 +440,31 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
+          title: formData.title,
+          description: formData.description,
+          contentType: formData.contentType,
+          creatorName: formData.creatorName,
+          originalUrl: formData.originalUrl,
+          thumbnailUrl: formData.thumbnailUrl,
+          attribution: formData.attribution,
+          owner: formData.owner,
           collaborators: JSON.stringify(formData.collaborators),
           aiToolsUsed: JSON.stringify(formData.aiToolsUsed),
+          // Include hash data only if hash was computed
+          ...(formData.contentHash && {
+            contentHash: formData.contentHash,
+            hashAlgorithm: formData.hashAlgorithm,
+            hashTarget: formData.hashTarget,
+            hashInputSize: formData.hashInputSize,
+            hashInputFilename: formData.hashInputFilename,
+          }),
+          // Include git data only if provided
+          ...(formData.gitCommitHash && {
+            gitCommitHash: formData.gitCommitHash,
+          }),
+          ...(formData.gitRepositoryUrl && {
+            gitRepositoryUrl: formData.gitRepositoryUrl,
+          }),
         }),
       });
 
@@ -536,6 +696,226 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
             />
           </div>
         </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-100" />
+
+      {/* Content Verification Section */}
+      <div className="space-y-5">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          Content Verification
+          <span className="text-xs font-normal text-gray-500">(optional)</span>
+        </h3>
+        <p className="text-sm text-gray-600">
+          Upload a file to generate a cryptographic hash. This allows anyone to verify the content hasn&apos;t been modified since declaration.
+        </p>
+
+        {/* Hash Algorithm Selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Hash Algorithm
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {HASH_ALGORITHMS.map((algo) => (
+              <label
+                key={algo.value || "none"}
+                className={`relative flex flex-col items-center p-3 rounded-xl cursor-pointer transition-all border-2 ${
+                  formData.hashAlgorithm === algo.value
+                    ? "border-emerald-500 bg-emerald-50"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="hashAlgorithm"
+                  value={algo.value}
+                  checked={formData.hashAlgorithm === algo.value}
+                  onChange={() => handleAlgorithmChange(algo.value)}
+                  className="sr-only"
+                />
+                <span className="font-medium text-gray-900 text-sm">{algo.label}</span>
+                <span className="text-xs text-gray-500">{algo.description}</span>
+                {formData.hashAlgorithm === algo.value && (
+                  <div className="absolute top-1 right-1">
+                    <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* File Upload */}
+        {formData.hashAlgorithm && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Content File
+            </label>
+            {!selectedFile ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/50 transition-all"
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <svg className="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                <p className="text-xs text-gray-500 mt-1">Any file type supported</p>
+              </div>
+            ) : (
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{formData.hashInputFilename}</p>
+                      <p className="text-xs text-gray-500">
+                        {formData.hashInputSize ? formatFileSize(formData.hashInputSize) : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearFileSelection}
+                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Hash Display */}
+                {isHashing ? (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                    <svg className="animate-spin h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Computing hash...
+                  </div>
+                ) : formData.contentHash ? (
+                  <div className="mt-3 p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium text-gray-500 uppercase">{formData.hashAlgorithm} Hash</span>
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(formData.contentHash)}
+                        className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <code className="text-xs text-gray-700 font-mono break-all">{formData.contentHash}</code>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Info Box */}
+        {formData.contentHash && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <div className="flex gap-3">
+              <svg className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-emerald-800">Hash Recorded</p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  This hash will be stored with your declaration. Anyone can verify the content integrity by re-computing the hash and comparing.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-100" />
+
+      {/* Version Control Section */}
+      <div className="space-y-5">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Version Control
+          <span className="text-xs font-normal text-gray-500">(optional)</span>
+        </h3>
+        <p className="text-sm text-gray-600">
+          Link your content to a specific git commit to track its version history and source code.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Git Commit Hash */}
+          <div>
+            <label htmlFor="gitCommitHash" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Git Commit Hash
+            </label>
+            <input
+              type="text"
+              id="gitCommitHash"
+              name="gitCommitHash"
+              value={formData.gitCommitHash}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all bg-gray-50/50 hover:bg-white text-gray-900 placeholder-gray-500 font-mono text-sm"
+              placeholder="e.g., a1b2c3d or full SHA"
+              pattern="[a-fA-F0-9]{7,40}"
+              title="Enter a valid git commit hash (7-40 hex characters)"
+            />
+          </div>
+
+          {/* Git Repository URL */}
+          <div>
+            <label htmlFor="gitRepositoryUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
+              Repository URL
+            </label>
+            <input
+              type="url"
+              id="gitRepositoryUrl"
+              name="gitRepositoryUrl"
+              value={formData.gitRepositoryUrl}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all bg-gray-50/50 hover:bg-white text-gray-900 placeholder-gray-500"
+              placeholder="https://github.com/user/repo"
+            />
+          </div>
+        </div>
+
+        {/* Info Box for Git */}
+        {formData.gitCommitHash && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex gap-3">
+              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-blue-800">Git Reference Added</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  This commit hash will be linked to your declaration, allowing others to view the exact version of the source code.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Divider */}

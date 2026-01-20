@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 
 // Generate a 6-character alphanumeric code
 function generateCode(): string {
@@ -15,14 +15,14 @@ function generateCode(): string {
 // POST: Request address verification (send postal mail)
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user's identity and address
     const identity = await prisma.identity.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: authResult.userId },
       include: { mailingAddress: true },
     });
 

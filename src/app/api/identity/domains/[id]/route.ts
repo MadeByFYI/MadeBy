@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/api-keys";
 import { Visibility } from "@/generated/prisma";
 import { randomUUID } from "crypto";
 
@@ -10,8 +10,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -25,7 +25,7 @@ export async function PATCH(
       include: { identity: true },
     });
 
-    if (!identityDomain || identityDomain.identity.userId !== session.user.id) {
+    if (!identityDomain || identityDomain.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Domain not found" }, { status: 404 });
     }
 
@@ -58,8 +58,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const authResult = await authenticateRequest(request);
+    if (!authResult?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -71,7 +71,7 @@ export async function DELETE(
       include: { identity: true },
     });
 
-    if (!identityDomain || identityDomain.identity.userId !== session.user.id) {
+    if (!identityDomain || identityDomain.identity.userId !== authResult.userId) {
       return NextResponse.json({ error: "Domain not found" }, { status: 404 });
     }
 
