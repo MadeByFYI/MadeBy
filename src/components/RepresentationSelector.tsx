@@ -81,17 +81,6 @@ export function RepresentationSelector({
 
   return (
     <div className="space-y-5">
-      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        Legal Representation
-        <span className="text-xs font-normal text-gray-500">(optional)</span>
-      </h3>
-      <p className="text-sm text-gray-600">
-        Associate a legally-binding assertion with your declaration. MadeBy.fyi records only that you created this badge and associated it with a legal representation — not that the declaration is true.
-      </p>
-
       <div className="grid sm:grid-cols-2 gap-4">
         {/* No Representation Option */}
         <label

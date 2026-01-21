@@ -125,6 +125,25 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
   const [collaboratorInput, setCollaboratorInput] = useState("");
   const [aiToolInput, setAiToolInput] = useState("");
 
+  // Accordion state for optional sections (all closed by default)
+  const [openSections, setOpenSections] = useState<{
+    links: boolean;
+    verification: boolean;
+    versionControl: boolean;
+    attribution: boolean;
+    legal: boolean;
+  }>({
+    links: false,
+    verification: false,
+    versionControl: false,
+    attribution: false,
+    legal: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   // Collaborator autocomplete state
   const [handleSuggestions, setHandleSuggestions] = useState<HandleSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -668,67 +687,102 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
       {/* Divider */}
       <div className="border-t border-gray-100" />
 
-      {/* Links Section */}
-      <div className="space-y-5">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      {/* Links Section - Accordion */}
+      <div className="space-y-0">
+        <button
+          type="button"
+          onClick={() => toggleSection("links")}
+          className="w-full text-lg font-semibold text-gray-900 flex items-center gap-2 py-2 hover:text-gray-700 transition-colors"
+        >
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
           Links & Media
           <span className="text-xs font-normal text-gray-500">(optional)</span>
-        </h3>
+          <svg
+            className={`w-5 h-5 text-gray-400 ml-auto transition-transform duration-200 ${openSections.links ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          {/* Original URL */}
-          <div>
-            <label htmlFor="originalUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Original Content URL
-            </label>
-            <input
-              type="url"
-              id="originalUrl"
-              name="originalUrl"
-              value={formData.originalUrl}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all bg-gray-50/50 hover:bg-white text-gray-900 placeholder-gray-500"
-              placeholder="https://..."
-            />
-          </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Link to the original content and provide a thumbnail image for previews.
+        </p>
 
-          {/* Thumbnail URL */}
-          <div>
-            <label htmlFor="thumbnailUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Thumbnail URL
-            </label>
-            <input
-              type="url"
-              id="thumbnailUrl"
-              name="thumbnailUrl"
-              value={formData.thumbnailUrl}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all bg-gray-50/50 hover:bg-white text-gray-900 placeholder-gray-500"
-              placeholder="https://..."
-            />
+        {openSections.links && (
+          <div className="space-y-5 pt-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Original URL */}
+              <div>
+                <label htmlFor="originalUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Original Content URL
+                </label>
+                <input
+                  type="url"
+                  id="originalUrl"
+                  name="originalUrl"
+                  value={formData.originalUrl}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all bg-gray-50/50 hover:bg-white text-gray-900 placeholder-gray-500"
+                  placeholder="https://..."
+                />
+              </div>
+
+              {/* Thumbnail URL */}
+              <div>
+                <label htmlFor="thumbnailUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Thumbnail URL
+                </label>
+                <input
+                  type="url"
+                  id="thumbnailUrl"
+                  name="thumbnailUrl"
+                  value={formData.thumbnailUrl}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all bg-gray-50/50 hover:bg-white text-gray-900 placeholder-gray-500"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Divider */}
       <div className="border-t border-gray-100" />
 
-      {/* Content Verification Section */}
-      <div className="space-y-5">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      {/* Content Verification Section - Accordion */}
+      <div className="space-y-0">
+        <button
+          type="button"
+          onClick={() => toggleSection("verification")}
+          className="w-full text-lg font-semibold text-gray-900 flex items-center gap-2 py-2 hover:text-gray-700 transition-colors"
+        >
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
           Content Verification
           <span className="text-xs font-normal text-gray-500">(optional)</span>
-        </h3>
-        <p className="text-sm text-gray-600">
+          <svg
+            className={`w-5 h-5 text-gray-400 ml-auto transition-transform duration-200 ${openSections.verification ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <p className="text-sm text-gray-600 mt-2">
           Upload a file to generate a cryptographic hash. This allows anyone to verify the content hasn&apos;t been modified since declaration.
         </p>
 
+        {openSections.verification && (
+          <div className="space-y-5 pt-4">
         {/* Hash Algorithm Selector */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -861,24 +915,41 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
             </div>
           </div>
         )}
+          </div>
+        )}
       </div>
 
       {/* Divider */}
       <div className="border-t border-gray-100" />
 
-      {/* Version Control Section */}
-      <div className="space-y-5">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      {/* Version Control Section - Accordion */}
+      <div className="space-y-0">
+        <button
+          type="button"
+          onClick={() => toggleSection("versionControl")}
+          className="w-full text-lg font-semibold text-gray-900 flex items-center gap-2 py-2 hover:text-gray-700 transition-colors"
+        >
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           Version Control
           <span className="text-xs font-normal text-gray-500">(optional)</span>
-        </h3>
-        <p className="text-sm text-gray-600">
+          <svg
+            className={`w-5 h-5 text-gray-400 ml-auto transition-transform duration-200 ${openSections.versionControl ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <p className="text-sm text-gray-600 mt-2">
           Link your content to a specific git commit to track its version history and source code.
         </p>
 
+        {openSections.versionControl && (
+          <div className="space-y-5 pt-4">
         <div className="grid sm:grid-cols-2 gap-4">
           {/* Git Commit Hash */}
           <div>
@@ -931,21 +1002,41 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
             </div>
           </div>
         )}
+          </div>
+        )}
       </div>
 
       {/* Divider */}
       <div className="border-t border-gray-100" />
 
-      {/* Attribution Section */}
-      <div className="space-y-5">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      {/* Attribution Section - Accordion */}
+      <div className="space-y-0">
+        <button
+          type="button"
+          onClick={() => toggleSection("attribution")}
+          className="w-full text-lg font-semibold text-gray-900 flex items-center gap-2 py-2 hover:text-gray-700 transition-colors"
+        >
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           Attribution & Credits
           <span className="text-xs font-normal text-gray-500">(optional)</span>
-        </h3>
+          <svg
+            className={`w-5 h-5 text-gray-400 ml-auto transition-transform duration-200 ${openSections.attribution ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
 
+        <p className="text-sm text-gray-600 mt-2">
+          Credit contributors, collaborators, and AI tools used in creating this content.
+        </p>
+
+        {openSections.attribution && (
+          <div className="space-y-5 pt-4">
         {/* Attribution */}
         <div>
           <label htmlFor="attribution" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -1088,20 +1179,52 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
             )}
           </div>
         )}
+          </div>
+        )}
       </div>
 
       {/* Divider */}
       <div className="border-t border-gray-100" />
 
-      {/* Legal Representation Section */}
-      <RepresentationSelector
-        selectedRepresentationId={selectedRepresentationId}
-        onRepresentationSelect={setSelectedRepresentationId}
-        signatureName={signatureName}
-        onSignatureNameChange={setSignatureName}
-        signatureDate={signatureDate}
-        creatorName={formData.creatorName}
-      />
+      {/* Legal Assertion Section - Accordion */}
+      <div className="space-y-0">
+        <button
+          type="button"
+          onClick={() => toggleSection("legal")}
+          className="w-full text-lg font-semibold text-gray-900 flex items-center gap-2 py-2 hover:text-gray-700 transition-colors"
+        >
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          Legal Assertion
+          <span className="text-xs font-normal text-gray-500">(optional)</span>
+          <svg
+            className={`w-5 h-5 text-gray-400 ml-auto transition-transform duration-200 ${openSections.legal ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <p className="text-sm text-gray-600 mt-2">
+          Optionally add a legal assertion to strengthen the credibility of your declaration.
+        </p>
+
+        {openSections.legal && (
+          <div className="pt-4">
+            <RepresentationSelector
+              selectedRepresentationId={selectedRepresentationId}
+              onRepresentationSelect={setSelectedRepresentationId}
+              signatureName={signatureName}
+              onSignatureNameChange={setSignatureName}
+              signatureDate={signatureDate}
+              creatorName={formData.creatorName}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Error Message */}
       {error && (
