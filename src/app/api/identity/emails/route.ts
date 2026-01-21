@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { Visibility } from "@/generated/prisma";
+import { Visibility } from "@/generated/prisma/client";
 
 // GET: List all emails for current user's identity
 export async function GET(request: NextRequest) {

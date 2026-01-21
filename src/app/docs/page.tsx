@@ -20,7 +20,16 @@ export default function DocsPage() {
           <p className="text-emerald-100 text-lg max-w-2xl">
             Complete guide to the content attribution and identity verification platform.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/quick-start"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-emerald-700 hover:bg-emerald-50 rounded-lg text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Quick Start Guide
+            </Link>
             <Link
               href="/docs/api.json"
               className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
@@ -35,6 +44,25 @@ export default function DocsPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Quick Start Callout */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg bg-emerald-600 flex items-center justify-center flex-shrink-0">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900">New to MadeBy?</h3>
+            <p className="text-sm text-gray-600">Get started in 5 minutes with our simplified guide.</p>
+          </div>
+          <Link
+            href="/quick-start"
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            Quick Start →
+          </Link>
+        </div>
+
         {/* Table of Contents */}
         <nav className="bg-gray-50 rounded-xl p-6 mb-12">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Table of Contents</h2>
@@ -48,8 +76,9 @@ export default function DocsPage() {
             <li><a href="#content-hashing" className="hover:underline">7. Content Hashing</a></li>
             <li><a href="#version-control" className="hover:underline">8. Version Control Integration</a></li>
             <li><a href="#badges" className="hover:underline">9. Badges &amp; Embedding</a></li>
-            <li><a href="#api-reference" className="hover:underline">10. API Reference</a></li>
-            <li><a href="#data-model" className="hover:underline">11. Data Model</a></li>
+            <li><a href="#legal-representations" className="hover:underline">10. Legal Representations</a></li>
+            <li><a href="#api-reference" className="hover:underline">11. API Reference</a></li>
+            <li><a href="#data-model" className="hover:underline">12. Data Model</a></li>
           </ul>
         </nav>
 
@@ -550,9 +579,143 @@ git rev-parse --short HEAD
           </div>
         </section>
 
+        {/* Legal Representations */}
+        <section id="legal-representations" className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">10. Legal Representations</h2>
+          <p className="text-gray-700 mb-6">
+            Legal representations are optional attestations that creators can attach to their content declarations. They provide different levels of legal weight to the declaration.
+          </p>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+            <h4 className="font-semibold text-amber-900 mb-2">Important Disclaimer</h4>
+            <p className="text-amber-800 text-sm">
+              MadeBy.fyi records that users created badges and associated them with legal representations. <strong>MadeBy.fyi does NOT assert that the declarations are true.</strong> The legal representation is between the declarant and any party relying on the declaration.
+            </p>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Available Representations</h3>
+
+          <div className="grid gap-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Standard Assertion</h3>
+                  <p className="text-sm text-gray-600">Code: <code className="bg-white px-2 py-0.5 rounded">STANDARD</code></p>
+                </div>
+              </div>
+              <p className="text-gray-700 mb-3">
+                A good-faith assertion based on current knowledge. This is a simple declaration that the badge has been applied correctly to the best of the declarant&apos;s knowledge.
+              </p>
+              <div className="bg-white/50 rounded-lg p-4 text-sm">
+                <p className="font-medium text-gray-900 mb-1">Assertion Text:</p>
+                <p className="text-gray-700 italic">&quot;I have applied the correct badge to the content to the best of my knowledge.&quot;</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Gold Standard Assertion</h3>
+                  <p className="text-sm text-gray-600">Code: <code className="bg-white px-2 py-0.5 rounded">PERJURY</code></p>
+                </div>
+              </div>
+              <p className="text-gray-700 mb-3">
+                A declaration under penalty of perjury under the laws of the United States of America. This carries significant legal weight and requires a digital signature.
+              </p>
+              <div className="bg-white/50 rounded-lg p-4 text-sm mb-3">
+                <p className="font-medium text-gray-900 mb-1">Assertion Text:</p>
+                <p className="text-gray-700 italic">&quot;I have applied the correct badge to the content to the best of my knowledge.</p>
+                <p className="text-gray-700 italic mt-2">I declare under penalty of perjury under the laws of the United States of America that the foregoing is true and correct.&quot;</p>
+              </div>
+              <div className="bg-amber-100/50 rounded-lg p-4 text-sm">
+                <p className="font-medium text-amber-900 mb-1">Requirements:</p>
+                <ul className="list-disc list-inside text-amber-800 space-y-1">
+                  <li>Digital signature (typed full legal name)</li>
+                  <li>Date of signature (auto-populated)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">Legal Implications</h3>
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full border border-gray-200 rounded-lg overflow-hidden text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Aspect</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Standard</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Gold Standard</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-3 font-medium text-gray-900">Legal Weight</td>
+                  <td className="px-4 py-3 text-gray-700">Good-faith assertion</td>
+                  <td className="px-4 py-3 text-gray-700">Same effect as sworn statement</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium text-gray-900">False Statement</td>
+                  <td className="px-4 py-3 text-gray-700">Potential civil liability</td>
+                  <td className="px-4 py-3 text-gray-700">Federal crime (18 U.S.C. &sect; 1621)</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium text-gray-900">Signature</td>
+                  <td className="px-4 py-3 text-gray-700">Not required</td>
+                  <td className="px-4 py-3 text-gray-700">Required (digital signature)</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium text-gray-900">Modification</td>
+                  <td className="px-4 py-3 text-gray-700">Can update declaration</td>
+                  <td className="px-4 py-3 text-gray-700">Original signature retained</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">API Usage</h3>
+          <p className="text-gray-700 mb-3">
+            When creating content via the API, you can specify a legal representation using either the representation ID or code:
+          </p>
+          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto mb-6">
+            <p className="text-gray-400 text-xs mb-2"># Using representation code (recommended)</p>
+            <code className="text-sm text-green-400">
+              {`POST /api/content
+{
+  "title": "My Artwork",
+  "creatorName": "Jane Doe",
+  "contentType": "HUMAN",
+  "representationCode": "STANDARD"
+}`}
+            </code>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+            <p className="text-gray-400 text-xs mb-2"># Gold Standard with required signature</p>
+            <code className="text-sm text-green-400">
+              {`POST /api/content
+{
+  "title": "My Artwork",
+  "creatorName": "Jane Doe",
+  "contentType": "HUMAN",
+  "representationCode": "PERJURY",
+  "signatureName": "Jane Doe"
+}`}
+            </code>
+          </div>
+        </section>
+
         {/* API Reference */}
         <section id="api-reference" className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">10. API Reference</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">11. API Reference</h2>
           <p className="text-gray-700 mb-6">
             All API endpoints require authentication unless noted. See the{" "}
             <Link href="/docs/api.json" className="text-emerald-700 hover:underline">
@@ -770,6 +933,26 @@ git rev-parse --short HEAD
             </table>
           </div>
 
+          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Legal Representation Endpoints</h3>
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full border border-gray-200 rounded-lg overflow-hidden text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Method</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Endpoint</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-3"><code className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">GET</code></td>
+                  <td className="px-4 py-3"><code>/api/representations</code></td>
+                  <td className="px-4 py-3 text-gray-700">List available legal representations</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">API Key Endpoints</h3>
           <div className="overflow-x-auto">
             <table className="w-full border border-gray-200 rounded-lg overflow-hidden text-sm">
@@ -803,7 +986,7 @@ git rev-parse --short HEAD
 
         {/* Data Model */}
         <section id="data-model" className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">11. Data Model</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">12. Data Model</h2>
           <p className="text-gray-700 mb-6">
             Key entities in the MadeBy system:
           </p>
@@ -838,14 +1021,27 @@ git rev-parse --short HEAD
     │       ├── provider, model
     │       ├── source: CLAUDE_CODE_LOG | C2PA_METADATA | SYNTHID_DETECTED | ...
     │       └── level: SELF_REPORTED | LOCAL_LOG | ...
-    └── provenance[]
-        └── ContentProvenance
-            ├── provenanceType: C2PA | SYNTHID | ADOBE_CR | IPTC | EXIF
-            ├── status: DETECTED | NOT_DETECTED | TAMPERED | INVALID
-            ├── c2paManifest, c2paClaimGenerator, c2paSignature
-            ├── synthidConfidence, synthidVersion
-            ├── generatorModel, generatorProvider
-            └── detectedAt, verificationMethod`}</pre>
+    ├── provenance[]
+    │   └── ContentProvenance
+    │       ├── provenanceType: C2PA | SYNTHID | ADOBE_CR | IPTC | EXIF
+    │       ├── status: DETECTED | NOT_DETECTED | TAMPERED | INVALID
+    │       ├── c2paManifest, c2paClaimGenerator, c2paSignature
+    │       ├── synthidConfidence, synthidVersion
+    │       ├── generatorModel, generatorProvider
+    │       └── detectedAt, verificationMethod
+    └── representationAcceptance
+        └── RepresentationAcceptance
+            ├── representation → LegalRepresentation
+            │   ├── code: "STANDARD" | "PERJURY"
+            │   ├── assertionLevel: STANDARD | PERJURY
+            │   ├── name, shortDescription
+            │   ├── assertionText, fullLegalText
+            │   └── isActive
+            ├── acceptedByName
+            ├── acceptedAt
+            ├── legalTextSnapshot
+            ├── signatureName (for PERJURY)
+            └── signatureDate (for PERJURY)`}</pre>
           </div>
         </section>
 
@@ -857,6 +1053,7 @@ git rev-parse --short HEAD
             </p>
             <div className="flex gap-4">
               <Link href="/" className="text-emerald-700 hover:underline text-sm">Home</Link>
+              <Link href="/quick-start" className="text-emerald-700 hover:underline text-sm">Quick Start</Link>
               <Link href="/docs/api.json" className="text-emerald-700 hover:underline text-sm">API (JSON)</Link>
               <Link href="/register" className="text-emerald-700 hover:underline text-sm">Register Content</Link>
             </div>

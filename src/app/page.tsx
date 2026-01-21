@@ -1,14 +1,18 @@
 import { RegistrationForm } from "@/components/RegistrationForm";
-import Image from "next/image";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
 
 export default async function Home() {
   const session = await auth();
 
-  // Redirect logged-in users to the dedicated registration page
+  // Fetch the user's identity to get their display name if logged in
+  let defaultCreatorName = "";
   if (session?.user?.id) {
-    redirect("/register");
+    const identity = await prisma.identity.findUnique({
+      where: { userId: session.user.id },
+      select: { displayName: true },
+    });
+    defaultCreatorName = identity?.displayName || session.user.name || "";
   }
 
   return (
@@ -204,7 +208,7 @@ export default async function Home() {
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-            <RegistrationForm />
+            <RegistrationForm defaultCreatorName={defaultCreatorName} />
           </div>
         </div>
       </section>

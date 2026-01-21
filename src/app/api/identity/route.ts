@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { IdentityType, AIProvider, AIModel } from "@/generated/prisma";
+import { IdentityType, AIProvider, AIModel } from "@/generated/prisma/client";
 
 // Handle validation regex: 3-30 chars, alphanumeric + hyphens, can't start/end with hyphen
 const HANDLE_REGEX = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;

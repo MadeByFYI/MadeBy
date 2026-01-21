@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { ContentType, HashAlgorithm, HashTarget } from "@/generated/prisma";
+import { ContentType, HashAlgorithm, HashTarget } from "@/generated/prisma/client";
 
 // Valid hash algorithms
 const VALID_HASH_ALGORITHMS = ["SHA256", "SHA384", "SHA512", "SHA3_256", "SHA3_512", "BLAKE2B", "BLAKE3", "MD5"];
@@ -21,6 +21,19 @@ export async function GET(
           select: {
             name: true,
             email: true,
+          },
+        },
+        representationAcceptance: {
+          include: {
+            representation: {
+              select: {
+                code: true,
+                assertionLevel: true,
+                name: true,
+                shortDescription: true,
+                assertionText: true,
+              },
+            },
           },
         },
       },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { AIProvider, CredentialType } from "@/generated/prisma";
+import { AIProvider, CredentialType } from "@/generated/prisma/client";
 import crypto from "crypto";
 
 // Simple encryption for API keys (in production, use a proper secrets manager)

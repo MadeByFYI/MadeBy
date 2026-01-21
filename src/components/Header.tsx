@@ -17,30 +17,43 @@ export function Header() {
           <span className="text-xl font-bold text-gray-900">MadeBy.fyi</span>
         </Link>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-1 sm:gap-3">
+          {/* Common links for all users */}
+          <Link
+            href="/quick-start"
+            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors hidden sm:block"
+          >
+            Quick Start
+          </Link>
+          <Link
+            href="/docs"
+            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+          >
+            Docs
+          </Link>
+
           {status === "loading" ? (
-            <div className="w-20 h-9 bg-gray-100 rounded-lg animate-pulse" />
+            <div className="w-20 h-9 bg-gray-100 rounded-lg animate-pulse ml-2" />
           ) : session ? (
             <>
-              <Link
-                href="/dashboard"
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/settings/identity"
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
-              >
-                Identity
-              </Link>
-              <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
-                <span className="text-sm text-gray-600 hidden sm:block">
+              <div className="hidden sm:flex items-center">
+                <Link
+                  href="/dashboard"
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-gray-200 ml-2">
+                <Link
+                  href="/settings/identity"
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors hidden md:block"
+                >
                   {session.user.email}
-                </span>
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium text-gray-700"
+                  className="px-3 sm:px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium text-gray-700"
                 >
                   Sign Out
                 </button>
@@ -49,7 +62,7 @@ export function Header() {
           ) : (
             <Link
               href="/auth/signin"
-              className="px-5 py-2 text-sm bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-800 rounded-lg transition-all font-medium shadow-sm hover:shadow-md"
+              className="px-4 sm:px-5 py-2 text-sm bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-800 rounded-lg transition-all font-medium shadow-sm hover:shadow-md ml-2"
             >
               Sign In
             </Link>

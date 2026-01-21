@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { RepresentationSelector } from "./RepresentationSelector";
 
 type ContentType = "HUMAN" | "AI" | "WITH_AI";
 type HashAlgorithm = "SHA256" | "SHA384" | "SHA512" | "SHA3_256" | "BLAKE3" | "";
@@ -111,6 +112,15 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isHashing, setIsHashing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Legal representation selection state
+  const [selectedRepresentationId, setSelectedRepresentationId] = useState<string | null>(null);
+  const [signatureName, setSignatureName] = useState("");
+  const signatureDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const [collaboratorInput, setCollaboratorInput] = useState("");
   const [aiToolInput, setAiToolInput] = useState("");
@@ -464,6 +474,11 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
           }),
           ...(formData.gitRepositoryUrl && {
             gitRepositoryUrl: formData.gitRepositoryUrl,
+          }),
+          // Legal representation data
+          ...(selectedRepresentationId && {
+            representationId: selectedRepresentationId,
+            signatureName: signatureName || undefined,
           }),
         }),
       });
@@ -1074,6 +1089,19 @@ export function RegistrationForm({ defaultCreatorName = "" }: RegistrationFormPr
           </div>
         )}
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-100" />
+
+      {/* Legal Representation Section */}
+      <RepresentationSelector
+        selectedRepresentationId={selectedRepresentationId}
+        onRepresentationSelect={setSelectedRepresentationId}
+        signatureName={signatureName}
+        onSignatureNameChange={setSignatureName}
+        signatureDate={signatureDate}
+        creatorName={formData.creatorName}
+      />
 
       {/* Error Message */}
       {error && (

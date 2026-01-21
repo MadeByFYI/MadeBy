@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { ContentType, HashAlgorithm, HashTarget } from "@/generated/prisma";
+import { ContentType, HashAlgorithm, HashTarget } from "@/generated/prisma/client";
 
 // Valid hash algorithms
 const VALID_HASH_ALGORITHMS = ["SHA256", "SHA384", "SHA512", "SHA3_256", "SHA3_512", "BLAKE2B", "BLAKE3", "MD5"];
@@ -86,6 +86,10 @@ export async function POST(request: NextRequest) {
       // Git fields
       gitCommitHash,
       gitRepositoryUrl,
+      // Legal representation fields
+      representationId,
+      representationCode, // Alternative: specify by code ("STANDARD" or "PERJURY")
+      signatureName,
     } = body;
 
     // Validate required fields
@@ -120,30 +124,91 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const content = await prisma.content.create({
-      data: {
-        title,
-        description: description || null,
-        contentType: contentType as ContentType,
-        creatorName,
-        originalUrl: originalUrl || null,
-        thumbnailUrl: thumbnailUrl || null,
-        attribution: attribution || null,
-        collaborators: collaborators || null,
-        aiToolsUsed: aiToolsUsed || null,
-        owner: owner || null,
-        userId: authResult?.userId || null,
-        // Hash fields
-        contentHash: contentHash || null,
-        hashAlgorithm: hashAlgorithm ? (hashAlgorithm as HashAlgorithm) : null,
-        hashTarget: hashTarget ? (hashTarget as HashTarget) : null,
-        hashCreatedAt: contentHash ? new Date() : null,
-        hashInputSize: hashInputSize ? parseInt(hashInputSize, 10) : null,
-        hashInputFilename: hashInputFilename || null,
-        // Git fields
-        gitCommitHash: gitCommitHash || null,
-        gitRepositoryUrl: gitRepositoryUrl || null,
-      },
+    // If a legal representation is selected, validate it exists and get its details
+    let representationData = null;
+    if (representationId || representationCode) {
+      // Look up by ID or by code
+      if (representationId) {
+        representationData = await prisma.legalRepresentation.findUnique({
+          where: { id: representationId },
+          select: {
+            id: true,
+            assertionLevel: true,
+            fullLegalText: true,
+          },
+        });
+      } else if (representationCode) {
+        representationData = await prisma.legalRepresentation.findUnique({
+          where: { code: representationCode },
+          select: {
+            id: true,
+            assertionLevel: true,
+            fullLegalText: true,
+          },
+        });
+      }
+
+      if (!representationData) {
+        return NextResponse.json(
+          { error: representationId ? "Invalid representation ID" : "Invalid representation code" },
+          { status: 400 }
+        );
+      }
+
+      // For PERJURY (Gold Standard) representations, signature name is required
+      if (representationData.assertionLevel === "PERJURY" && !signatureName) {
+        return NextResponse.json(
+          { error: "Signature name is required for Gold Standard assertions" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Use a transaction to create both Content and RepresentationAcceptance
+    const content = await prisma.$transaction(async (tx) => {
+      const newContent = await tx.content.create({
+        data: {
+          title,
+          description: description || null,
+          contentType: contentType as ContentType,
+          creatorName,
+          originalUrl: originalUrl || null,
+          thumbnailUrl: thumbnailUrl || null,
+          attribution: attribution || null,
+          collaborators: collaborators || null,
+          aiToolsUsed: aiToolsUsed || null,
+          owner: owner || null,
+          userId: authResult?.userId || null,
+          // Hash fields
+          contentHash: contentHash || null,
+          hashAlgorithm: hashAlgorithm ? (hashAlgorithm as HashAlgorithm) : null,
+          hashTarget: hashTarget ? (hashTarget as HashTarget) : null,
+          hashCreatedAt: contentHash ? new Date() : null,
+          hashInputSize: hashInputSize ? parseInt(hashInputSize, 10) : null,
+          hashInputFilename: hashInputFilename || null,
+          // Git fields
+          gitCommitHash: gitCommitHash || null,
+          gitRepositoryUrl: gitRepositoryUrl || null,
+        },
+      });
+
+      // Create RepresentationAcceptance if a representation was selected
+      if (representationData) {
+        const isPerjury = representationData.assertionLevel === "PERJURY";
+        await tx.representationAcceptance.create({
+          data: {
+            contentId: newContent.id,
+            representationId: representationData.id,
+            acceptedByUserId: authResult?.userId || null,
+            acceptedByName: creatorName,
+            legalTextSnapshot: representationData.fullLegalText,
+            signatureName: isPerjury ? signatureName : null,
+            signatureDate: isPerjury ? new Date() : null,
+          },
+        });
+      }
+
+      return newContent;
     });
 
     return NextResponse.json({ id: content.id }, { status: 201 });

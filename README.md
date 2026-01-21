@@ -645,6 +645,238 @@ TWILIO_PHONE_NUMBER="+15551234567"
 LOB_API_KEY="test_xxxxxxxxxxxxx"
 ```
 
+## API Reference
+
+MadeBy provides a REST API for programmatic content declaration management. Authentication is required for most endpoints.
+
+### Authentication
+
+The API supports two authentication methods:
+
+1. **Session-based** - For browser clients using cookies
+2. **API Key** - For programmatic access via `Authorization: Bearer <api_key>` header
+
+To create an API key, visit `/settings/api-keys` in the web UI.
+
+### Endpoints
+
+#### Content Declarations
+
+##### List Declarations
+```
+GET /api/content
+```
+
+Query parameters:
+- `limit` (optional): Max results (default: 50, max: 100)
+- `offset` (optional): Pagination offset (default: 0)
+- `contentType` (optional): Filter by type (`HUMAN`, `AI`, `WITH_AI`)
+
+Response:
+```json
+{
+  "contents": [...],
+  "pagination": {
+    "total": 100,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": true
+  }
+}
+```
+
+##### Create Declaration
+```
+POST /api/content
+```
+
+Request body:
+```json
+{
+  "title": "My Artwork",
+  "creatorName": "Jane Doe",
+  "contentType": "HUMAN",
+  "description": "Optional description",
+  "originalUrl": "https://example.com/artwork",
+  "thumbnailUrl": "https://example.com/thumb.jpg",
+  "attribution": "Optional attribution text",
+  "collaborators": "Optional collaborators list",
+  "aiToolsUsed": "Optional AI tools used (for WITH_AI type)",
+  "owner": "Optional owner name",
+  "contentHash": "sha256:abc123...",
+  "hashAlgorithm": "SHA256",
+  "hashTarget": "FILE",
+  "hashInputSize": 1024,
+  "hashInputFilename": "artwork.png",
+  "gitCommitHash": "abc123def456",
+  "gitRepositoryUrl": "https://github.com/user/repo",
+  "representationCode": "STANDARD",
+  "signatureName": "Jane Doe"
+}
+```
+
+Required fields: `title`, `creatorName`, `contentType`
+
+Content types:
+- `HUMAN` - 100% human-created content
+- `AI` - AI-generated content
+- `WITH_AI` - Human-created with AI assistance
+
+Response:
+```json
+{
+  "id": "clxxx..."
+}
+```
+
+##### Get Declaration
+```
+GET /api/content/{id}
+```
+
+Returns the full declaration including user info and legal representation acceptance.
+
+##### Update Declaration
+```
+PATCH /api/content/{id}
+```
+
+Request body: Same fields as POST (all optional). Only the owner can update.
+
+##### Delete Declaration
+```
+DELETE /api/content/{id}
+```
+
+Only the owner can delete.
+
+#### Legal Representations
+
+Legal representations are optional attestations users can attach to their declarations.
+
+##### List Available Representations
+```
+GET /api/representations
+```
+
+Response:
+```json
+{
+  "representations": [
+    {
+      "id": "clxxx...",
+      "code": "STANDARD",
+      "assertionLevel": "STANDARD",
+      "name": "Standard Assertion",
+      "shortDescription": "Best knowledge assertion",
+      "assertionText": "I have applied the correct badge...",
+      "fullLegalText": "LEGAL REPRESENTATION - STANDARD..."
+    },
+    {
+      "id": "clyyy...",
+      "code": "PERJURY",
+      "assertionLevel": "PERJURY",
+      "name": "Gold Standard Assertion",
+      "shortDescription": "Under penalty of perjury + signature",
+      "assertionText": "I have applied the correct badge...",
+      "fullLegalText": "LEGAL REPRESENTATION - PERJURY..."
+    }
+  ]
+}
+```
+
+##### Using Representations
+
+When creating a declaration, include either:
+
+- `representationId` - The database ID of the representation
+- `representationCode` - The code string: `"STANDARD"` or `"PERJURY"`
+
+For Gold Standard (PERJURY) representations, `signatureName` is required:
+
+```json
+{
+  "title": "My Work",
+  "creatorName": "Jane Doe",
+  "contentType": "HUMAN",
+  "representationCode": "PERJURY",
+  "signatureName": "Jane Doe"
+}
+```
+
+**Important:** MadeBy.fyi records that users created badges and associated them with legal representations. MadeBy.fyi does NOT assert that the declarations are true.
+
+### Error Responses
+
+All errors return JSON:
+```json
+{
+  "error": "Error message"
+}
+```
+
+Common status codes:
+- `400` - Bad request (validation error)
+- `401` - Unauthorized (authentication required)
+- `403` - Forbidden (not the owner)
+- `404` - Not found
+- `500` - Server error
+
+## Database Seeding
+
+### Seed Legal Representations
+
+Run the seed script to populate the legal representations:
+
+```bash
+npx ts-node prisma/seed-representations.ts
+```
+
+This creates/updates the two built-in representations:
+- **Standard Assertion** - Basic good-faith declaration
+- **Gold Standard Assertion** - Declaration under penalty of perjury with digital signature
+
+## MCP Server for AI Agents
+
+MadeBy includes an MCP (Model Context Protocol) server that allows AI agents like Claude to interact with the API.
+
+### Installation
+
+```bash
+cd mcp-server
+npm install
+npm run build
+```
+
+### Configuration
+
+Add to your Claude Desktop or Claude Code MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "madeby": {
+      "command": "node",
+      "args": ["/path/to/MadeBy/mcp-server/dist/index.js"],
+      "env": {
+        "MADEBY_API_KEY": "mk_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Available Tools
+
+- `list_representations` - List available legal representations
+- `create_declaration` - Create a content declaration
+- `list_declarations` - List user's declarations
+- `get_declaration` - Get a specific declaration
+- `update_declaration` - Update a declaration
+- `delete_declaration` - Delete a declaration
+
+See [mcp-server/README.md](./mcp-server/README.md) for full documentation.
+
 ## Scripts
 
 - `npm run dev` - Start development server

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { Visibility } from "@/generated/prisma";
+import { Visibility } from "@/generated/prisma/client";
 import crypto from "crypto";
 
 // GET: List all domains for current user's identity

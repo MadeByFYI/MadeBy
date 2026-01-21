@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { EmbedCodeSection } from "@/components/EmbedCodeSection";
 import { BadgeDownloadSection } from "@/components/BadgeDownloadSection";
+import { RepresentationDisplay } from "@/components/RepresentationDisplay";
 
 interface DeclarationPageProps {
   params: Promise<{ id: string }>;
@@ -62,6 +63,19 @@ export default async function DeclarationPage({ params }: DeclarationPageProps) 
           identity: {
             select: {
               handle: true,
+            },
+          },
+        },
+      },
+      representationAcceptance: {
+        include: {
+          representation: {
+            select: {
+              code: true,
+              assertionLevel: true,
+              name: true,
+              shortDescription: true,
+              assertionText: true,
             },
           },
         },
@@ -157,6 +171,27 @@ export default async function DeclarationPage({ params }: DeclarationPageProps) 
             contentType={content.contentType}
             verifyUrl={`${baseUrl}/declaration/${id}`}
           />
+
+          {/* Legal Representation Section */}
+          {content.representationAcceptance && (
+            <RepresentationDisplay
+              representationAcceptance={{
+                id: content.representationAcceptance.id,
+                acceptedByName: content.representationAcceptance.acceptedByName,
+                acceptedAt: content.representationAcceptance.acceptedAt.toISOString(),
+                legalTextSnapshot: content.representationAcceptance.legalTextSnapshot,
+                signatureName: content.representationAcceptance.signatureName,
+                signatureDate: content.representationAcceptance.signatureDate?.toISOString() || null,
+                representation: {
+                  code: content.representationAcceptance.representation.code,
+                  assertionLevel: content.representationAcceptance.representation.assertionLevel,
+                  name: content.representationAcceptance.representation.name,
+                  shortDescription: content.representationAcceptance.representation.shortDescription,
+                  assertionText: content.representationAcceptance.representation.assertionText,
+                },
+              }}
+            />
+          )}
 
           {/* Content Details Card */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-8">

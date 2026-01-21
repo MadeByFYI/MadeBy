@@ -14,11 +14,13 @@ export async function GET() {
       "purpose": "MadeBy enables creators to declare how their content was made (by humans, AI, or collaboration) and provides verifiable identities and badges for content attribution.",
       "coreFeatures": [
         "Content declaration with attribution type (HUMAN, AI, WITH_AI)",
+        "Legal representations (attestations) with varying levels of legal weight",
         "Identity management for individuals, organizations, and AI agents",
         "Multi-factor identity verification (email, phone, domain, address)",
         "Badge generation with QR codes linking to declarations",
         "AI identity verification through provider API integration"
-      ]
+      ],
+      "disclaimer": "MadeBy.fyi records that users created badges and associated them with legal representations. MadeBy.fyi does NOT assert that the declarations are true."
     },
 
     "contentTypes": {
@@ -65,6 +67,41 @@ export async function GET() {
           "model": "required",
           "modelVersion": "optional",
           "operator": "optional (linked identity)"
+        }
+      }
+    },
+
+    "legalRepresentations": {
+      "description": "Optional attestations users can attach to their content declarations with varying levels of legal weight",
+      "disclaimer": "MadeBy.fyi records that users created badges and associated them with legal representations. MadeBy.fyi does NOT assert that the declarations are true.",
+      "assertionLevels": {
+        "STANDARD": {
+          "code": "STANDARD",
+          "name": "Standard Assertion",
+          "shortDescription": "Best knowledge assertion",
+          "assertionText": "I have applied the correct badge to the content to the best of my knowledge.",
+          "requiresSignature": false,
+          "legalWeight": "Good-faith assertion based on current knowledge"
+        },
+        "PERJURY": {
+          "code": "PERJURY",
+          "name": "Gold Standard Assertion",
+          "shortDescription": "Under penalty of perjury + digital signature",
+          "assertionText": "I have applied the correct badge to the content to the best of my knowledge.\n\nI declare under penalty of perjury under the laws of the United States of America that the foregoing is true and correct.",
+          "requiresSignature": true,
+          "legalWeight": "Same legal effect as statement made under oath. False declaration is federal crime under 18 U.S.C. § 1621.",
+          "signatureFields": {
+            "signatureName": "Typed full legal name (required)",
+            "signatureDate": "Auto-populated date of signing"
+          }
+        }
+      },
+      "usage": {
+        "webUI": "Select representation during content registration and provide signature if required",
+        "api": {
+          "byCode": "Include 'representationCode': 'STANDARD' or 'PERJURY' in POST /api/content",
+          "byId": "Include 'representationId': '<id>' in POST /api/content",
+          "signature": "For PERJURY, include 'signatureName': '<full legal name>'"
         }
       }
     },
@@ -209,7 +246,10 @@ export async function GET() {
             "hashInputSize": { "type": "integer", "required": false, "description": "Size in bytes of hashed input" },
             "hashInputFilename": { "type": "string", "required": false, "description": "Original filename if FILE target" },
             "gitCommitHash": { "type": "string", "required": false, "description": "Git commit SHA (full 40-char or short form)" },
-            "gitRepositoryUrl": { "type": "string", "required": false, "description": "URL to the repository (GitHub, GitLab, etc.)" }
+            "gitRepositoryUrl": { "type": "string", "required": false, "description": "URL to the repository (GitHub, GitLab, etc.)" },
+            "representationId": { "type": "string", "required": false, "description": "ID of legal representation to attach (alternative to representationCode)" },
+            "representationCode": { "type": "enum", "values": ["STANDARD", "PERJURY"], "required": false, "description": "Code of legal representation to attach (alternative to representationId)" },
+            "signatureName": { "type": "string", "required": false, "description": "Required for PERJURY representation - typed full legal name as digital signature" }
           },
           "response": { "type": "Content" }
         },
@@ -461,6 +501,28 @@ export async function GET() {
           "description": "Remove a provider credential"
         }
       },
+      "representations": {
+        "list": {
+          "method": "GET",
+          "path": "/api/representations",
+          "authentication": "none",
+          "description": "List all active legal representations",
+          "response": {
+            "representations": {
+              "type": "array",
+              "items": {
+                "id": { "type": "string" },
+                "code": { "type": "string", "values": ["STANDARD", "PERJURY"] },
+                "assertionLevel": { "type": "enum", "values": ["STANDARD", "PERJURY"] },
+                "name": { "type": "string" },
+                "shortDescription": { "type": "string" },
+                "assertionText": { "type": "string" },
+                "fullLegalText": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
       "apiKeys": {
         "note": "API key management requires session authentication (cannot use API keys to manage API keys)",
         "list": {
@@ -540,6 +602,7 @@ export async function GET() {
         "hashInputFilename": "string | null",
         "gitCommitHash": "string | null (git commit SHA)",
         "gitRepositoryUrl": "string | null (repository URL)",
+        "representationAcceptance": "RepresentationAcceptance | null - Attached legal representation",
         "createdAt": "datetime",
         "updatedAt": "datetime"
       },
@@ -605,6 +668,30 @@ export async function GET() {
         "verificationMethod": "string | null",
         "verificationUrl": "string | null",
         "verificationDetail": "string | null"
+      },
+      "LegalRepresentation": {
+        "id": "string (cuid)",
+        "code": "string (unique) - 'STANDARD' or 'PERJURY'",
+        "assertionLevel": "STANDARD | PERJURY",
+        "name": "string - e.g., 'Standard Assertion' or 'Gold Standard Assertion'",
+        "shortDescription": "string",
+        "assertionText": "string - The assertion statement text",
+        "fullLegalText": "string - Complete legal terms and conditions",
+        "isActive": "boolean - Whether this representation is available for use",
+        "createdAt": "datetime",
+        "updatedAt": "datetime"
+      },
+      "RepresentationAcceptance": {
+        "id": "string (cuid)",
+        "contentId": "string (unique) - One acceptance per content",
+        "representationId": "string - Reference to LegalRepresentation",
+        "acceptedByUserId": "string | null",
+        "acceptedByName": "string - Name captured at acceptance time",
+        "acceptedAt": "datetime",
+        "legalTextSnapshot": "string - Snapshot of fullLegalText at acceptance time",
+        "signatureName": "string | null - For PERJURY: typed full legal name as digital signature",
+        "signatureDate": "datetime | null - For PERJURY: date of signature",
+        "createdAt": "datetime"
       }
     },
 
@@ -620,8 +707,10 @@ export async function GET() {
       "/settings/identity/domains": "Manage domains",
       "/settings/identity/address": "Manage mailing address",
       "/{handle}": "Public identity profile page",
-      "/docs": "Human-readable documentation",
-      "/docs/api.json": "Machine-readable API documentation (this document)"
+      "/quick-start": "Quick start guide - get started in 5 minutes",
+      "/docs": "Human-readable full documentation",
+      "/docs/api.json": "Machine-readable API documentation (this document)",
+      "/api/representations": "List available legal representations (JSON API)"
     },
 
     "aiIntegration": {

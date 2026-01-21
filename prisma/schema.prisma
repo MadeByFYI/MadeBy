@@ -71,6 +71,7 @@ model User {
   contents Content[]
   identity Identity?
   apiKeys  ApiKey[]
+  representationAcceptances RepresentationAcceptance[]
 }
 
 // API Keys for programmatic access
@@ -128,6 +129,8 @@ model Content {
   contributors  ContentContributor[]
   // Content provenance verification (C2PA, SynthID, etc.)
   provenance    ContentProvenance[]
+  // Legal representation acceptance for this content
+  representationAcceptance RepresentationAcceptance?
 
   @@index([contentHash])
   @@index([gitCommitHash])
@@ -137,6 +140,12 @@ enum ContentType {
   HUMAN
   AI
   WITH_AI
+}
+
+// Assertion level for unilateral contracts
+enum AssertionLevel {
+  STANDARD  // Best knowledge assertion
+  PERJURY   // Under penalty of perjury + signature
 }
 
 // Cryptographic hash algorithms
@@ -548,4 +557,42 @@ model ContentProvenance {
   @@index([provenanceType])
   @@index([status])
   @@index([generatorProvider])
+}
+
+// Predefined legal representations users can select
+model LegalRepresentation {
+  id               String          @id @default(cuid())
+  code             String          @unique  // "STANDARD" or "PERJURY"
+  assertionLevel   AssertionLevel
+  name             String
+  shortDescription String
+  assertionText    String          @db.Text
+  fullLegalText    String          @db.Text
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  acceptances      RepresentationAcceptance[]
+}
+
+// Records that a user accepted a legal representation for specific content
+model RepresentationAcceptance {
+  id                  String              @id @default(cuid())
+  contentId           String              @unique
+  content             Content             @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  representationId    String
+  representation      LegalRepresentation @relation(fields: [representationId], references: [id], onDelete: Restrict)
+  acceptedByUserId    String?
+  acceptedByUser      User?               @relation(fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  acceptedByName      String              // Captured at acceptance (acts as signature for PERJURY)
+  acceptedAt          DateTime            @default(now())
+  legalTextSnapshot   String              @db.Text
+
+  // For PERJURY representations - digital signature fields
+  signatureName       String?             // Typed full legal name
+  signatureDate       DateTime?           // Date of signature
+
+  createdAt           DateTime            @default(now())
+
+  @@index([representationId])
+  @@index([acceptedByUserId])
 }

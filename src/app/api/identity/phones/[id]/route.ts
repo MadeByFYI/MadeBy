@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { authenticateRequest } from "@/lib/api-keys";
-import { Visibility } from "@/generated/prisma";
+import { Visibility } from "@/generated/prisma/client";
 
 // PATCH: Update phone number, visibility, or primary status
 export async function PATCH(
