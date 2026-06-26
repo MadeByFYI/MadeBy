@@ -298,6 +298,22 @@ A rendered badge is just an image, and any image can be faked. So:
 > to the authoritative page" — which is the asker-pull spine doing its job. **Never market
 > the image itself as proof.**
 
+### Two principles the badge depends on (mission guardrails)
+
+These surfaced from dogfooding the analyzer on our own repo and are easy to violate:
+
+> **Altitude — the badge is a headline + pointer; the answer lives on the page.** The badge
+> carries a glanceable *facet* (the mix, or a tier mark) and links to the full answer. Rich,
+> name-every-creator attribution lives on the resolver page, never on the badge — so the badge
+> stays succinct and viral while the answer stays complete. When data is too coarse for a
+> precise headline, the badge degrades to the **tier** (`madeby.fyi · estimated`), still short.
+
+> **Name the creator; put the uncertainty in the tier — never abdicate the question.** The
+> product exists to answer "who made this." "No signal detected" is honest but is a non-answer,
+> so we don't ship it: we always name the contributors (human operators + AI models) and
+> express how-sure-we-are through the *tier* and a caveat, not by refusing to name. (Coarse
+> now, precise later, is fine — but never silent.)
+
 Note: QR codes (central in v1) made sense for physical/visual content. For code, the
 markdown shield + social/OG share card + clickable link are the surfaces. QR is retired as
 the centerpiece here (revisit for the eventual creative/visual expansion).
