@@ -1,0 +1,154 @@
+# MadeBy — Test & QA Doctrine
+
+> Fourth companion to `STRATEGY.md`, `ARCHITECTURE.md`, and `OPERATIONS.md`. This doc is how
+> we keep the product *trustworthy*, not just working — which for a trust instrument is the
+> whole point.
+
+The governing fact: **we sell trust, so our worst bug is not a crash — it's a confident wrong
+answer.** That is the exact thing customers pay us *not* to produce. The entire QA strategy is
+built around that inversion.
+
+---
+
+## 1. Two QA regimes — never conflated
+
+The system has two fundamentally different kinds of component. Applying one QA style to both
+is the central trap.
+
+| | Trust/crypto core | Classification estimate |
+|---|---|---|
+| **Components** | fingerprinting, canonicalization, signatures, tier resolution, the invariants | human/AI % per unit |
+| **Nature** | deterministic | probabilistic |
+| **QA regime** | **soundness** — exact, reproducible, adversarially tested, pass/fail | **calibration** — labeled ground truth, precision/recall, calibration curves, drift |
+| **"Passing" means** | bit-identical to the spec; forgeries rejected | honest about its own uncertainty |
+
+The crypto must be **exact**; the estimate must be **honestly uncertain**. Treating the
+estimate like crypto (expecting impossible exactness) or the crypto like the estimate
+(tolerating "mostly works") both destroy us.
+
+---
+
+## 2. Severity inversion + fail-safe
+
+**Over-claiming trust is the catastrophic bug class** — a forgery accepted as bound-tier, an
+unrecognized carrier treated as verified, a confident wrong attribution. These are sev-0
+release-blockers, categorically worse than a crash or a miss.
+
+The design-level test property that follows:
+
+> **The system must fail *safe*, never fail *confident-wrong*.** "No record found,"
+> "processing," and "asserted/unverified" are all correct, safe outputs. Fabricated
+> confidence is the only true failure.
+
+A large share of the suite is simply: *under every adversarial or degraded condition, does the
+tier degrade downward (toward unknown/asserted), never upward?* **Soundness > completeness.**
+
+---
+
+## 3. The invariants are the test spec
+
+The enforceable invariants (`ARCHITECTURE.md` §10) each become an **adversarial test that
+actively tries to violate them**, not a happy-path assertion:
+
+- *Subject is a reference, never a re-hash* → assert no path mints a competing content hash.
+- *Unrecognized carriers cap at asserted* → property test: random/malformed carriers, tier
+  **never** exceeds asserted.
+- *Signatures cover the canonical claim independent of carrier* → cross-carrier round-trip
+  (sign in A, re-encode to B, verify) **and** the negative (mutate content → verify fails).
+- *Percent-authored is a view, not stored truth* → assert it can't be persisted as ground truth.
+
+Plus a **red-team suite** that thinks like an attacker: forge a badge; spoof a verified
+identity; carrier-confusion; **canonicalization mismatch** (make a signature verify over
+different bytes); **corpus poisoning**; **prompt injection via a malicious repo** through both
+ingestion and the ops agent; **hash enumeration against private content**. And **mutation
+testing on the tier-resolution logic** — introduce a mutant that promotes asserted→verified
+and confirm a test kills it.
+
+---
+
+## 4. Verifiability without open source
+
+The strongest trust is **"don't trust us — verify."** We achieve it with **published
+conformance artifacts**, *not* by open-sourcing the implementation.
+
+> **Verifiability comes from open *contract + evidence + means-to-check*, not visible source.**
+> A bound-tier claim is trustworthy because its signature verifies against an open spec with
+> open tooling — not because anyone can read our resolver.
+
+| Must be public | Stays fully closed |
+|---|---|
+| The **spec** (format, canonicalization, tier policy, invariants) — already open per the carrier-registry decision (`ARCHITECTURE.md` §3) | Ingestion pipeline |
+| **Test vectors** — inputs → expected outputs, with adversarial negatives first-class | Classifier internals |
+| A **verification path** — ideally existing open tooling (Sigstore/cosign, standard crypto over the canonical claim); optionally a small standalone verifier | Resolver service, analyzer, UI, business logic |
+
+The test vectors make the implementation's correctness **checkable without making it
+visible** — if we pass the published adversarial vectors, correctness on those cases is
+established without anyone reading our source. This is the normal pattern for crypto, C2PA,
+and Sigstore (open formats + public vectors; proprietary implementations everywhere).
+
+**Residual gap, stated plainly:** closed source means "trust our prod code matches reference
+behavior on cases the vectors don't cover." We close most of it with (a) broad adversarial
+vectors, (b) reproducible builds + signed releases + a transparency log so the deployed
+artifact is pinned and can't be quietly swapped, and (c) the fail-safe design (§2). The
+leftover is small, bounded, and smaller than what a one-time private audit would leave.
+
+**Optional, later:** open-source just the *small verifier* (not the producer/classifier) — a
+cheap credibility bonus. Open verifier, closed generator. Nice-to-have, not required.
+
+---
+
+## 5. The probabilistic regime
+
+Test vectors don't work for the estimate (no single "correct" output). The publishable
+artifact is a **labeled benchmark + published methodology + calibration report + open eval
+harness**, so others can reproduce our *accuracy and calibration claims*. This is where
+outside validation genuinely adds credibility — and the right "auditor" is the
+**research/OSS community reproducing a benchmark**, not a pentest firm. The public "State of
+AI in Open Source" index ships with its methodology + calibration from day one and invites
+reproduction (`STRATEGY.md` §4, invariant #7).
+
+---
+
+## 6. Dogfood canary + reproducibility
+
+- **Our own repo is the first subject** (dogfood epic #1) — ground truth we know absolutely.
+  Its provenance-coverage badge is a live self-test that breaks loudly if resolution drifts.
+- **Golden fixtures** — known repos → known fingerprints → known claims — catch nondeterminism.
+- **Reproducibility is itself a tested property**: same content always resolves the same way;
+  canonicalization is deterministic.
+
+---
+
+## 7. The credibility gate (self-satisfiable)
+
+> **No public "verified/proven" claim until the open conformance suite + reproducible red-team
+> harness exist, are published, and pass — covering the deterministic core.** The probabilistic
+> index ships with methodology + calibration and invites community reproduction.
+
+No dependency on finding/funding an external auditor; the published artifact *is* the gate,
+and it stays checkable forever. A paid pentest is reserved for **infrastructure** security
+(servers, secrets, isolation) when budget allows — orthogonal to the trust claims.
+
+---
+
+## 8. The CI trust-gate
+
+The soundness suite is a blocking release gate, like a security gate:
+
+- Invariant/property tests + mutation tests on tier logic
+- Conformance test vectors (including adversarial negatives)
+- Golden-fixture reproducibility checks
+
+If any fail, the build does not ship. The calibration/eval suite runs continuously and gates
+*claims about accuracy*, not every deploy.
+
+---
+
+## 9. Definition-of-done by regime (ties to the backlog)
+
+- **Deterministic tickets** (#9 standard, #11 fingerprinting, #14 resolver; invariants in #8)
+  ship **with their conformance test vectors** and pass the CI trust-gate.
+- **The probabilistic ticket** (#12 classification) ships **with its benchmark + calibration
+  report + eval harness**.
+- Cross-cutting suites (red-team harness, reference verifier, CI gate, transparency log) are
+  owned by the **Trust-QA epic**.
