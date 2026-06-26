@@ -1,0 +1,363 @@
+# MadeBy — Product & Go-to-Market Strategy
+
+> **The question:** *Who made this thing?*
+> MadeBy lets humans and AI answer that — verifiably — for digital content, starting with code.
+
+This document covers positioning, the trust model, the first wedge, go-to-market, and
+monetization. The technical design that follows from it is in `ARCHITECTURE.md`. The
+first attempt is archived in `archive/v1/` (see its `ARCHIVE_NOTE.md`).
+
+---
+
+## 1. Positioning: a proof layer, with credit as the free tier
+
+There are two different users of "who made this":
+
+- **The skeptic** ("prove it") — a journalist, a platform, a court, a buyer. Needs rigor:
+  a tamper-evident binding to the actual bytes, a verified signer, and an honest failure
+  mode when proof is absent. For them, a forgeable claim is *worse* than nothing.
+- **The crediter** ("who deserves the nod") — a creator, collaborator, or AI operator who
+  wants attribution to travel. Needs reach and near-zero friction; social stakes, not
+  adversarial ones.
+
+These have **opposite failure tolerances**, so a product can't sit neutrally between them.
+
+**Decision: the proof layer is the spine; credit/attribution rides on top as the free tier.**
+
+Rationale:
+- The credit/attribution space is crowded and weakly defended (every platform has bylines,
+  watermarks, "made with AI" labels). Hard to build a moat there.
+- The proof space is structurally hard and getting more valuable every month as generative
+  content floods in. That difficulty is the moat.
+- **A proof layer can always offer a cheap credit tier; a credit layer can never credibly
+  retrofit proof.** Trust architecture has to be load-bearing from day one.
+
+### The free tier is not a loss-leader — it is the distribution engine
+
+A proof layer with an empty registry is useless; nobody queries a database with nothing in
+it. The frictionless credit tier is what **seeds the corpus** — getting content and
+identities into the system at volume, so that when a skeptic shows up holding an artifact,
+there is something to resolve against.
+
+> **Proof is the moat. Credit is the flywheel that fills the moat.** They are sequenced,
+> not in tension. This is the answer to "the better technology loses in the market": the
+> better technology wins *only* when wrapped in the lower-friction thing.
+
+---
+
+## 2. The trust model: an honest, labeled spectrum
+
+Trust is never a single bit. It is a labeled ladder, and the product's job is to make the
+tier legible at a glance and never let a low tier masquerade as a high one.
+
+| Tier | What it means | Trust mechanism |
+|------|---------------|-----------------|
+| **Asserted** | A claim, from anyone. Discovery/credit only. | None (honor system) |
+| **Sworn** | Still no cryptographic binding, but legally consequential. | Legal attestation |
+| **Verified** | The signer is a known, verified party. | Verified identity |
+| **Bound (proven)** | Cryptographic binding to the exact bytes. | Signature / C2PA / Sigstore |
+
+### The legal axis is orthogonal — and it is a real wedge
+
+A sworn legal representation is **a non-cryptographic way to raise the cost of lying.**
+Cryptography binds a claim to *bytes*; a sworn attestation binds a claim to a *person who
+bears consequences for it.* These are independent, and we use both:
+
+- It gives the **free tier teeth** without cryptography (a false sworn claim is actionable).
+- At the proof tier it converts "here is a cryptographic fact" into **"here is a
+  legally-established claim of authorship/copyright."**
+
+A signed, timestamped, sworn authorship record is *evidence of authorship and priority* —
+useful in a dispute even when the bytes later drift. The registry quietly becomes a
+**copyright-provenance ledger**, not just a badge service.
+
+> We **order evidence; we do not assert truth.** When two parties claim the same content,
+> we rank by tier, timestamp, and lineage — we do not adjudicate.
+
+---
+
+## 3. The first wedge: code, and specifically vibe-coding
+
+"Creators of all kinds" is the destination. The beachhead is **software/code**, because:
+
+- **It's a gap the incumbents don't cover.** Going visual-first means fighting the C2PA
+  Content Authenticity Initiative (Adobe, Google, camera makers, baked into hardware).
+  Code has *no* incumbent provenance standard — we can define the binding.
+- **Git is already content-addressed**, so the asker-pull spine and content-as-key are
+  *native* (a commit SHA is a content hash). The hard part of the architecture is free here.
+- **Capture-at-source is a solved mechanism** — git hooks, commit trailers, signed commits,
+  CI steps. A technical audience tolerates setup and gives real feedback.
+- **The human/AI question is at peak economic urgency in code right now** — licensing,
+  liability, supply-chain provenance, "how much of this PR did the AI write."
+
+### Vibe-coding is the viral surface inside code
+
+Code has muted virality vs. creative work — *except* for vibe-coding, which is the exact
+intersection of code-first + AI-native + free-tier flywheel + a culturally loud, online,
+sharing-prone audience that is anxious and curious about the very question we answer:
+**"how much of this did I make vs. the AI?"**
+
+And the AI tools (Claude Code, Cursor, Copilot) already hold the session logs — so the
+attestation can be *generated from the tool's own record*, not self-reported. The vibe
+coder's free badge gets evidence-backed teeth for free, because the AI tool is a witness.
+
+### Adjacent ideas: logical applications vs. detours
+
+- **Open-source supply-chain security** — *same architecture, different question.* "Is this
+  dependency really from who it claims, unmodified?" is asker-pull + content-as-key +
+  verified identity + bound proof. It is **orthogonal only on the AI/not-AI axis**, not on
+  the architecture. Treat it as a **downstream product** the same ledger lights up later
+  (different, enterprise go-to-market) — but keep the primitives cryptographically
+  load-bearing *now* so it can stand on them.
+- **Wallet as identity anchor — yes, on-spine.** A public key is already the proof
+  substrate (signing is public-key crypto). One key pair per producer does triple duty:
+  signs content, anchors a self-sovereign identity, and can receive value.
+- **Becoming a payment/compensation rail — no, fenced off.** Moving money inherits
+  money-transmission/KYC/AML weight and token-speculation optics that undermine the sober
+  trust positioning. We produce **the verified attribution graph with payable identities
+  attached** ("this dependency is 40% authored by these three verified identities, here are
+  their keys") — the input a funding protocol needs. **We are the trust layer; someone else
+  moves the money.**
+
+---
+
+## 4. Go-to-market: the architecture *is* the distribution
+
+A zero-budget, earliest-stage startup needs the product to market itself. Several design
+choices double as the distribution mechanism:
+
+1. **The README/coverage badge — the classic dev-tool loop.** A badge in a README is seen
+   by every visitor and links back. The *artifact is the ad* (how Codecov, Travis spread).
+2. **Public resolver pages — an SEO / public-good engine.** Because we bootstrap from public
+   git, "who wrote this library/function" pages exist and are indexable *before we have a
+   single user.* The bootstrap decision is also a content-marketing engine.
+3. **AI-tool integration — the highest-leverage loop.** If the span convention is something
+   Claude Code / Cursor / Copilot emit automatically, we acquire the *output of their entire
+   user base* as a byproduct. This is why the **open-standard** posture matters commercially:
+   a standard gets adopted by integration; a proprietary API requires a partnership we have
+   no leverage to win yet.
+
+### The first buildable wedge: "analyze your existing git history"
+
+A free analyzer that reads **existing** git history and shows your human-vs-AI authorship
+breakdown — using data that already exists (`Co-Authored-By` trailers are already in
+millions of commits, plus git blame + heuristics). "Connect your GitHub, see how much of
+your code is AI-written," producing a shareable report + badge.
+
+- **No behavior change** — it works on history people already have. Value first; the
+  hardest part (doing something at creation time) is deferred to the upgrade path.
+- **Inherently shareable** — the breakdown is an ego-number people *want* to post.
+- **Turns the bootstrap asset into acquisition** — "here's *your* breakdown, claim your page."
+
+> **Build-order consequence:** build the **analyzer + resolver (read side) first**, and make
+> the producer/signing flow the *upgrade*. v1 built producer-push first; GTM inverts this.
+
+The upgrade ladder doubles as the trust ladder: free asserted breakdown → "verify your
+identity & sign your commits" → verified/bound badge. Converting asserted→verified is what
+fills the registry with *real* identities, which is what makes the proof core valuable.
+
+### Cold-start: user #1 is using a mirror, not a provenance tool
+
+This is where products with a beautiful flywheel usually die, so it gets first-class
+treatment.
+
+**The fatal trap:** the flywheel (badges, registry, network) is *collective* value — useful
+when many participate. But user #1 participates in a network of one. If their payoff depends
+on the network existing, the flywheel never starts. A badge nobody recognizes, in a registry
+nobody queries, is the value of being first to a network product: zero.
+
+So the real question is not "how do we start the flywheel" but: **what complete, selfish,
+single-player payoff does user #1 get with zero network?**
+
+**The answer:** on day one this is a **curiosity mirror, not a provenance tool.** The thing
+with standalone, network-free value right now is the answer to a question people are already
+itching to ask about themselves — *"how much of my code is actually AI?"* — delivered to one
+person in 30 seconds, needing no one else. This is the **Spotify Wrapped pattern** (also
+GitHub year-in-review, WakaTime, Grammarly's original "check your writing"): a single-player
+mirror whose result is interesting enough about *you* that sharing happens as a byproduct.
+
+> **Principle: decouple the first-use motivation (selfish, single-player, instant) from the
+> system's eventual value (collective trust network).** Products that make user #1 care about
+> the network die; products that hand user #1 a complete selfish payoff and treat the network
+> as a byproduct spin up.
+
+Corollary, stated honestly: **the badge is a *second-order* motivator, not the cold-start
+hook.** Early on nobody recognizes it; the *insight* is what's valuable on day one. Don't
+expect the badge itself to pull the first user.
+
+**Why they'd do it the first time ever:** zero cost / zero setup / instant; the question is at
+**peak cultural salience right now** (a now-or-never timing window); and the result is
+*surprising* (people don't know their ratio) and *shareable* (an ego-number).
+
+**The full cold-start sequence** — note the first three steps owe nothing to provenance,
+trust, or network:
+
+1. **Aggregate study + live index** from public-git data → newsworthy, zero users needed,
+   positions us as the authority → drives the first traffic.
+2. **The selfish mirror** (analyze *your* repo) → user #1's first action, complete payoff
+   with no network.
+3. **The shareable result** → ego-number → dev-to-dev viral loop → more first-timers.
+4. **The upgrade** (claim page, verify, badge) → *now* the registry fills with real
+   identities and producer-push begins — **only here does the provenance flywheel turn.**
+
+### The live index: "State of AI in Open Source"
+
+Not a one-off study — a **constantly-updated page**, powered by continuous public-git
+ingestion, reporting how much of open source is AI-written: a headline global number, trends
+over time, and breakdowns by language/ecosystem. (Technical home: `ARCHITECTURE.md` §8.)
+
+Why it's a strategic asset, not just marketing:
+- **Authority moat.** Being *the* canonical, citable source for "how much of open source is
+  AI" is a brand position competitors can't easily take — it compounds with every update.
+- **Evergreen PR + SEO.** A live, updating number is re-citable forever (press, talks,
+  papers) where a one-off study decays. It is returning-traffic, not a spike.
+- **Top of the funnel.** The natural CTA from the global number is **"check your own repo,"**
+  feeding the curiosity mirror above.
+- **Same engine → an enterprise product.** The index is corpus-agnostic. Pointed at public
+  git it's the free authority asset; pointed at **an org's private repos** it's the internal
+  provenance dashboard enterprises want — "how much of *our* codebase is AI-written, what's
+  our provenance coverage, which dependencies are unattributed." The public index is the
+  marketing instance; the org index is the **paid** instance (the supply-chain/compliance
+  monetization line). Build the aggregation engine once. (Technical: `ARCHITECTURE.md` §8.)
+
+**Honesty requirement (non-negotiable for us specifically):** the global number is an
+*estimate* — asserted-tier, heuristic. We are a trust company, so **our own headline metric
+must model the tier-honesty we sell**: label it as estimated, publish the methodology, and
+show confidence. A provenance authority that overstates its own confidence is self-refuting.
+
+### Regulatory tailwind
+
+The EU AI Act and similar disclosure rules convert "nice-to-have provenance" into "must
+demonstrate provenance." That makes AI labs both a **distribution channel** and a potential
+**customer** (their tools' outputs must be disclosably attributable). Design the standard to
+fit "compliance-grade disclosure" — that buyer has a budget and a deadline.
+
+---
+
+## 5. The badge: the growth engine in ~30 characters
+
+The badge is the entire growth engine compressed into a README line. Every character must
+be delightful, informative, viral, and branded.
+
+### The domain is a sentence-stem — lean on it
+
+`madeby.fyi` is not just a short URL; it is the first half of the sentence the badge
+completes, **and** a valid, visitable domain (both jobs at once):
+
+```
+[ madeby.fyi ][ 🧑 62% · 🤖 38% ✓ ]
+```
+
+Reads as *"made by [fyi]: 62% human, 38% AI."* The `.fyi` carries the "for your
+information / here's the disclosure" tone for free. The left capsule (the domain) is the
+constant that travels and builds brand recall; the right capsule is the personal hook.
+
+### Non-negotiable framing rule: celebrate transparency, stay neutral on the ratio
+
+The thing rewarded is **that you disclosed and verified** — *not* that you used less AI. A
+90%-AI verified repo wears its badge as proudly as a 90%-human one; both told the truth,
+verifiably. This is essential *because of the wedge*: vibe-coders are heavy AI users and
+proud of it. If the badge implies "more human = better," we alienate our entire viral
+surface. All prestige lives in the **tier**, never in the ratio. (This is also consistent
+with "order evidence, don't assert truth.")
+
+### The tier aesthetic gradient *is* the conversion funnel
+
+```
+[ madeby.fyi ][ 🧑 62% · 🤖 38% · estimated ]   ← asserted: neutral/slate, complete, proud
+[ madeby.fyi ][ 🧑 62% · 🤖 38% ✓ ]             ← verified: brand color, earned check
+[ madeby.fyi ][ 🧑 62% · 🤖 38% (seal) ]        ← proven: a distinctive, ownable MadeBy mark
+```
+
+- **Default content is mix-led**: the human/AI ratio is the headline (ego-shareable), with
+  a tier/coverage mark alongside (keeps the broader proof-layer identity open, rather than
+  boxing us into "the AI-percentage thing").
+- **The gap between tiers lives in the *trust mark*, not in aesthetic quality.** Asserted is
+  never crippled (it must seed virally); verified adds a desirable, earned mark — the
+  verified-checkmark model. Moderate gap: pronounced in *meaning*, subtle in *aesthetics*.
+- **The honest qualifier is the upsell.** "estimated / self-reported" is required for
+  integrity *and* is exactly what creates the itch to upgrade and earn the `✓`. The
+  integrity label and the growth mechanism are the same five characters.
+- **Proven-tier mark:** not a stock padlock (reads "SSL," cold, not ours) — a distinctive,
+  ownable MadeBy mark, recognizable the way a verified check is. (Design detail, parked.)
+
+### Genuineness must be checkable — the badge is a pointer, never proof
+
+A rendered badge is just an image, and any image can be faked. So:
+
+1. The image is **served live from `madeby.fyi`** (e.g. `madeby.fyi/b/<owner>/<repo>.svg`) —
+   numbers are rendered from real data, not a forgeable static file.
+2. The badge is **always wrapped in a link to the authoritative resolver page**
+   (`[![madeby.fyi](.../b/owner/repo.svg)](https://madeby.fyi/owner/repo)`).
+3. **Genuineness = follow the link.** The resolver page is the single source of truth.
+   Forgery is self-defeating: a faked `✓` image, once clicked, lands on the real page
+   showing the true (likely unclaimed) status.
+
+> Honest limit: a casual viewer can't authenticate pixels by eye. Checkability is "one click
+> to the authoritative page" — which is the asker-pull spine doing its job. **Never market
+> the image itself as proof.**
+
+Note: QR codes (central in v1) made sense for physical/visual content. For code, the
+markdown shield + social/OG share card + clickable link are the surfaces. QR is retired as
+the centerpiece here (revisit for the eventual creative/visual expansion).
+
+---
+
+## 6. Monetization
+
+Monetization is downstream of momentum, but it shapes the core design, so the rules are set
+now. **At this stage we hedge: treat all three viable lines as potential centers of gravity.**
+
+### Viable lines (hedge all three)
+
+- **Trust premium (verification-as-a-service):** free to assert; pay for org/team accounts,
+  verified-identity, signing infrastructure, the verified badge. Monetizes the proof core.
+- **Asker-side at scale (the resolver API):** free/metered for casual asks; platforms,
+  marketplaces, moderation systems, and AI labs pay to query provenance at volume. Likely
+  the largest TAM; monetizes the asker-pull spine.
+- **Supply-chain / compliance (CI gating, SBOM, coverage gates):** enterprises pay to gate
+  releases and satisfy disclosure rules. The downstream product the same ledger enables.
+
+### Ruled out (corrosive to a trust instrument)
+
+- **Compensation/payment rail** — regulatory weight + speculation optics; we are not the bank.
+- **Selling provenance data / ads** — a trust instrument that sells its data is no longer
+  trusted.
+
+### The insight that feeds back into design
+
+> **The trust tiers ARE the pricing tiers.** asserted → verified → bound is simultaneously
+> the honesty ladder and the free → paid → enterprise ladder. The value gradient and the
+> price gradient are the same axis — so we never choose between honesty and revenue.
+
+Hard rule that follows: **the act of attribution stays free forever** (it is the flywheel;
+charging for it kills momentum). We charge for *trust* and for *asking at scale*.
+
+Second consequence: the **resolver API is a first-class, productized, SLA-backed surface**,
+not an afterthought — metering, rate limits, and bulk designed from the start (generous free
+asks to feed the SEO/public-good loop; metered volume to capture enterprise value). This
+re-confirms asker-pull as the spine on business grounds.
+
+---
+
+## 7. The spine, in one place
+
+1. Proof core; credit + legal as the seeded free tier (flywheel fills the moat).
+2. Asker-pull as the architectural spine, seeded by producer-push + public-git bootstrap.
+3. Ride C2PA (media) / Sigstore-SLSA (code); own identity + resolver + legal everywhere.
+4. Code-first, vibe-coding as the viral surface; supply-chain + wallet-identity downstream;
+   never the bank.
+5. Hash = join key, not trust; multi-resolution fingerprints; two-hash invariant.
+6. Commit/release atomic unit, span-compatible; semantic attestation standard + swappable
+   carrier registry + canonical signing + graceful unknown-carrier degradation.
+7. Composable claims → provenance DAG; two edge types (part-of / derived-from); "provenance
+   coverage" as the headline metric; pinned-immutable vs. living-mutable.
+8. GTM = the architecture; first wedge is the analyze-existing-git-history tool; trust tiers
+   ARE pricing tiers; hedge all three monetization lines; rule out data-sale/ads.
+   Cold-start: user #1 gets a *curiosity mirror* (selfish, single-player, no network) — the
+   network is the byproduct. A live **"State of AI in Open Source" index** is the authority
+   asset and top of funnel; the same engine pointed at private repos is the enterprise
+   dashboard. No automated unsolicited PRs — invited automation (Dependabot model) only.
+9. The badge: literal `madeby.fyi` domain as sentence-stem; live-served + always linked
+   (pointer, never proof); mix-led default; moderate gap located in the trust mark; honest
+   qualifier doubles as the upsell.
