@@ -11,36 +11,39 @@ const withClaude = (msg: string): CommitMeta => ({
 });
 const aiAuthored = (msg: string): CommitMeta => ({ message: msg, authorName: "Claude", authorEmail: "noreply@anthropic.com" });
 
-describe("analyzeCommits", () => {
+describe("analyzeCommits — answers WHO", () => {
   const commits = [human("a"), human("b"), withClaude("c"), aiAuthored("d")];
   const r = analyzeCommits(commits);
 
-  it("is a labeled estimate with per-class percentages", () => {
+  it("names the contributors (human operators + AI models), by commit count", () => {
+    // Mac authored a, b, c (3); Claude/anthropic appears in c (trailer) + d (author) = 2
+    expect(r.contributors[0]).toMatchObject({ kind: "human", name: "Mac", commits: 3 });
+    const ai = r.contributors.find((c) => c.kind === "ai");
+    expect(ai).toMatchObject({ name: "anthropic", commits: 2 });
+  });
+
+  it("always names someone for a non-empty history (never abdicates the question)", () => {
+    expect(r.contributors.length).toBeGreaterThan(0);
+  });
+
+  it("puts the uncertainty in the tier + caveat, not in the answer", () => {
+    expect(r.tier).toBe("asserted");
+    expect(r.caveat.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the human/AI split as a facet (labeled estimate)", () => {
     expect(r.isEstimate).toBe(true);
     expect(r.totalCommits).toBe(4);
     expect(r.percent.human).toBe(50);
     expect(r.percent.with_ai).toBe(25);
     expect(r.percent.ai).toBe(25);
-  });
-
-  it("reports AI-involved percent (ai + with_ai)", () => {
     expect(r.aiInvolvedPercent).toBe(50);
   });
 
-  it("surfaces top AI providers (dogfood: detects anthropic from our own trailer)", () => {
-    expect(r.topProviders[0]?.provider).toBe("anthropic");
-    expect(r.topProviders[0]?.count).toBe(2); // the with_ai trailer + the ai-authored commit
-  });
-
-  it("carries a mean confidence", () => {
-    expect(r.meanConfidence).toBeGreaterThan(0);
-    expect(r.meanConfidence).toBeLessThanOrEqual(1);
-  });
-
-  it("empty history yields zeros, not NaN", () => {
+  it("empty history yields no contributors and zeros, not NaN", () => {
     const e = analyzeCommits([]);
+    expect(e.contributors).toEqual([]);
     expect(e.totalCommits).toBe(0);
-    expect(e.percent.human).toBe(0);
     expect(e.aiInvolvedPercent).toBe(0);
   });
 });

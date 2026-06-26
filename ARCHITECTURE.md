@@ -39,6 +39,13 @@ view. Two lookup modes:
 - **Structural / fuzzy fingerprint → nearest-neighbor search.** For "this is substantially
   the code that was attested," surviving reformatting, renaming, and copy-paste.
 
+> **Mission guardrail: name the creator; put the uncertainty in the tier.** The resolver always
+> *answers* "who made this" — it names the contributors (human operators + AI models). It never
+> abdicates with "no signal found"; how-sure-we-are is expressed through the **tier** (asserted
+> → bound) and a caveat, not by withholding the answer. Absence of an AI signal is not proof of
+> human authorship — that nuance is tier/caveat, not a refusal to name. (Companion: STRATEGY §5
+> — *the badge is a headline+pointer; the full answer lives on the resolver page*.)
+
 ---
 
 ## 2. Hashing: the hash is the *join key*, not the *trust*
