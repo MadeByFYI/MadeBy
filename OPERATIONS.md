@@ -1,9 +1,9 @@
 # MadeBy — Operations & Infrastructure
 
-> Companion to `STRATEGY.md` (why), `ARCHITECTURE.md` (what/how), and `TESTING.md` (how we keep
-> it trustworthy). This doc is *how we run it*: resources, the provider stack, internal
-> dashboards, cost governance, and the security posture. It serves a different reader (whoever
-> is on call / paying the bills).
+> Companion to `STRATEGY.md` (why), `ARCHITECTURE.md` (what/how), `TESTING.md` (how we keep it
+> trustworthy), and `PROVISIONING.md` (the one-time runbook to stand the infra up). This doc is
+> *how we run it*: resources, the provider stack, internal dashboards, cost governance, and the
+> security posture. It serves a different reader (whoever is on call / paying the bills).
 
 The guiding fact: at our stage, ops is dominated by **one existential risk (the cost of the
 corpus)** and **one architectural separation (hot read path vs. cold compute path)**. Almost
