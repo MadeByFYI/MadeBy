@@ -53,7 +53,9 @@ export default function AnalyzePage() {
         {r.meanConfidence.toFixed(2)}
       </p>
 
-      <h2 style={{ fontSize: ".9rem", marginTop: "2.5rem", opacity: 0.7 }}>Copy badge</h2>
+      <h2 style={{ fontSize: ".9rem", marginTop: "2.5rem", opacity: 0.7 }}>Badge</h2>
+      {/* eslint-disable-next-line @next/next/no-img-element -- live-served external SVG */}
+      <img src="/api/badge" alt="madeby.fyi badge" style={{ display: "block", marginBottom: "0.75rem" }} />
       <pre
         style={{ background: "#11161f", padding: "0.75rem", borderRadius: 6, overflowX: "auto", fontSize: ".8rem" }}
       >
