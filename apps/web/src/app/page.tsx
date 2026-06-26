@@ -15,7 +15,13 @@ export default function Home() {
         ))}
       </ol>
 
-      <p style={{ marginTop: "2.5rem", fontSize: "0.85rem", opacity: 0.5 }}>
+      <p style={{ marginTop: "2.5rem" }}>
+        <a href="/analyze" style={{ color: "#7ee0c0" }}>
+          Analyze this repo → who made it?
+        </a>
+      </p>
+
+      <p style={{ marginTop: "1rem", fontSize: "0.85rem", opacity: 0.5 }}>
         Skeleton — see STRATEGY / ARCHITECTURE / OPERATIONS / TESTING.
       </p>
     </main>
