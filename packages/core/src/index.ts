@@ -7,5 +7,30 @@ export type { TrustTier } from "./tiers";
 
 export { canonicalize } from "./canonicalize";
 
-export { fingerprintExact } from "./fingerprint";
+export { fingerprintExact, isExactFingerprint, isNativeFingerprint } from "./fingerprint";
 export type { Fingerprint } from "./fingerprint";
+
+export { resolveTier } from "./resolve";
+export type { ResolutionContext } from "./resolve";
+
+export { assertSubjectIsReference } from "./guards";
+
+export { computeCoverage, percentByTier } from "./coverage";
+export type { CoverageView } from "./coverage";
+
+export type {
+  Identity,
+  IdentityType,
+  Anchor,
+  AnchorKind,
+  VerificationStatus,
+  Subject,
+  Attribution,
+  ContributorRole,
+  Signature,
+  SwornAttestation,
+  Claim,
+  ClaimEdge,
+  EdgeType,
+  Carrier,
+} from "./model";
