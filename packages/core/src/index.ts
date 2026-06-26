@@ -35,6 +35,9 @@ export type { ResolutionContext } from "./resolve";
 export { resolveClaims, resolve } from "./resolution";
 export type { ResolvedClaim, Resolution } from "./resolution";
 
+export { runConformance, CONFORMANCE_VERSION } from "./conformance";
+export type { ConformanceResult } from "./conformance";
+
 export { assertSubjectIsReference } from "./guards";
 
 export { computeCoverage, percentByTier } from "./coverage";
