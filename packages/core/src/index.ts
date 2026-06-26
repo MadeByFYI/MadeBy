@@ -5,7 +5,51 @@
 export { TRUST_TIERS, compareTiers, FALLBACK_TIER } from "./tiers";
 export type { TrustTier } from "./tiers";
 
-export { canonicalize } from "./canonicalize";
+export { canonicalize, claimPayload, claimFromPayload, jcs } from "./canonicalize";
+export type { Json } from "./canonicalize";
 
-export { fingerprintExact } from "./fingerprint";
+export {
+  CARRIER_REGISTRY,
+  carriersForResolution,
+  parseEnvelope,
+} from "./carriers";
+export type { CarrierBinding, ParsedAttestation } from "./carriers";
+
+export type { SpanAnchor, SpanAttribution, SpanAttestationV0 } from "./span";
+
+export {
+  sha256Fingerprint,
+  gitBlobFingerprint,
+  exactFingerprints,
+  isExactFingerprint,
+  isNativeFingerprint,
+} from "./fingerprint";
 export type { Fingerprint } from "./fingerprint";
+
+export { structuralFingerprint, cosineSimilarity, normalizeSource } from "./structural";
+export type { StructuralResult } from "./structural";
+
+export { resolveTier } from "./resolve";
+export type { ResolutionContext } from "./resolve";
+
+export { assertSubjectIsReference } from "./guards";
+
+export { computeCoverage, percentByTier } from "./coverage";
+export type { CoverageView } from "./coverage";
+
+export type {
+  Identity,
+  IdentityType,
+  Anchor,
+  AnchorKind,
+  VerificationStatus,
+  Subject,
+  Attribution,
+  ContributorRole,
+  Signature,
+  SwornAttestation,
+  Claim,
+  ClaimEdge,
+  EdgeType,
+  Carrier,
+} from "./model";
