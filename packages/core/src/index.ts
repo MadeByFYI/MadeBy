@@ -5,7 +5,17 @@
 export { TRUST_TIERS, compareTiers, FALLBACK_TIER } from "./tiers";
 export type { TrustTier } from "./tiers";
 
-export { canonicalize } from "./canonicalize";
+export { canonicalize, claimPayload, claimFromPayload, jcs } from "./canonicalize";
+export type { Json } from "./canonicalize";
+
+export {
+  CARRIER_REGISTRY,
+  carriersForResolution,
+  parseEnvelope,
+} from "./carriers";
+export type { CarrierBinding, ParsedAttestation } from "./carriers";
+
+export type { SpanAnchor, SpanAttribution, SpanAttestationV0 } from "./span";
 
 export { fingerprintExact, isExactFingerprint, isNativeFingerprint } from "./fingerprint";
 export type { Fingerprint } from "./fingerprint";
