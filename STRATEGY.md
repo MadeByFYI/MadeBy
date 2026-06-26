@@ -4,8 +4,9 @@
 > MadeBy lets humans and AI answer that — verifiably — for digital content, starting with code.
 
 This document covers positioning, the trust model, the first wedge, go-to-market, and
-monetization. The technical design that follows from it is in `ARCHITECTURE.md`. The
-first attempt is archived in `archive/v1/` (see its `ARCHIVE_NOTE.md`).
+monetization. The technical design that follows from it is in `ARCHITECTURE.md`; how we run
+it (resources, providers, dashboards) is in `OPERATIONS.md`. The first attempt is archived in
+`archive/v1/` (see its `ARCHIVE_NOTE.md`).
 
 ---
 
