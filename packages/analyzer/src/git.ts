@@ -18,6 +18,7 @@ export function readGitLog(repoPath: string, limit?: number): CommitMeta[] {
       "-C",
       repoPath,
       "log",
+      "--no-merges", // merge commits aren't authored content — exclude them from attribution
       ...(limit ? ["-n", String(limit)] : []),
       `--format=%an${FIELD}%ae${FIELD}%B${RECORD}`,
     ];
