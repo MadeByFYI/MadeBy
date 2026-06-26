@@ -20,6 +20,14 @@ export default function Home() {
           Analyze this repo → who made it?
         </a>
       </p>
+      <p style={{ marginTop: "0.5rem" }}>
+        <a
+          href="/r/git-blob-sha1/ce013625030ba8dba906f756967f9e9ca394464a"
+          style={{ color: "#7ee0c0" }}
+        >
+          Resolve content by hash → who made this?
+        </a>
+      </p>
 
       <p style={{ marginTop: "1rem", fontSize: "0.85rem", opacity: 0.5 }}>
         Skeleton — see STRATEGY / ARCHITECTURE / OPERATIONS / TESTING.
