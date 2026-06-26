@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@madeby/analyzer": "workspace:*",
+    "@madeby/badge": "workspace:*",
     "@madeby/core": "workspace:*",
     "@madeby/registry": "workspace:*",
     "@neondatabase/serverless": "^1.1.0",
