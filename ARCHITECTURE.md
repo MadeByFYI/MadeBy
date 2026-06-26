@@ -1,7 +1,8 @@
 # MadeBy — Technical Architecture
 
-> Companion to `STRATEGY.md` (why) and `OPERATIONS.md` (how we run it). This document is the
-> technical design v2 is built against — *what* and *how*. The first attempt is in `archive/v1/`.
+> Companion to `STRATEGY.md` (why), `OPERATIONS.md` (how we run it), and `TESTING.md` (how we
+> keep it trustworthy). This document is the technical design v2 is built against — *what* and
+> *how*. The first attempt is in `archive/v1/`.
 
 The whole system answers one question — *who made this thing?* — asked by someone **holding
 the artifact**. Everything below follows from making that query the spine.
