@@ -11,7 +11,7 @@ export default function AnalyzePage() {
   if (commits.length === 0) {
     return (
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "4rem 1.5rem" }}>
-        <h1>Analyze</h1>
+        <h1>Who made this?</h1>
         <p style={{ opacity: 0.7 }}>
           Analysis unavailable here (no git history in this environment). In v0 the mirror runs
           on a repo on disk; arbitrary public-repo analysis arrives with ingestion (#10).
@@ -22,49 +22,46 @@ export default function AnalyzePage() {
 
   const r = analyzeCommits(commits);
   const snippet = badgeSnippet("MacDougherty", "MadeBy");
+  const who = r.contributors
+    .map((c) => `${c.name}${c.kind === "ai" ? " (AI)" : ""}`)
+    .join(" · ");
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "4rem 1.5rem" }}>
-      <h1 style={{ marginBottom: 0 }}>madeby.fyi · this repo</h1>
+      <h1 style={{ marginBottom: 0 }}>Who made this?</h1>
       <p style={{ opacity: 0.6, marginTop: ".25rem", fontSize: ".85rem" }}>
-        Estimate over {r.totalCommits} commits · {r.classification.methodology} · mean confidence{" "}
+        {r.totalCommits} commits · {r.tier} tier (unverified)
+      </p>
+
+      {/* The answer: named contributors. */}
+      <p style={{ fontSize: "1.3rem", margin: "1.25rem 0 0.25rem" }}>Made by {who}</p>
+
+      <ul style={{ listStyle: "none", padding: 0, opacity: 0.85, fontSize: ".9rem" }}>
+        {r.contributors.map((c) => (
+          <li key={`${c.kind}:${c.name}`} style={{ padding: "0.1rem 0" }}>
+            {c.kind === "ai" ? "🤖" : "🧑"} <strong>{c.name}</strong>
+            {c.detail ? <span style={{ opacity: 0.6 }}> · {c.detail}</span> : null}
+            <span style={{ opacity: 0.6 }}> — {c.commits} commit{c.commits === 1 ? "" : "s"}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* Facet: the human/AI split. */}
+      <p style={{ marginTop: "1.5rem", fontSize: ".9rem", opacity: 0.75 }}>
+        AI-involved on {pct(r.aiInvolvedPercent)} of commits · 🧑 {pct(r.percent.human)} · 🤖+
+        {pct(r.percent.with_ai)} with AI · 🤖 {pct(r.percent.ai)} AI · mean confidence{" "}
         {r.meanConfidence.toFixed(2)}
       </p>
 
-      <div style={{ fontSize: "1.6rem", margin: "1.5rem 0" }}>
-        🧑 {pct(r.percent.human)} &nbsp;·&nbsp; 🤖 {pct(r.aiInvolvedPercent)} <span style={{ opacity: 0.5, fontSize: "1rem" }}>AI-involved</span>
-      </div>
-
-      <table style={{ fontSize: ".9rem", opacity: 0.85, borderSpacing: "0 .25rem" }}>
-        <tbody>
-          <tr><td style={{ paddingRight: "1.5rem" }}>human</td><td>{pct(r.percent.human)}</td></tr>
-          <tr><td>with AI</td><td>{pct(r.percent.with_ai)}</td></tr>
-          <tr><td>AI</td><td>{pct(r.percent.ai)}</td></tr>
-        </tbody>
-      </table>
-
-      {r.topProviders.length > 0 && (
-        <p style={{ fontSize: ".85rem", opacity: 0.7 }}>
-          AI providers: {r.topProviders.map((p) => `${p.provider} (${p.count})`).join(" · ")}
-        </p>
-      )}
-
       <h2 style={{ fontSize: ".9rem", marginTop: "2.5rem", opacity: 0.7 }}>Copy badge</h2>
       <pre
-        style={{
-          background: "#11161f",
-          padding: "0.75rem",
-          borderRadius: 6,
-          overflowX: "auto",
-          fontSize: ".8rem",
-        }}
+        style={{ background: "#11161f", padding: "0.75rem", borderRadius: 6, overflowX: "auto", fontSize: ".8rem" }}
       >
         {snippet}
       </pre>
 
-      <p style={{ fontSize: ".85rem", opacity: 0.6, marginTop: "2rem" }}>
-        This is an estimate from commit metadata, not a verified claim. Claim this repo to verify
-        your identity and sign commits → a higher trust tier. <em>(claim flow: producer-push, #6)</em>
+      <p style={{ fontSize: ".8rem", opacity: 0.55, marginTop: "2rem" }}>{r.caveat} Claim this repo
+        to verify identities and sign commits → a higher tier. <em>(claim flow: producer-push, #6)</em>
       </p>
     </main>
   );
