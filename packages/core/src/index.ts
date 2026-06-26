@@ -32,6 +32,9 @@ export type { StructuralResult } from "./structural";
 export { resolveTier } from "./resolve";
 export type { ResolutionContext } from "./resolve";
 
+export { resolveClaims, resolve } from "./resolution";
+export type { ResolvedClaim, Resolution } from "./resolution";
+
 export { assertSubjectIsReference } from "./guards";
 
 export { computeCoverage, percentByTier } from "./coverage";
