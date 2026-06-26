@@ -17,8 +17,17 @@ export type { CarrierBinding, ParsedAttestation } from "./carriers";
 
 export type { SpanAnchor, SpanAttribution, SpanAttestationV0 } from "./span";
 
-export { fingerprintExact, isExactFingerprint, isNativeFingerprint } from "./fingerprint";
+export {
+  sha256Fingerprint,
+  gitBlobFingerprint,
+  exactFingerprints,
+  isExactFingerprint,
+  isNativeFingerprint,
+} from "./fingerprint";
 export type { Fingerprint } from "./fingerprint";
+
+export { structuralFingerprint, cosineSimilarity, normalizeSource } from "./structural";
+export type { StructuralResult } from "./structural";
 
 export { resolveTier } from "./resolve";
 export type { ResolutionContext } from "./resolve";
