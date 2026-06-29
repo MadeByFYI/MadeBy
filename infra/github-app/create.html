@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create the MadeBy GitHub App</title>
+    <style>
+      body { font: 15px/1.5 system-ui, sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; color: #111; }
+      h1 { font-size: 1.3rem; }
+      label { display: block; margin: 1rem 0 0.25rem; font-weight: 600; }
+      input { width: 100%; padding: 0.5rem; font-size: 1rem; box-sizing: border-box; }
+      button { margin-top: 1.25rem; padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; }
+      .hint { color: #555; font-size: 0.9rem; }
+      code { background: #f3f3f3; padding: 0.1rem 0.3rem; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <h1>Create the MadeBy GitHub App</h1>
+    <p class="hint">
+      This pre-fills GitHub's App-creation screen from <code>manifest.json</code> (the GitHub App
+      Manifest flow). Leave the org blank to create it under your personal account, or enter the
+      MadeBy org's login to create it there. After you click through, copy the credentials into
+      <code>.env</code> — see <code>README.md</code>.
+    </p>
+
+    <label for="org">GitHub org login (optional)</label>
+    <input id="org" placeholder="e.g. madeby — leave blank for personal account" />
+
+    <button id="go">Create on GitHub →</button>
+
+    <p class="hint" id="status"></p>
+
+    <!-- The manifest is loaded from the sibling file so this stays a single source of truth. -->
+    <form id="manifest-form" method="post" style="display: none">
+      <input type="hidden" name="manifest" id="manifest-field" />
+    </form>
+
+    <script>
+      async function loadManifest() {
+        const res = await fetch("./manifest.json");
+        if (!res.ok) throw new Error("could not load manifest.json (serve this folder over http, e.g. `npx serve`)");
+        return res.json();
+      }
+      document.getElementById("go").addEventListener("click", async () => {
+        const status = document.getElementById("status");
+        try {
+          const manifest = await loadManifest();
+          const org = document.getElementById("org").value.trim();
+          const form = document.getElementById("manifest-form");
+          form.action = org
+            ? `https://github.com/organizations/${encodeURIComponent(org)}/settings/apps/new`
+            : "https://github.com/settings/apps/new";
+          document.getElementById("manifest-field").value = JSON.stringify(manifest);
+          status.textContent = "Redirecting to GitHub…";
+          form.submit();
+        } catch (e) {
+          status.textContent = "⚠️ " + e.message;
+        }
+      });
+    </script>
+  </body>
+</html>
