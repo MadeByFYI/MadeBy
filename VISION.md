@@ -162,11 +162,53 @@ The foundations are built and proven out:
 What's next: stand the service up on real infrastructure, ship the "analyze your git history" mirror,
 launch the public index, and turn on the vibe-coding wedge.
 
-## The bigger picture
+## What becomes possible
 
-We think provenance is about to become basic infrastructure for the digital world — the layer that
-lets credit, trust, and accountability survive in an era where people and machines create together at
-machine speed. The goal is a world where "who made this?" always has an honest answer: one that names
-everyone who contributed, human and AI, and is exactly as confident as the evidence allows.
+It's easy to read all this as a handy tool — a badge, a dashboard, a checker. Step back, though.
+A surprising number of things we take for granted quietly depend on being able to trace something
+back to whoever made it: credit, payment, trust, responsibility, ownership — even our shared sense of
+what's real. None of them work without a reliable link between a thing and its origin.
+
+**AI is severing that link at scale.** As it does, those things start to wobble — not all at once,
+but steadily. The maintainers who built the world's software go unpaid. Creators' work is absorbed
+without acknowledgment. A convincing fake becomes indistinguishable from the real thing — so people
+stop believing the real thing, too. And when something goes wrong, there's no one to hold
+responsible, because "nobody made it."
+
+A working provenance layer is the structural beam that keeps those things standing. With one in place:
+
+- **Credit — and eventually compensation — can follow the work.** When a contribution is tied to a
+  verified identity (whose key can also receive value), acknowledgment and payment can flow to the
+  people who actually did the work, instead of stopping at whatever platform happens to host it. We
+  don't move the money — we produce the verified map that lets others do it honestly.
+- **Trust becomes something you check, not something you guess.** The flood of synthetic content
+  otherwise forces an ugly choice: be gullible, or be cynical about everything. Verifiable provenance
+  is the third option — a genuine thing can prove it's genuine, and a fake can't borrow that credibility.
+- **Responsibility can attach again.** A claim someone swore to, code signed by a known party, content
+  bound to its maker — each hands the world a chain back to someone who stands behind it. Accountability
+  needs a name; provenance supplies one.
+- **Humans stay visible as AI does more.** Because the record names *both* the people and the AI
+  involved, working with AI doesn't erase the human contribution — it documents it. The goal was never
+  less AI; it's an honest account of who did what.
+- **The software the world runs on gets safer.** Almost everything sits on a deep stack of open-source
+  code written by strangers. When each piece can prove where it came from and who's behind it, a whole
+  class of supply-chain attacks gets much harder to pull off.
+- **People own a portable creative identity.** Your body of work and the proof behind it travel with
+  you, instead of being rented from a platform that can change the rules or vanish.
+
+These compound. Every verified record makes the next answer more valuable, until checking provenance
+is as ordinary as following a link. That's what "infrastructure" means: not a feature anyone thinks
+about, but a layer the rest of the world quietly stands on.
+
+## The world we're building toward
+
+We're betting that the ability to answer *"who made this?"* — honestly, and with proof — is about to
+become load-bearing for the digital world, the way trustworthy addresses underpin the mail or a
+recognizable signature underpins a contract. AI is the forcing function: it makes the question harder
+and far more important at the very same moment.
+
+The world we want is simple to state: one where "who made this?" always has an honest answer — naming
+everyone who contributed, human and AI, and exactly as confident as the evidence allows. A world that
+can embrace machines as collaborators without losing track of the people.
 
 That's what MadeBy is for.
