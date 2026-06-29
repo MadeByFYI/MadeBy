@@ -101,10 +101,14 @@ personally, reimburse from Mercury once it lands).
 For each of `madebyhi.fyi`, `madebyai.fyi`, `madewithai.fyi`, `madewith.fyi`: add to Cloudflare
 (delegate NS from Gandi, same as Step 2), then a **Redirect Rule**:
 
-- **When:** `http.host` matches the domain
-- **Then:** Dynamic 301 → `concat("https://madeby.fyi", http.request.uri.path)` (preserves path)
+- **When:** all incoming requests (each secondary is its own zone)
+- **Then:** Dynamic 301 → `concat("https://madeby.fyi", http.request.uri.path)` (preserves path + query)
 
 Keeps the brand consolidated on `madeby.fyi` while holding the others defensively.
+
+> **Prepped:** [`infra/cloudflare/`](infra/cloudflare/) — a one-shot script
+> (`CLOUDFLARE_API_TOKEN=*** ./redirects.sh`) that sets all four at once, plus the dashboard recipe.
+> Runs once the zones are added.
 
 ## Step 5 — Technical providers
 
@@ -117,7 +121,7 @@ Register each with **`mac@madeby.fyi`** + the **Atlas company card**. Each yield
 | **Vercel** | `apps/web` hosting (hot path) | (project link; sets `NEXT_PUBLIC_BASE_URL`) |
 | **Neon** | Postgres + pgvector (registry) | `DATABASE_URL` |
 | **Modal** | cold-path compute (ingestion/fingerprint/classify) | `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` |
-| **GitHub** | org + the MadeBy App (OAuth + on-demand ingestion) | `GITHUB_CLIENT_ID/SECRET`, `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` |
+| **GitHub** | org + the MadeBy App (OAuth + on-demand ingestion) — manifest **prepped** in [`infra/github-app/`](infra/github-app/) | `GITHUB_CLIENT_ID/SECRET`, `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` |
 | **Sentry / PostHog / Axiom** | errors / funnel / logs | `SENTRY_DSN`, `POSTHOG_KEY`, `AXIOM_TOKEN` |
 
 **Set hard spend caps / budget alerts on every provider** (OPERATIONS.md §8) — a viral spike
@@ -135,5 +139,6 @@ unblocks **#10 ingestion**, the real (Drizzle-backed) registry, **dogfood #3**, 
 
 - **Yours (identity-verified):** the Workspace tenant + records at Gandi, the Cloudflare
   account + nameserver switch, Atlas, each provider signup + payment.
-- **Mine (now / as creds arrive):** this runbook + the DNS record set above, the GitHub org
-  layout + App manifest, `.env` wiring, and the deploy + migration (Step 6).
+- **Mine (now / as creds arrive):** this runbook + the DNS record set above, the GitHub App
+  manifest (`infra/github-app/`, **done**) + Cloudflare redirect script (`infra/cloudflare/`,
+  **done**), `.env` wiring, and the deploy + migration (Step 6).
