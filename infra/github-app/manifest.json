@@ -1,0 +1,25 @@
+{
+  "name": "MadeBy",
+  "description": "Verifiable content provenance — answers \"who made this?\" for code. Reads repos you engage with to fingerprint content and attribute authorship; never writes.",
+  "url": "https://madeby.fyi",
+  "hook_attributes": {
+    "url": "https://madeby.fyi/api/github/webhook",
+    "active": false
+  },
+  "redirect_url": "https://madeby.fyi/api/github/manifest-callback",
+  "callback_urls": [
+    "https://madeby.fyi/api/auth/callback/github"
+  ],
+  "setup_url": "https://madeby.fyi/settings/github",
+  "public": false,
+  "default_permissions": {
+    "contents": "read",
+    "metadata": "read",
+    "email_addresses": "read"
+  },
+  "default_events": [
+    "push"
+  ],
+  "request_oauth_on_install": true,
+  "setup_on_update": false
+}
