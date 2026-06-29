@@ -38,6 +38,9 @@ export type { ResolvedClaim, Resolution } from "./resolution";
 export { runConformance, CONFORMANCE_VERSION } from "./conformance";
 export type { ConformanceResult } from "./conformance";
 
+export { runRedTeam } from "./redteam";
+export type { AttackResult } from "./redteam";
+
 export { assertSubjectIsReference } from "./guards";
 
 export { computeCoverage, percentByTier } from "./coverage";
