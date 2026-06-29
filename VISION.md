@@ -30,8 +30,11 @@ Nobody owns the trustworthy answer to "who made this?" for the AI era. We intend
 ## What MadeBy is
 
 MadeBy is a **provenance layer**: a service that records who made a piece of content, and lets anyone
-check that record later. Think of it less like a product and more like a *utility* — the way DNS
-quietly answers "what's behind this domain name," MadeBy answers "who's behind this content."
+check that record later. Think of it less like a product and more like a *utility* — something that
+runs quietly in the background until you need an answer. Galleries and auction houses keep a
+*provenance* record for a work of art: the documented trail of who made it and how it's changed
+hands — the thing that separates a genuine piece from a forgery. MadeBy is that record for digital
+content, and checking it takes a second and costs nothing.
 
 Two things make that hard, and therefore valuable:
 
