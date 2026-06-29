@@ -32,3 +32,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 coverage/
+
+# mutation testing (Stryker)
+.stryker-tmp/
+reports/
