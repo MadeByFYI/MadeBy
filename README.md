@@ -2,6 +2,9 @@
 
 **Who made this thing?** — a verifiable content-provenance layer, starting with code.
 
+New here? Start with [`VISION.md`](./VISION.md) — a plain-language overview of what we're building
+and why (no jargon; good for non-technical readers).
+
 This is the v2 build. The design lives in four spec docs at the repo root:
 
 - [`STRATEGY.md`](./STRATEGY.md) — positioning, trust model, wedge, go-to-market, monetization
