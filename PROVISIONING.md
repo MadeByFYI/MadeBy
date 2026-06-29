@@ -70,11 +70,29 @@ DNS is still at Gandi at this point, so Workspace is verified there — no Cloud
 ## Step 3 — Stripe Atlas (entity + EIN + bank + cap table)
 
 Register at atlas.stripe.com **using `mac@madeby.fyi`**. Outputs: a Delaware C-corp, EIN, a bank
-account (Mercury/Brex), and a clean cap table / founder stock. **This collapses the entity →
-EIN → bank steps.** Note the QSBS clock starts at stock issuance.
+account, and a clean cap table / founder stock. **This collapses the entity → EIN → bank steps.**
+Note the QSBS clock starts at stock issuance — record that date. Atlas fee ~$500 (front
+personally, reimburse from Mercury once it lands).
 
-> Forming the C-corp switches on bookkeeping + a compliance calendar (incl. the **83(b)
-> 30-day deadline**) — see **`COMPLIANCE.md`**, which kicks in the moment Atlas closes.
+**Locked decisions (enter these in the Atlas flow):**
+- **Legal name:** `MadeBy, Inc.` (Delaware C-corp). Have a backup (`Made By, Inc.` / `MadeBy
+  Labs, Inc.`) in case of a DE name conflict. *DE availability ≠ trademark clearance — "MadeBy"
+  is generic; trademark is a separate, later task.*
+- **Founders:** solo — **100% of founder stock to Mac**.
+- **Shares / par value:** accept Atlas defaults (**10,000,000 authorized**, very low par). The low
+  par is what keeps DE franchise tax on the **assumed-par-value method** (~$400) — do not change it.
+- **Vesting:** **fully vested, no vesting schedule.** ⚠️ **Verify the stock-purchase docs carry no
+  repurchase/forfeiture right** — if one is present, the **83(b) 30-day clock applies** (see
+  `COMPLIANCE.md`). Pay for the shares promptly to perfect issuance (starts the QSBS clock).
+- **Bank:** **Mercury**.
+- **EIN:** Atlas files it; Mac is the responsible party (needs SSN/ITIN).
+- **Registered agent:** accept Atlas's DE agent (first year included).
+- **Sign:** incorporation docs, **IP assignment** (assigns prior MadeBy work to the company — sign
+  it for clean ownership), bylaws, board consent.
+
+> Forming the C-corp switches on bookkeeping + a compliance calendar — see **`COMPLIANCE.md`**,
+> which kicks in the moment Atlas closes. As structured (fully vested), the **83(b) is N/A** unless
+> a repurchase right turns up at signing.
 
 ## Step 4 — Secondary domains → 301 redirects
 

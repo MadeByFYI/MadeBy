@@ -12,19 +12,24 @@
 | Tax filings | **A Puzzle-certified startup tax firm** (frontrunner: **Accountalent**) **or Inkle** (~$750/yr tax-only) — *pending quotes*. Hybrid model: software for books + firm for annual filings |
 | Ruled out | **Pilot** tax (requires its own bookkeeping); **Kruze/Burkland** (over-scoped/expensive for now) |
 | Entity | Delaware C-corp via Stripe Atlas (see `PROVISIONING.md`) |
+| Founders / stock | **Solo founder, 100% to Mac; stock fully vested at grant (no vesting)** → **83(b) is N/A** (see below). Bank: **Mercury** |
 
-## ⚠️ Most urgent — 83(b) election
+## ⚠️ 83(b) election — N/A as structured, with one thing to verify
 
-If the Atlas founder stock is subject to **vesting**, each founder must file an **83(b) election
-with the IRS within 30 days of the stock grant** — no extensions, large tax consequences if
-missed. Atlas prompts it. **This is the highest-priority post-formation task.** (If stock is
-fully vested at grant, it's moot — confirm which you have.)
+Founder stock is being issued **fully vested with no vesting schedule** (locked decision), so
+there is **no substantial risk of forfeiture and nothing to elect** — **no 83(b) filing is
+required.** This removes what is normally the most time-sensitive post-formation task.
+
+> **Verify at signing (the one caveat):** confirm the Atlas stock purchase docs include **no
+> repurchase right / forfeiture restriction**. If any such restriction is present, the **83(b)
+> 30-day clock applies after all** (file with the IRS within 30 days of grant, no extensions) —
+> in that case treat it as the top priority and tell me the grant date so I set the reminder.
 
 ## Compliance calendar
 
 | When | Obligation | Notes |
 |---|---|---|
-| **+30 days** of stock grant | **83(b) election** (each founder) | one-time, critical (above) |
+| **+30 days** of stock grant | **83(b) election** | **N/A** as structured (fully vested, no vesting) — applies *only* if a repurchase right is present (verify at signing) |
 | At formation | Confirm **FinCEN BOI** status | a **March 2025 interim rule exempted US domestic entities** — likely no filing for a US C-corp, but **confirm current** |
 | **March 1** (annual) | **Delaware franchise tax + annual report** | use the **assumed-par-value-capital method** (min ~$400), not authorized-shares (can balloon); Atlas structures shares for this |
 | **~April 15** (annual) | **Federal Form 1120** + **state income return** (operating state) | files even at $0 revenue; losses carry forward (NOLs) |
@@ -49,7 +54,8 @@ fully vested at grant, it's moot — confirm which you have.)
 
 ## Division of labor
 
-- **Yours:** file the 83(b), pick + engage the tax firm, set up Puzzle, confirm operating-state
-  nexus.
+- **Yours:** verify no repurchase right at signing (else 83(b) is back on), pick + engage the tax
+  firm, set up Puzzle, confirm operating-state nexus.
 - **Mine:** this doc + the calendar; and once Atlas gives a formation/grant date, **set
-  scheduled reminders** for the 83(b) +30-day deadline and the annual March 1 / April 15 dates.
+  scheduled reminders** for the annual March 1 / April 15 dates (plus the 83(b) +30-day deadline
+  *only if* a repurchase right turns up). Record the stock-issuance date (starts the QSBS clock).
