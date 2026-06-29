@@ -1,0 +1,242 @@
+{
+  "version": "0",
+  "suite": "ed25519-jcs-v0",
+  "note": "Reproducible bound-tier verification vectors. The keypair is TEST-ONLY (private key in the clear). Ed25519 is deterministic, so re-signing the same claim with the same key reproduces signature.value byte-for-byte.",
+  "testKey": {
+    "publicKeyHex": "430a77822da381e811654901f1d8f195f6a9a5f2d7c4999b6d962f9da193cc11",
+    "privateKeyPkcs8Hex": "302e020100300506032b657004220420f346e92dbbcfce2275dd34805c8047fe5518bca66173efeca679db10c82fd855"
+  },
+  "cases": [
+    {
+      "name": "valid bound-tier in-toto attestation, content supplied",
+      "content": "export const greeting = \"hello, provenance\";\n",
+      "contentHex": "6578706f727420636f6e7374206772656574696e67203d202268656c6c6f2c2070726f76656e616e6365223b0a",
+      "envelope": {
+        "carrier": "in-toto",
+        "_type": "https://in-toto.io/Statement/v1",
+        "predicateType": "https://madeby.fyi/attestation/v0",
+        "subject": [
+          {
+            "digest": {
+              "sha256": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+            }
+          }
+        ],
+        "predicate": {
+          "subject": {
+            "algorithm": "sha256",
+            "target": "FILE",
+            "value": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+          },
+          "attribution": {
+            "identityId": "did:web:alice.example",
+            "role": "creator"
+          },
+          "assertedTier": "bound",
+          "createdAt": "2026-01-01T00:00:00Z"
+        },
+        "signatures": [
+          {
+            "signerKeyId": "430a77822da381e811654901f1d8f195f6a9a5f2d7c4999b6d962f9da193cc11",
+            "value": "9d0336d37649d9efc94f3f1c2b8da667ee2883e76891f8d6f5f90c73a56f85b639e5a577834b9e6fb5664a5661679bc7474f62e78a9422ad3a7b1448ec427606",
+            "carrierId": "in-toto",
+            "signedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "verify": {
+        "trustSigner": true,
+        "withContent": true
+      },
+      "expect": {
+        "signatureValid": true,
+        "recognizedCarrier": true,
+        "subjectIsNative": true,
+        "subjectIsExact": true,
+        "contentMatches": true,
+        "confirmedTier": "bound"
+      }
+    },
+    {
+      "name": "same attestation, signer NOT vouched for -> fails safe to asserted",
+      "envelope": {
+        "carrier": "in-toto",
+        "_type": "https://in-toto.io/Statement/v1",
+        "predicateType": "https://madeby.fyi/attestation/v0",
+        "subject": [
+          {
+            "digest": {
+              "sha256": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+            }
+          }
+        ],
+        "predicate": {
+          "subject": {
+            "algorithm": "sha256",
+            "target": "FILE",
+            "value": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+          },
+          "attribution": {
+            "identityId": "did:web:alice.example",
+            "role": "creator"
+          },
+          "assertedTier": "bound",
+          "createdAt": "2026-01-01T00:00:00Z"
+        },
+        "signatures": [
+          {
+            "signerKeyId": "430a77822da381e811654901f1d8f195f6a9a5f2d7c4999b6d962f9da193cc11",
+            "value": "9d0336d37649d9efc94f3f1c2b8da667ee2883e76891f8d6f5f90c73a56f85b639e5a577834b9e6fb5664a5661679bc7474f62e78a9422ad3a7b1448ec427606",
+            "carrierId": "in-toto",
+            "signedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "verify": {
+        "trustSigner": false,
+        "withContent": true
+      },
+      "content": "export const greeting = \"hello, provenance\";\n",
+      "contentHex": "6578706f727420636f6e7374206772656574696e67203d202268656c6c6f2c2070726f76656e616e6365223b0a",
+      "expect": {
+        "signatureValid": true,
+        "recognizedCarrier": true,
+        "contentMatches": true,
+        "confirmedTier": "asserted"
+      }
+    },
+    {
+      "name": "valid signature but content withheld -> verified not bound",
+      "envelope": {
+        "carrier": "in-toto",
+        "_type": "https://in-toto.io/Statement/v1",
+        "predicateType": "https://madeby.fyi/attestation/v0",
+        "subject": [
+          {
+            "digest": {
+              "sha256": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+            }
+          }
+        ],
+        "predicate": {
+          "subject": {
+            "algorithm": "sha256",
+            "target": "FILE",
+            "value": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+          },
+          "attribution": {
+            "identityId": "did:web:alice.example",
+            "role": "creator"
+          },
+          "assertedTier": "bound",
+          "createdAt": "2026-01-01T00:00:00Z"
+        },
+        "signatures": [
+          {
+            "signerKeyId": "430a77822da381e811654901f1d8f195f6a9a5f2d7c4999b6d962f9da193cc11",
+            "value": "9d0336d37649d9efc94f3f1c2b8da667ee2883e76891f8d6f5f90c73a56f85b639e5a577834b9e6fb5664a5661679bc7474f62e78a9422ad3a7b1448ec427606",
+            "carrierId": "in-toto",
+            "signedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "verify": {
+        "trustSigner": true,
+        "withContent": false
+      },
+      "expect": {
+        "signatureValid": true,
+        "contentMatches": null,
+        "confirmedTier": "verified"
+      }
+    },
+    {
+      "name": "ADVERSARIAL: tampered subject value -> signature must NOT verify -> asserted",
+      "envelope": {
+        "carrier": "in-toto",
+        "_type": "https://in-toto.io/Statement/v1",
+        "predicateType": "https://madeby.fyi/attestation/v0",
+        "subject": [
+          {
+            "digest": {
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          }
+        ],
+        "predicate": {
+          "subject": {
+            "algorithm": "sha256",
+            "target": "FILE",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "attribution": {
+            "identityId": "did:web:alice.example",
+            "role": "creator"
+          },
+          "assertedTier": "bound",
+          "createdAt": "2026-01-01T00:00:00Z"
+        },
+        "signatures": [
+          {
+            "signerKeyId": "430a77822da381e811654901f1d8f195f6a9a5f2d7c4999b6d962f9da193cc11",
+            "value": "9d0336d37649d9efc94f3f1c2b8da667ee2883e76891f8d6f5f90c73a56f85b639e5a577834b9e6fb5664a5661679bc7474f62e78a9422ad3a7b1448ec427606",
+            "carrierId": "in-toto",
+            "signedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "verify": {
+        "trustSigner": true,
+        "withContent": false
+      },
+      "expect": {
+        "signatureValid": false,
+        "confirmedTier": "asserted"
+      }
+    },
+    {
+      "name": "ADVERSARIAL: tampered signature bytes -> must NOT verify -> asserted",
+      "envelope": {
+        "carrier": "in-toto",
+        "_type": "https://in-toto.io/Statement/v1",
+        "predicateType": "https://madeby.fyi/attestation/v0",
+        "subject": [
+          {
+            "digest": {
+              "sha256": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+            }
+          }
+        ],
+        "predicate": {
+          "subject": {
+            "algorithm": "sha256",
+            "target": "FILE",
+            "value": "2b1bce86a0f9e60a5bbdea9447288bc62d7191ff249e562a82f89a2847faf4c8"
+          },
+          "attribution": {
+            "identityId": "did:web:alice.example",
+            "role": "creator"
+          },
+          "assertedTier": "bound",
+          "createdAt": "2026-01-01T00:00:00Z"
+        },
+        "signatures": [
+          {
+            "signerKeyId": "430a77822da381e811654901f1d8f195f6a9a5f2d7c4999b6d962f9da193cc11",
+            "value": "9d0336d37649d9efc94f3f1c2b8da667ee2883e76891f8d6f5f90c73a56f85b639e5a577834b9e6fb5664a5661679bc7474f62e78a9422ad3a7b1448ec427600",
+            "carrierId": "in-toto",
+            "signedAt": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "verify": {
+        "trustSigner": true,
+        "withContent": false
+      },
+      "expect": {
+        "signatureValid": false,
+        "confirmedTier": "asserted"
+      }
+    }
+  ]
+}

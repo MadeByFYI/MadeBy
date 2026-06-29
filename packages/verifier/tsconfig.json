@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    // We sign/verify with Web Crypto and consume @madeby/core as source (which uses
+    // TextEncoder/crypto), so tsc deep-checks those files and needs the DOM lib too.
+    "lib": ["ES2023", "DOM"]
+  },
+  "include": ["src"]
+}

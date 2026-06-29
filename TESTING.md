@@ -92,8 +92,12 @@ vectors, (b) reproducible builds + signed releases + a transparency log so the d
 artifact is pinned and can't be quietly swapped, and (c) the fail-safe design (§2). The
 leftover is small, bounded, and smaller than what a one-time private audit would leave.
 
-**Optional, later:** open-source just the *small verifier* (not the producer/classifier) — a
-cheap credibility bonus. Open verifier, closed generator. Nice-to-have, not required.
+**Delivered (#18):** the small verifier is open — [`@madeby/verifier`](packages/verifier),
+built only on the open `@madeby/core`. The bound-tier suite is pinned to **Ed25519 over the
+RFC 8785 (JCS) canonical claim payload** (`ed25519-jcs-v0`): a standard, deterministic primitive
+any stack can check. The end-to-end recipe — including a generic-tools path (`openssl` / Python
+`cryptography`) that uses **no MadeBy code** — and reproducible vectors (positive + adversarial)
+are in [`VERIFYING.md`](VERIFYING.md). Open verifier, closed generator.
 
 ---
 
