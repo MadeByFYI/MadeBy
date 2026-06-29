@@ -75,9 +75,11 @@ Note the QSBS clock starts at stock issuance — record that date. Atlas fee ~$5
 personally, reimburse from Mercury once it lands).
 
 **Locked decisions (enter these in the Atlas flow):**
-- **Legal name:** `MadeBy, Inc.` (Delaware C-corp). Have a backup (`Made By, Inc.` / `MadeBy
-  Labs, Inc.`) in case of a DE name conflict. *DE availability ≠ trademark clearance — "MadeBy"
-  is generic; trademark is a separate, later task.*
+- **Legal name:** `MadeBy, Inc.` **first choice**; **`MadeBy.FYI, Inc.` immediate fallback** if
+  taken (distinctive → likelier to clear the DE check, and mirrors the hub domain), then
+  `Made By, Inc.`. The brand stays "MadeBy" regardless of the legal name; renaming later is a
+  cheap DE certificate amendment (~$50), so this isn't a lock-in. *DE availability ≠ trademark
+  clearance — "MadeBy" is generic; trademark is a separate, later task.*
 - **Founders:** solo — **100% of founder stock to Mac**.
 - **Shares / par value:** accept Atlas defaults (**10,000,000 authorized**, very low par). The low
   par is what keeps DE franchise tax on the **assumed-par-value method** (~$400) — do not change it.
