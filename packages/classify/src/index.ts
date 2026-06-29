@@ -7,3 +7,6 @@ export type { AuthorClass, CommitMeta, CommitClassification, AiContributor } fro
 
 export { summarize } from "./aggregate";
 export type { ClassificationSummary } from "./aggregate";
+
+export { runEval, BENCHMARK_VERSION } from "./eval";
+export type { EvalReport } from "./eval";
