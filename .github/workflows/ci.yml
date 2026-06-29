@@ -35,7 +35,24 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Blocking release gate (TESTING.md §8): invariant + property + mutation tests,
-      # conformance test vectors, golden-fixture reproducibility.
-      # Suites land with the Trust-QA epic (#16); this job is the gate they plug into.
+      # Blocking release gate (TESTING.md §8): invariant + property tests, the conformance
+      # test vectors (#17), and golden-fixture reproducibility — all run by `pnpm test`.
       - run: pnpm test
+
+  mutation:
+    name: mutation (tier-resolution logic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Stryker mutation testing on the trust-critical tier-resolution logic (resolve /
+      # resolution / tiers). Fails below the break threshold (90%) — proves the soundness
+      # tests actually KILL tier-escalation bugs, not just exercise the code (TESTING.md §3).
+      - run: pnpm --filter @madeby/core mutation

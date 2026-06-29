@@ -142,6 +142,14 @@ The soundness suite is a blocking release gate, like a security gate:
 If any fail, the build does not ship. The calibration/eval suite runs continuously and gates
 *claims about accuracy*, not every deploy.
 
+**As implemented (#21):** three GitHub Actions checks — `typecheck + build`, `trust-gate
+(soundness suite)` (runs `pnpm test`: invariants + the #17 conformance vectors), and `mutation
+(tier-resolution logic)` (Stryker over `resolve`/`resolution`/`tiers`, **break 90%**, currently
+~96%) — are **required status checks on `main`** via branch protection, so a regression in the
+trust core cannot merge. Mutation is scoped to the tier-resolution logic because that's where a
+silent escalation bug would live; canonicalization/fingerprint outputs are already pinned by the
+conformance vectors. Broadening mutation coverage is a follow-up.
+
 ---
 
 ## 9. Definition-of-done by regime (ties to the backlog)
