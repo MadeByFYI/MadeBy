@@ -73,6 +73,9 @@ Register at atlas.stripe.com **using `mac@madeby.fyi`**. Outputs: a Delaware C-c
 account (Mercury/Brex), and a clean cap table / founder stock. **This collapses the entity →
 EIN → bank steps.** Note the QSBS clock starts at stock issuance.
 
+> Forming the C-corp switches on bookkeeping + a compliance calendar (incl. the **83(b)
+> 30-day deadline**) — see **`COMPLIANCE.md`**, which kicks in the moment Atlas closes.
+
 ## Step 4 — Secondary domains → 301 redirects
 
 For each of `madebyhi.fyi`, `madebyai.fyi`, `madewithai.fyi`, `madewith.fyi`: add to Cloudflare
