@@ -79,11 +79,28 @@ export interface Claim {
   createdAt: string;
 }
 
-export type EdgeType = "PART_OF" | "DERIVED_FROM";
+/** Open edge-type id; recognized values + semantics live in the edge-type registry (edges.ts). */
+export type EdgeType = string;
+
+/** How a relationship was established — its evidence class (ARCHITECTURE §6). */
+export type EdgeMethod = "declared" | "inferred";
+
+/**
+ * A typed link between claims/subjects. An edge is itself a CLAIM about a relationship, so it
+ * carries evidence and resolves to an effective tier (resolveEdgeTier) — fail-safe, never stored.
+ * Inferred or unsigned edges cap at 'asserted'; edges never reach 'bound' (they relate, not
+ * byte-bind — the edge analog of a fuzzy fingerprint capping at 'verified').
+ */
 export interface ClaimEdge {
   type: EdgeType;
   fromClaimId: string;
   toClaimId: string;
+  /** declared by a source (trailer/link) vs. inferred by us (heuristic / semantic match) */
+  method: EdgeMethod;
+  /** optional signature over the canonical edge payload (enables the 'verified' tier) */
+  signature?: Signature;
+  /** surfaced evidence, e.g. "Closes #123 trailer" or "winnowing match 0.92" */
+  evidence?: string;
 }
 
 /** Carrier registry entry — whether we can fully verify signatures in this carrier. */
