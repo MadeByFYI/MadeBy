@@ -27,13 +27,13 @@ commits; the label basis is documented per case (`provenanceBasis`). Reproduce:
 pnpm --filter @madeby/classify test   # runs ground-truth.test.ts
 ```
 
-## Measured results (ground-truth v0, 18 cases)
+## Measured results (ground-truth v0, 20 cases)
 
 | Metric | Value |
 |---|---|
-| Overall accuracy | **67%** (12/18) |
+| Overall accuracy | **70%** (14/20) |
 | **Human false-positives** | **0** — never over-claims AI about a person |
-| **Recall on TRAILERED AI** | **1.00** (3/3) — trailers are strong, reliable evidence |
+| **Recall on IDENTIFIABLE AI** | **1.00** (5/5) — trailers + agent identities are strong, reliable evidence (#78 widened this class) |
 | **Recall on UNTRAILERED AI** | **0.00** (0/6) — **the real-world blind spot** |
 
 ### The headline, stated plainly
@@ -42,7 +42,7 @@ pnpm --filter @madeby/classify test   # runs ground-truth.test.ts
 0%.** Inline autocomplete (Copilot/Cursor tab), squashed/stripped trailers, and tools that don't
 emit `Co-Authored-By` all fall in this gap — and it disproportionately hits the heaviest AI users
 (the vibe-coders the strategy targets). The synthetic benchmark's 0.77 averaged this away; here it
-is the headline. The overall 67% accuracy is *dragged down by these honest misses* — we report that
+is the headline. The overall 70% accuracy is *dragged down by these honest misses* — we report that
 rather than tune it up.
 
 What we do **not** do: infer AI from diff-size/cadence heuristics to paper over the gap. They are

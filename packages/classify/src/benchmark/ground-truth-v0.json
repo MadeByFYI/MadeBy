@@ -91,6 +91,22 @@
       "provenanceBasis": "authored by the Devin autonomous-agent account (no human co-author) — agent-authored",
       "untrailered": false
     },
+    {
+      "message": "Regenerate API client and types",
+      "authorName": "Cursor Agent",
+      "authorEmail": "agent@cursor.com",
+      "expected": "ai",
+      "provenanceBasis": "authored by the Cursor agent account — agent-authored (evidence-grade identity, #78)",
+      "untrailered": false
+    },
+    {
+      "message": "Add pagination to the list endpoint\n\nGenerated-by: aider",
+      "authorName": "Devon Park",
+      "authorEmail": "devon@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "explicit Generated-by trailer naming the aider AI tool (#78) — identifiable, not untrailered",
+      "untrailered": false
+    },
 
     {
       "message": "Add dark mode toggle to settings",

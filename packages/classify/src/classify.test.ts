@@ -53,6 +53,30 @@ describe("classifyCommit", () => {
   });
 });
 
+describe("evidence-grade signals (#78) — wider trailers + agent identities, no false positives", () => {
+  it("recognizes Generated-by: and Assisted-by: trailers, not just Co-authored-by", () => {
+    expect(classifyCommit({ message: "x\n\nGenerated-by: Cursor", authorName: "Mac", authorEmail: "m@x.com" }).class).toBe("with_ai");
+    expect(classifyCommit({ message: "x\n\nAssisted-by: Claude", authorName: "Mac", authorEmail: "m@x.com" }).class).toBe("with_ai");
+  });
+
+  it("recognizes the Cursor agent identity (cursoragent / cursor.com)", () => {
+    expect(classifyCommit({ message: "Regenerate types", authorName: "Cursor Agent", authorEmail: "agent@cursor.com" }).class).toBe("ai");
+  });
+
+  it("recognizes additional named AI coding tools", () => {
+    for (const who of ["Generated-by: aider", "Co-authored-by: Codeium", "Co-authored-by: Windsurf", "Co-authored-by: CodeWhisperer", "Co-authored-by: TabNine"]) {
+      expect(classifyCommit({ message: `x\n\n${who} <bot@tool.dev>`, authorName: "Mac", authorEmail: "m@x.com" }).class, who).toBe("with_ai");
+    }
+  });
+
+  it("does NOT false-positive on human names/words that merely contain a tool substring", () => {
+    // 'precursor' must not match cursor; 'Aiden' must not match aider; 'codex' is openai (expected).
+    expect(classifyCommit({ message: "precursor cleanup", authorName: "Aiden Cody", authorEmail: "aiden@x.com" }).class).toBe("human");
+    // a Generated-by naming a non-AI tool is still human (no AI match)
+    expect(classifyCommit({ message: "x\n\nGenerated-by: protoc", authorName: "Mac", authorEmail: "m@x.com" }).class).toBe("human");
+  });
+});
+
 describe("summarize", () => {
   it("is a labeled estimate with class counts and mean confidence", () => {
     const s = summarize([human, withAi, copilot, aiAuthored].map(classifyCommit));
