@@ -10,3 +10,6 @@ export type { ClassificationSummary } from "./aggregate";
 
 export { runEval, BENCHMARK_VERSION } from "./eval";
 export type { EvalReport } from "./eval";
+
+export { runGroundTruth, GROUND_TRUTH_VERSION } from "./ground-truth";
+export type { GroundTruthReport } from "./ground-truth";
