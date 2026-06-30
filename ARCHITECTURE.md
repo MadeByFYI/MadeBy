@@ -242,6 +242,50 @@ ride it, don't reinvent.)
     can't express this). The edge that powers supply-chain + licensing + "did the model
     regurgitate GPL code."
 
+### Edges are claims, too — tiered and extensible
+
+An edge asserts that *A relates to B*, so it is a claim like any other and **carries a tier**: a
+`Closes #123` trailer or a signed link is a *declared* (high-confidence) edge; a semantically-
+inferred "this module implements that design doc" is an *asserted* (low-confidence) edge, surfaced
+with its evidence and **never as false certainty**. This is the tier honesty of §2–§3 applied to
+*relationships* — fuzzy connections aren't hidden, they're low-tier. The edge-type set is an **open
+registry**, not a fixed enum (same discipline as carriers/algorithms):
+
+- `PART_OF`, `DERIVED_FROM` — the code-native pair (above).
+- `DISPUTES` — a contradiction / counter-claim (§11).
+- `IMPLEMENTS` / `MOTIVATED_BY` / `DECIDED_BY` / `DISCUSSED_IN` — link code to the **management
+  artifacts that shaped it** (tickets, PRs, design docs, ADRs) — the *why* layer and the first
+  non-code frontier (`STRATEGY.md` §3). These edges are usually inferred, hence tiered.
+
+### What the DAG enables (one graph, many lenses)
+
+The DAG is the durable asset: tiers and badges are how content *enters* it; the following are how
+value *comes out*. Each is a computed view over the same graph (cf. the index's "one engine, two
+surfaces", §8):
+
+- **Fair credit / invisible labor.** `git blame` attributes the last toucher; the DAG preserves the
+  *originator* across moves/refactors, records non-author roles (reviewer/`editor`/`assistant`), and
+  follows cross-repo reuse — surfacing contribution the crude metrics erase.
+- **"Who do I ask?" expertise.** Origination-weighted (not last-touch), blended with recency, and
+  degrading gracefully when the originator has left. Powers navigation, review-routing, onboarding,
+  incident response.
+- **Contributor-portable reputation.** A verifiable, self-exported authorship record that travels
+  across employers — including a **privacy-preserving** form ("prove I authored 60% of X" without
+  revealing the content). Authorship travels even though the org owns the code (§11).
+- **Org / manager views** (the paid org index, §8): collaboration topology, **bus-factor / key-person
+  risk**, AI-leverage and human↔AI co-creation *patterns* (via roles + operator chain), M&A and
+  individual due diligence.
+- **Ecosystem lineage** (`DERIVED_FROM` across repos): license/vulnerability propagation,
+  AI-regurgitation tracing, and influence ranking that credits foundational work at ecosystem scale.
+- **Attribution-weighted splits**: the verifiable contribution split a funding/rev-share rail needs —
+  we compute it; someone else moves the money (not the bank).
+
+> **Guardrail (firm): the DAG illuminates contribution for credit and understanding — never to
+> surveil or rank individuals.** Favor self-directed individual insight + team/aggregate health
+> signals; refuse the per-engineer productivity score (toxic, Goodhart-prone, off-brand for a
+> fair-credit company). The contributor controls disclosure of their own graph. An ethical commitment
+> *and* a positioning moat.
+
 ### Provenance coverage (the headline metric)
 
 Aggregating a tree of mixed tiers gives a codebase a measurable, verifiable **provenance
@@ -354,7 +398,9 @@ Deliberately small — resist v1's speculative breadth. Open string/registry fie
 enums where values churn (models, providers, carriers, algorithms).
 
 - **Subject** — a piece of content. Has many **Fingerprints** `{algorithm, target, value}`
-  (multi-resolution). The resolver's lookup key.
+  (multi-resolution). The resolver's lookup key. Code-first but not code-only: management artifacts
+  (tickets/PRs/design docs) and media are subjects too, fingerprinted by the same machinery
+  (structural handles prose; C2PA covers media).
 - **Identity** — individual / org / AI. Has verified **Anchors** (email, domain, phone,
   address, **public key / wallet**). AI identities have provider/model/version + **operator**
   (→ Identity).
@@ -362,9 +408,10 @@ enums where values churn (models, providers, carriers, algorithms).
   asserts an **Attribution** (Identity + role; for AI, model + operator), carries a **tier**,
   a **canonical payload**, and a **Signature**. Is itself content-addressed (claim hash) so
   Claims can reference Claims.
-- **ClaimEdge** — typed link between claims/subjects: `PART_OF` (composition) or
-  `DERIVED_FROM` (derivation). (A `DISPUTES` edge for contested claims is specced in §11,
-  built later.)
+- **ClaimEdge** — a typed, **tiered** link between claims/subjects (an edge is itself a claim;
+  inferred edges carry a confidence tier and surface their evidence — §6). **Open type registry:**
+  `PART_OF`, `DERIVED_FROM`, `DISPUTES` (§11), and the code↔artifact types
+  (`IMPLEMENTS`/`MOTIVATED_BY`/`DECIDED_BY`/`DISCUSSED_IN`) for the non-code frontier.
 - **Carrier** — registry entry: identifier + parser/serializer + canonicalization ref +
   whether it supports full verification (→ tier cap).
 - **LegalRepresentation** / **SwornAttestation** — optional overlay on a Claim (the sworn

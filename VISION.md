@@ -123,6 +123,21 @@ and a little anxious about exactly the question we answer. Better still: those A
 record of what they did, so the answer can be *generated from the tool's own logs* rather than
 self-reported. The AI is a witness to its own work.
 
+## Where it goes from here
+
+Code is the beachhead, not the destination. Once the code foundation is solid, the natural next step
+isn't a different industry — it's the **artifacts that surround the code**: the tickets, pull
+requests, design docs, and decision records that shape what gets built. Those carry authorship the
+code itself misses entirely — the product manager who wrote the spec, the architect behind the
+design, the designer whose mockup drove the screen. Recording who made *those*, and linking them to
+the code they produced, is how credit reaches the people the usual metrics erase — and it's our path
+toward "creators of all kinds."
+
+It also makes the everyday answer richer. With those artifacts in the picture you don't just learn
+*who* wrote a piece of code, but *why it exists* and *who to ask about it* — and you carry a
+verifiable record of your own work with you, wherever you go. (One line we hold throughout: this
+exists to give people credit and to help them understand their work — never to surveil or rank them.)
+
 ## How it grows
 
 A provenance registry with nothing in it is useless — nobody queries an empty database. So the growth
