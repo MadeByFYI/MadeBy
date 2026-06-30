@@ -12,7 +12,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "provenance:verify-trailers": "node scripts/verify-trailers.mjs",
-    "provenance:capture": "node scripts/capture-spans.mjs"
+    "provenance:capture": "node scripts/capture-spans.mjs",
+    "provenance:capture-session": "node scripts/capture-session-spans.mjs"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

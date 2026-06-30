@@ -75,6 +75,14 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
       <p style={{ fontSize: ".95rem", opacity: 0.8, margin: 0 }}>
         AI-involved on <strong>{pct(r.aiInvolvedPercent)}</strong> of commits.
       </p>
+      {r.spanEvidence.attestations > 0 ? (
+        <p style={{ fontSize: ".95rem", margin: ".4rem 0 0", color: "#9ad29a" }}>
+          🔬 AI spans recorded in <strong>{r.spanEvidence.files}</strong> file
+          {r.spanEvidence.files === 1 ? "" : "s"} ({r.spanEvidence.providers.map((p) => p.model).join(", ")})
+          {r.spanEvidence.sources.includes("claude-code-session-log") ? " — witnessed by the tools' own session logs" : ""}
+          {" "}— span-level evidence the commit count doesn&apos;t capture.
+        </p>
+      ) : null}
 
       <ul style={{ listStyle: "none", padding: 0, marginTop: "1rem", opacity: 0.9, fontSize: ".9rem" }}>
         {r.contributors.map((c) => (
