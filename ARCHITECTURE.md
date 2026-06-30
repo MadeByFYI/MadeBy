@@ -46,6 +46,36 @@ view. Two lookup modes:
 > human authorship — that nuance is tier/caveat, not a refusal to name. (Companion: STRATEGY §5
 > — *the badge is a headline+pointer; the full answer lives on the resolver page*.)
 
+### The resolver page (what it presents)
+
+The badge is a pointer; **this page is the answer** — and it answers the same spine of questions,
+honestly, for any subject:
+
+1. **Who?** — names every contributor (human operators + AI models) with their **role**
+   (creator/editor/assistant/generator) and verified identity. Never "no signal"; always named.
+2. **How sure?** — the effective **tier** per claim, with honest qualifiers (estimated/asserted) and
+   methodology links for any computed view.
+3. **Said vs. made** — authenticity ("we verified X *said* this") shown **distinctly** from
+   origination ("X is established as the *origin*" — lineage + priority + native provenance). The
+   honest answer to a valid signature over copied bytes (§11).
+4. **Alone or contested?** — competing claims shown, **ranked by the evidence ladder**, each at its
+   true tier; genuine ties shown as *open*, never a fabricated winner; weak/squatter claims render
+   weak (no "disputed!" stigma on strong content); challenges and the (reopenable) dispute state
+   visible (§11).
+5. **From what / part of what** — the provenance graph: derivation lineage and the part-of roll-up
+   with **provenance coverage** (% bound/verified/asserted/unattributed), recomputable from signed
+   leaves (§6).
+6. **Why** (when artifacts exist) — links to the motivating tickets / design docs / ADRs as **tiered
+   edges** (declared vs. inferred), surfaced with their confidence (§6; STRATEGY §3).
+7. **Verify it yourself** — the canonical claim, the signature, and the open verification recipe /
+   reference verifier (`VERIFYING.md`). Genuineness = this page, not the badge image.
+
+Design discipline (the mission guardrails): **altitude** — richness lives here so the badge stays
+short; **name the creator, uncertainty in the tier**; **celebrate transparency, neutral on the
+human/AI ratio** (prestige in the tier mark, never the %); **show conflicts, never fake a
+resolution.** The page is also the prime **conversion surface** — an unclaimed or contested page is
+exactly where a real author is moved to verify-and-outrank (STRATEGY §4).
+
 ---
 
 ## 2. Hashing: the hash is the *join key*, not the *trust*
@@ -221,6 +251,32 @@ and can receive value (wallet — as an *identity anchor*, not a payment feature
 
 We generate **the verified attribution graph with payable identities attached** — the input
 a funding protocol needs. We do not process payments (see `STRATEGY.md` §3).
+
+### Portable reputation credentials (contributor-controlled)
+
+Because identity is key-anchored and self-sovereign, a contributor's **authorship travels with them,
+not with the employer** — the org owns the code (IP), the person holds the attribution (§11). We
+expose this as a **holder-controlled verifiable credential** over the DAG (§6): subject = the
+contributor's key/DID; issuer = MadeBy and/or the **org's verified identity**; claim = authorship of
+subject(s) at a tier, under a *labeled view* (percent is a computed view, never ground truth — §6).
+
+- **Selective disclosure — ride the standard.** Express it as a W3C Verifiable Credential with
+  selective disclosure (SD-JWT / BBS+), so the holder reveals only chosen fields and can prove
+  *predicates* — "I authored ≥ 50% of X" — **without revealing the content**. Existence, magnitude,
+  and specific spans are independently disclosable. This is the privacy-preserving form of "prove I
+  wrote 60% of a payments system": the bytes never leave the org.
+- **Private work travels via org co-signature.** For proprietary code the org (which owns the bytes)
+  co-signs the authorship *fact* while withholding the content — a `verified`-tier credential with no
+  IP leak, in both the org's interest (alumni goodwill, retention) and the contributor's.
+- **A pointer to the living record, not a frozen verdict.** A credential references the live claims;
+  a later dispute (§11) is reflected, and credentials are re-checkable / expirable — never an eternal
+  "proven" snapshot (same discipline as the badge: a pointer, not standalone proof).
+- **The contributor controls disclosure** — the concrete form of the credit-not-surveillance
+  guardrail (§6): your reputation graph is yours to export selectively, never a dossier others
+  assemble about you.
+
+A verifiable portfolio is also a single-player cold-start hook (`STRATEGY.md` §3/§4): reason to pull
+your work into MadeBy regardless of whether the network yet exists.
 
 ---
 
