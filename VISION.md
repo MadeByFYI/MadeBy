@@ -83,6 +83,29 @@ A few simple ideas do most of the work:
   "who made it" graph, and let payment systems plug into it. Becoming a payment rail would drag in
   regulatory weight and speculation that would poison a trust instrument. Hard line: not the bank.
 
+## What if two people claim the same thing?
+
+Anyone can *say* they made something — so what stops people from claiming work that isn't theirs?
+
+The answer is that **a claim with no backing can't climb the ladder.** Someone falsely claiming your
+work can't produce your verified identity, can't sign it with a key tied to the real source, and
+can't show the upstream history — so their claim is stuck on the bottom rung, displayed honestly
+*next to* yours. We don't hide it or delete it; we show each claim at the strength it has actually
+earned, and the gap is obvious at a glance. A practical consequence: **squatting doesn't work here.**
+Unlike grabbing a username or a domain name, you can't hold content hostage by claiming it first —
+claiming something you didn't make gets you nothing, because the real maker outranks you the moment
+they show up.
+
+When it's a genuine close call — two parties who each have a real case — we don't play judge. We show
+both, ranked by the evidence, and we never invent a winner. And the record stays open: new evidence,
+even a court's decision, can update it later.
+
+For a company, the simple version is this: connect your systems once, and everything your team
+creates is recorded as yours from the moment it's made — nobody has to learn how any of this works.
+If someone later claims something that's genuinely yours, the facts plus that record resolve it
+quickly. The one thing we will never do is let the bigger checkbook win on its own — being *right*,
+not being *big*, is what carries the day.
+
 ## Why we start with code (and "vibe-coding")
 
 "Creators of all kinds" is the destination. **Software is the beachhead**, for concrete reasons:
