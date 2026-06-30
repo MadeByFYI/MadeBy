@@ -63,6 +63,9 @@ importers:
       '@madeby/classify':
         specifier: workspace:*
         version: link:../classify
+      '@madeby/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       '@types/node':
         specifier: ^22.10.0

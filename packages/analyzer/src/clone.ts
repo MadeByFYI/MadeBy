@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { readGitLog } from "./git";
 import { analyzeCommits, type AnalysisResult } from "./analyze";
+import { readSpanManifestsFromGit, summarizeSpanEvidence, type SpanEvidence } from "./provenance";
 
 const execFileP = promisify(execFile);
 
@@ -25,7 +26,7 @@ const NAME_RE = /^[A-Za-z0-9._-]+$/;
 export interface AnalyzeRepoError {
   readonly error: string;
 }
-export type AnalyzeRepoResult = (AnalysisResult & { readonly repo: string }) | AnalyzeRepoError;
+export type AnalyzeRepoResult = (AnalysisResult & { readonly repo: string; readonly spanEvidence: SpanEvidence }) | AnalyzeRepoError;
 
 export function isAnalyzeError(r: AnalyzeRepoResult): r is AnalyzeRepoError {
   return (r as AnalyzeRepoError).error !== undefined;
@@ -85,7 +86,10 @@ export async function analyzeRepo(repoUrl: string, opts: AnalyzeRepoOptions = {}
     const commits = readGitLog(dir);
     if (commits.length === 0) return { error: "No commit history found — the repo may be empty or inaccessible." };
     const display = clean.replace(/^https:\/\//, "").replace(/\.git$/, "");
-    return { ...analyzeCommits(commits), repo: display };
+    // Fold in any witnessed span evidence the repo committed (.madeby/spans) — recall the
+    // trailers missed, where it actually exists. Empty for the vast majority of repos.
+    const spanEvidence = summarizeSpanEvidence(readSpanManifestsFromGit(dir));
+    return { ...analyzeCommits(commits), repo: display, spanEvidence };
   } catch (e) {
     const killed = (e as { killed?: boolean }).killed;
     return { error: killed ? "Clone timed out — that repo may be too large for the v0 mirror." : "Couldn't clone that repo — is it public?" };
