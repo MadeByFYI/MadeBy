@@ -33,20 +33,20 @@ calibration, ECE).
 - **Confidence model:** an explicit AI trailer/author is strong evidence → high confidence
   (`with_ai` 0.90, `ai` 0.85). `human` rests on the *absence* of an AI signal — weak evidence —
   so it is deliberately lower (0.55).
-- **Benchmark:** 21 labeled commit cases spanning clear-human, human edge cases (prose that
+- **Benchmark:** 23 labeled commit cases spanning clear-human, human edge cases (prose that
   *mentions* "AI"/"Claude" but has no AI co-author → must not false-positive; human co-authors),
   trailered `with_ai`, bot-authored `ai`, and — critically — **untrailered AI-assisted** commits
   labeled `with_ai` that the commit-level signal *cannot* catch. Those are included on purpose so
   recall is reported honestly, not inflated by omitting the hard cases.
 
-## Measured results (benchmark v0, 21 cases)
+## Measured results (benchmark v0, 23 cases)
 
 | Metric | Value |
 |---|---|
-| Overall accuracy | **85.7%** (18/21) |
+| Overall accuracy | **87.0%** (20/23) |
 | AI-involved **precision** | **1.00** (0 false positives) |
-| AI-involved **recall** | **0.77** (10/13; misses 3 untrailered) |
-| AI-involved **F1** | **0.87** |
+| AI-involved **recall** | **0.80** (12/15; misses 3 untrailered) |
+| AI-involved **F1** | **0.89** |
 | Expected Calibration Error (ECE) | **0.15** |
 
 ### Confusion matrix (actual → predicted)
@@ -55,7 +55,7 @@ calibration, ECE).
 |---|---|---|---|
 | **human** | 8 | 0 | 0 |
 | **ai** | 0 | 4 | 0 |
-| **with_ai** | 3 | 0 | 6 |
+| **with_ai** | 3 | 0 | 8 |
 
 The only errors are in one cell: 3 `with_ai` commits predicted `human`. All three are the
 untrailered AI-assisted cases — the classifier saw no AI signal and fell to `human`. There are
@@ -67,7 +67,7 @@ untrailered AI-assisted cases — the classifier saw no AI signal and fell to `h
 |---|---|---|
 | 0.55 (`human`) | 11 | 0.73 |
 | 0.85 (`ai`) | 4 | 1.00 |
-| 0.90 (`with_ai`) | 6 | 1.00 |
+| 0.90 (`with_ai`) | 8 | 1.00 |
 
 The `human` confidence of 0.55 is well-aligned with its observed 0.73 accuracy (slightly
 under-confident — the safe direction). High-confidence AI predictions are exactly right on this
