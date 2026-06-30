@@ -27,6 +27,16 @@ export type { EdgeCategory, EdgeTypeDef, EdgeResolutionContext } from "./edges";
 export type { SpanAnchor, SpanAttribution, SpanAttestationV0 } from "./span";
 
 export {
+  SPAN_MANIFEST_VERSION,
+  spanManifestPath,
+  spanManifestPayload,
+  canonicalizeSpanManifest,
+  serializeSpanManifest,
+  parseSpanManifest,
+} from "./manifest";
+export type { SpanManifest } from "./manifest";
+
+export {
   sha256Fingerprint,
   gitBlobFingerprint,
   exactFingerprints,

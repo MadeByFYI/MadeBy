@@ -1,0 +1,169 @@
+{
+  "version": "0",
+  "commit": "b69604f471549b70bcfa5f9da182ce5c550d972f",
+  "generatedAt": "2026-06-30T01:54:44.559Z",
+  "attestations": [
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "3091fd867d78499410a1d98c47384f561c3d3c18"
+        },
+        "hint": {
+          "path": "ARCHITECTURE.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4aaa2ea16da111e768d6fd382f5f52244a834e7e"
+        },
+        "hint": {
+          "path": "RED-TEAM.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "0aa7cebf7dc92a45c87ae71c5ad029d5ae4299fe"
+        },
+        "hint": {
+          "path": "packages/core/src/conformance.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "34f2174843615e0e8a9d342b113b2b59fbe55a72"
+        },
+        "hint": {
+          "path": "packages/core/src/contention.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "26c2ff71172f1cfebc67c25d857df41446f124f2"
+        },
+        "hint": {
+          "path": "packages/core/src/contention.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "75abe7b1e5236dc9dd84f86ef77604ca96df4f52"
+        },
+        "hint": {
+          "path": "packages/core/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b0ea412b23962335574c4bb2dcebacefd9e56370"
+        },
+        "hint": {
+          "path": "packages/core/src/redteam.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "397f0a16ad1a36abcf47234a86e7ac01fbb2ba7d"
+        },
+        "hint": {
+          "path": "packages/core/src/vectors/conformance-v0.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "383afc9b9ec72fa42566d83cd34f64b714ae81ef"
+        },
+        "hint": {
+          "path": "packages/core/stryker.config.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude",
+        "operatorId": "mac@macdougherty.com",
+        "source": "git-commit-trailer-v0"
+      }
+    }
+  ]
+}
