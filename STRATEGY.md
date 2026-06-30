@@ -120,6 +120,33 @@ coder's free badge gets evidence-backed teeth for free, because the AI tool is a
   their keys") — the input a funding protocol needs. **We are the trust layer; someone else
   moves the money.**
 
+### Beyond code: management artifacts are the next content frontier (committed, sequenced)
+
+"Creators of all kinds" is the destination; the **committed** next step after the code foundation is
+not a new vertical but the **artifacts that manage the creation of the code** — tickets, PRs, issues,
+design docs, ADRs/RFCs. Why this is the right first move beyond code:
+
+- **Same identity space, zero new bootstrap** — they live in GitHub/GitLab/Jira/Linear: same people,
+  orgs, and auth as the code wedge.
+- **Authorship-rich and credit-poor**, for exactly the people code attribution erases — the PM who
+  wrote the spec, the architect behind the RFC, the QA who filed the decisive bug, the designer whose
+  mock drove the UI. This broadens the credit flywheel past developers and is the **on-ramp to design
+  artifacts** (and the designer audience).
+- **They carry the *why*.** An edge from code → its motivating ticket/design doc is the rationale
+  layer code lacks — powering "who do I ask / how do I understand this," onboarding, and review.
+- **Enterprise value: requirements-to-code traceability**, which regulated industries (medical,
+  aerospace, finance) are *mandated* to maintain — a provenance product people must buy.
+
+These connections are **inferred and therefore tiered** (a `Closes #123` link is high-confidence; a
+semantic "implements that RFC" is low-confidence), handled by the open edge-type registry in
+`ARCHITECTURE.md` §6. **Sequencing is explicit: the code-focused foundation comes first; the artifact
+layer is built on top of it, not instead of it.**
+
+> A related single-player hook: **contributor-portable, verifiable reputation** — a proof of *your*
+> authorship you carry across employers (even privacy-preservingly: "I authored 60% of X" without
+> revealing the content). Another selfish, no-network reason to pull work into MadeBy (cf. §4
+> cold-start), and the DAG view that most protects the contributor (`ARCHITECTURE.md` §6).
+
 ---
 
 ## 4. Go-to-market: the architecture *is* the distribution
@@ -340,6 +367,10 @@ now. **At this stage we hedge: treat all three viable lines as potential centers
 - **Compensation/payment rail** — regulatory weight + speculation optics; we are not the bank.
 - **Selling provenance data / ads** — a trust instrument that sells its data is no longer
   trusted.
+- **Developer-surveillance / individual productivity scoring** — the DAG could be turned into a
+  per-engineer ranking weapon; we refuse it. Corrosive to a fair-credit instrument, Goodhart-prone,
+  and off-brand. We ship self-directed individual insight + team/aggregate health signals, never a
+  per-person score (`ARCHITECTURE.md` §6 guardrail).
 
 ### The insight that feeds back into design
 
@@ -363,7 +394,9 @@ re-confirms asker-pull as the spine on business grounds.
 2. Asker-pull as the architectural spine, seeded by producer-push + public-git bootstrap.
 3. Ride C2PA (media) / Sigstore-SLSA (code); own identity + resolver + legal everywhere.
 4. Code-first, vibe-coding as the viral surface; supply-chain + wallet-identity downstream;
-   never the bank.
+   never the bank. Management artifacts (tickets/PRs/design docs) are the committed next content
+   frontier, sequenced *after* the code foundation; the DAG is read as credit / "who to ask" /
+   portable reputation — never as individual surveillance.
 5. Hash = join key, not trust; multi-resolution fingerprints; two-hash invariant.
 6. Commit/release atomic unit, span-compatible; semantic attestation standard + swappable
    carrier registry + canonical signing + graceful unknown-carrier degradation.
