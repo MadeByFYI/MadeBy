@@ -115,8 +115,15 @@ reproduction (`STRATEGY.md` §4, invariant #7).
 
 ## 6. Dogfood canary + reproducibility
 
-- **Our own repo is the first subject** (dogfood epic #1) — ground truth we know absolutely.
-  Its provenance-coverage badge is a live self-test that breaks loudly if resolution drifts.
+- **Our own repo is the first subject** (dogfood epic #1). **Reproducibility/regression only, not
+  accuracy ground truth** (review 2026-06-29): its provenance is `Co-Authored-By` trailers *we
+  wrote*, so testing the classifier against them is circular — it proves the regex is stable, not
+  correct. It breaks loudly if resolution drifts; that's its job.
+- **Accuracy is measured against an INDEPENDENT corpus** — `ground-truth-v0` (`@madeby/classify`),
+  whose labels rest on provenance *other than the trailer* (era / autonomous-agent account /
+  publicly-documented AI builds). It reports the honest headline the synthetic benchmark hid:
+  **recall on untrailered AI = 0%** for the trailer-only v0 (0 human false-positives). Published in
+  `GROUND-TRUTH.md`; the gap closes with witnessed session-log evidence (#68), not heuristics.
 - **Golden fixtures** — known repos → known fingerprints → known claims — catch nondeterminism.
 - **Reproducibility is itself a tested property**: same content always resolves the same way;
   canonicalization is deterministic.
