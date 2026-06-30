@@ -81,13 +81,21 @@ the creator; uncertainty in the tier"). A human-only commit (no AI trailer) corr
 
 The commit trailer under-detects AI: inline autocomplete and many tool edits leave **no trailer**,
 so a heavy AI user can read as ~100% human. The highest-fidelity *honest* signal is the AI tool's
-**own session log** — the tool as its own witness. `capture-session-spans` reads a Claude Code
-transcript (its `Write`/`Edit` tool calls) and records the repo files the AI authored content in,
-with `source: "claude-code-session-log"`:
+**own session log** — the tool as its own witness.
+
+**Recommended — `madeby capture --local` (#80).** Run **one command now** (no hook to have set up
+months ago): it reads *your own* AI-tool logs locally, and only attests files whose AI-authored
+content is **structurally still present** in your checkout — matched by structural fingerprint, so
+attribution survives squash / rebase / reformat. AI work that was rewritten or discarded (low
+similarity) is honestly **not** attested. Privacy-clean by construction: logs and content never
+leave your machine; only derived attribution (fingerprint + path + model) is written.
 
 ```bash
-pnpm provenance:capture-session <transcript.jsonl> [commit]   # commit default HEAD
+pnpm provenance:capture-local [transcript.jsonl] [commit]    # autodiscovers the newest session
 ```
+
+(The simpler `provenance:capture-session` also exists — it anchors by git blob SHA at a commit
+rather than structural fingerprint; `capture-local` supersedes it for accuracy.)
 
 The mirror **folds this evidence in** (`@madeby/analyzer` reads `.madeby/spans` from a checkout or a
 clone) and surfaces "🔬 witnessed AI spans in N files" alongside the commit number — recall the
