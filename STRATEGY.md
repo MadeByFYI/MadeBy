@@ -75,6 +75,16 @@ useful in a dispute even when the bytes later drift. The registry quietly become
 > We **order evidence; we do not assert truth.** When two parties claim the same content,
 > we rank by tier, timestamp, and lineage — we do not adjudicate.
 
+> **Defer the sworn tier (review 2026-06-29, Finding 4).** Sworn is the **highest-liability
+> surface** (hosting legal representations, publishing ranked ownership evidence) and has the
+> *least* operational design — jurisdiction, intermediary-liability/safe-harbor, co-defendant
+> exposure, the "powerful actor files a false sworn claim" case. **We do not launch sworn until
+> counsel signs off.** The wedge runs on **asserted + verified** at a fraction of the liability.
+> When sworn does ship, MadeBy is the **record-keeper hosting ordered evidence, never the notary
+> or judge** (claimant-to-claimant counterparty; symmetric export + non-deletion enforced). The
+> **product-liability legal pack** (ToS, privacy policy, AUP, DMCA-agent registration,
+> safe-harbor posture) is a named **formation deliverable** — see `COMPLIANCE.md`.
+
 ---
 
 ## 3. The first wedge: code, and specifically vibe-coding
@@ -300,6 +310,18 @@ with "order evidence, don't assert truth.")
 - **Default content is mix-led**: the human/AI ratio is the headline (ego-shareable), with
   a tier/coverage mark alongside (keeps the broader proof-layer identity open, rather than
   boxing us into "the AI-percentage thing").
+
+> **v0 honesty correction (review 2026-06-29, Findings 1 + commit-%-vs-code-%).** Until span/
+> session-log evidence exists, our detector measures **commit *involvement* (trailer presence)**,
+> not a code ratio — and inline autocomplete emits no trailer, so heavy AI users can read as
+> ~100% human. A `🧑 62% · 🤖 38%` *code* split overclaims a precision we can't compute — the one
+> sin the doctrine forbids. **So at v0 the mirror/badge headline is named AI collaborators + a
+> provenance-coverage number, and any ratio is labeled exactly "% of commits with AI
+> involvement" — never "% AI" or a code split.** The precise lines/tokens mix-led ratio is
+> *reserved for the tiers where span evidence actually exists* (invariant #6). For a curiosity
+> mirror that systematically under-detects, **under-claiming is the fatal bug**: reframe to what
+> the evidence supports rather than ship a boring, wrong number. (Tracked: classifier-recall +
+> session-log evidence ticket.)
 - **The gap between tiers lives in the *trust mark*, not in aesthetic quality.** Asserted is
   never crippled (it must seed virally); verified adds a desirable, earned mark — the
   verified-checkmark model. Moderate gap: pronounced in *meaning*, subtle in *aesthetics*.
@@ -350,17 +372,25 @@ the centerpiece here (revisit for the eventual creative/visual expansion).
 ## 6. Monetization
 
 Monetization is downstream of momentum, but it shapes the core design, so the rules are set
-now. **At this stage we hedge: treat all three viable lines as potential centers of gravity.**
+now.
 
-### Viable lines (hedge all three)
+> **Focus commitment (review 2026-06-29, Concern C; dated through ~2026).** "Hedge all three"
+> at zero users is decision-avoidance dressed as rigor — focus is the scarce resource. **Primary
+> line for the next 6–12 months: the vibe-coder mirror → individual/team *verified* tier** (the
+> warmest audience and the *lowest-liability* path — it pairs with deferring the sworn tier,
+> below). The other two lines (resolver-API-at-scale, supply-chain/compliance) are **optionality,
+> not scope** — kept in the architecture, not on the build plan. Revisit at traction.
 
-- **Trust premium (verification-as-a-service):** free to assert; pay for org/team accounts,
-  verified-identity, signing infrastructure, the verified badge. Monetizes the proof core.
-- **Asker-side at scale (the resolver API):** free/metered for casual asks; platforms,
-  marketplaces, moderation systems, and AI labs pay to query provenance at volume. Likely
-  the largest TAM; monetizes the asker-pull spine.
-- **Supply-chain / compliance (CI gating, SBOM, coverage gates):** enterprises pay to gate
-  releases and satisfy disclosure rules. The downstream product the same ledger enables.
+### Viable lines — primary vs. optionality
+
+- **[PRIMARY] Trust premium (verification-as-a-service):** free to assert; pay for org/team
+  accounts, verified-identity, signing infrastructure, the verified badge. Monetizes the proof
+  core. This is the line we build toward now (vibe-coder mirror → verified tier).
+- **[optionality] Asker-side at scale (the resolver API):** free/metered for casual asks;
+  platforms, marketplaces, moderation systems, and AI labs pay to query provenance at volume.
+  Likely the largest TAM long-term; monetizes the asker-pull spine. Kept in architecture, not scope.
+- **[optionality] Supply-chain / compliance (CI gating, SBOM, coverage gates):** enterprises pay
+  to gate releases and satisfy disclosure rules. The downstream product the same ledger enables.
 
 ### Ruled out (corrosive to a trust instrument)
 

@@ -185,6 +185,13 @@ Several are product-critical, not just ops — two are the public product pointe
 
 ## 10. Agentic ops: Claude as a first-class ops team member
 
+> **Stage descope (review 2026-06-29).** The full design below — WIF, tiered capability brokers,
+> kill switches, two-person rules — is right for a product with prod to operate, and wrong as an
+> *attention allocation* for a pre-deploy company. **v0 floor: read-only metrics + propose-PR
+> only.** The WIF / broker / tiered-capability / kill-switch machinery is **parked as a
+> post-traction epic** (design captured here, not built now). Attention goes to the unblocked
+> funnel (the in-memory mirror, the classifier) instead.
+
 We want Claude on the ops team — reading every metric, triaging incidents, and making
 changes — without compromising the trust posture the product exists to sell.
 

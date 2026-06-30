@@ -43,6 +43,25 @@ required.** This removes what is normally the most time-sensitive post-formation
 - **Puzzle auto-syncs Mercury** — categorize monthly; keep receipts; maintain a clean chart of
   accounts (tag infra/SaaS distinctly). Clean books = painless filings + due diligence later.
 
+## Product-liability legal pack (formation deliverable — review 2026-06-29, Finding 4)
+
+This runbook covers *entity/tax*; it was **silent on product liability**, which is the larger
+exposure for a product that publishes inferences about third parties and (later) hosts sworn legal
+attestations. Forming the entity without this layer leaves the highest-liability surfaces legally
+naked. Engage counsel **at formation** for:
+
+- **Terms of Service + Acceptable Use Policy** — including the "we order evidence, we don't
+  adjudicate" posture and prohibited-use terms for the free assert tier.
+- **Privacy policy + GDPR/DPA review** — git author emails + behavioral inference are personal
+  data; cover lawful basis, right to object, and accuracy duties on *inferred* data (ties to the
+  consent/opt-out design, `ARCHITECTURE.md` §8/§11).
+- **DMCA/takedown agent registration + intermediary-liability / safe-harbor posture** — before any
+  public, name-attached pages ship.
+- **Counsel on the sworn tier specifically** — hosting legal representations, the "powerful actor
+  files a false sworn claim" case, and MadeBy-as-record-keeper-not-notary structure. The sworn tier
+  does **not** launch until this clears (`STRATEGY.md` §2).
+- **`security@` + `privacy@` contacts** live before launch.
+
 ## Deferred until they apply
 
 - **Quarterly estimated taxes** — only once profitable (pre-revenue at a loss: none due).
