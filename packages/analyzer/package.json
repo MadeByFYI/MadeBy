@@ -14,7 +14,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@madeby/classify": "workspace:*"
+    "@madeby/classify": "workspace:*",
+    "@madeby/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -1,0 +1,2095 @@
+{
+  "version": "0",
+  "commit": "462c3e7f4e4f6b74133455fa4562d9662b0ac925",
+  "generatedAt": "2026-06-30T11:03:08.064Z",
+  "attestations": [
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "0065833b760482e9b6fff381ef5cf141ac5fdfa6"
+        },
+        "hint": {
+          "path": "archive/v1/ARCHIVE_NOTE.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "cd05aa3be160894904d43ee83deb16f36490598f"
+        },
+        "hint": {
+          "path": "STRATEGY.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "cdb9cd3be1a94523f1fc49a46ae321190aef15c8"
+        },
+        "hint": {
+          "path": "ARCHITECTURE.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f9d1be51228fd450f858d62ed4d8ac5f34fd6a04"
+        },
+        "hint": {
+          "path": "OPERATIONS.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "ed67b53c61e89989a5cfc3e7d3ded85ccf93f835"
+        },
+        "hint": {
+          "path": "TESTING.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "3181a988e41ac2075f86727631ad6e2cddae3e08"
+        },
+        "hint": {
+          "path": "pnpm-workspace.yaml"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "a520dde7fa6cfe66085e91a2864e60a086d53513"
+        },
+        "hint": {
+          "path": "package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "a4949c8107553af5257887cb18792c562af54180"
+        },
+        "hint": {
+          "path": "tsconfig.base.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "c07914c650bb3e0fed0ee398d45d65196ba27c95"
+        },
+        "hint": {
+          "path": ".gitignore"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "bd4336a731e6dcf7c1e9fb82a3195f2837966243"
+        },
+        "hint": {
+          "path": ".env.example"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "085d39ad5db420d2c9544378abf959ae268dabfe"
+        },
+        "hint": {
+          "path": "README.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "a1affb9b3e8ffe3a9717ca8f1e4ebcf0fc1fa3de"
+        },
+        "hint": {
+          "path": "CLAUDE.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f8cb06903d9b7f8346d706a455af4fff4e730752"
+        },
+        "hint": {
+          "path": ".github/workflows/ci.yml"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "db229603a24eb29ff98ed347fa1ce13548c5a327"
+        },
+        "hint": {
+          "path": "apps/web/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "9c8e8115d5f915d4de1d38fab3fa94b2625cbe7d"
+        },
+        "hint": {
+          "path": "apps/web/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f29d1d9eea2c9e944dff8d1d58a390cb2a5fb76c"
+        },
+        "hint": {
+          "path": "apps/web/next.config.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "65a7b5440254c1a986f1aaaada23e87859020e7e"
+        },
+        "hint": {
+          "path": "apps/web/src/app/layout.tsx"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "6e3299be2d1caf28bc7a61f3255f23e4c9176a0e"
+        },
+        "hint": {
+          "path": "apps/web/src/app/page.tsx"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "d23446b5e6944d91de42350e89ff5f438a367681"
+        },
+        "hint": {
+          "path": "packages/core/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "9c3653f921162c743561dfdc073fd7f68fb94988"
+        },
+        "hint": {
+          "path": "packages/core/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "08e787b3aafb5b9cb095d21fc83044e381aab5c7"
+        },
+        "hint": {
+          "path": "packages/core/src/tiers.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "92cf44c3b6bd73eb4d4df44f0e58df7ba1aaf614"
+        },
+        "hint": {
+          "path": "packages/core/src/canonicalize.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7aee66f53c1ee369583ba117eef2c02896a063b7"
+        },
+        "hint": {
+          "path": "packages/core/src/fingerprint.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "42eff5d49491610144eba535912728b475cb4c23"
+        },
+        "hint": {
+          "path": "packages/core/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "27d7cc6bdb89937e9da554402b2f865150ef159b"
+        },
+        "hint": {
+          "path": "packages/core/src/vectors/README.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "e64db22305e23d10139b79885dc75a53e0aba05d"
+        },
+        "hint": {
+          "path": "workers/badge/README.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "eaa62f8d63560f9f2504728a71d767e501174678"
+        },
+        "hint": {
+          "path": "services/ingestion/README.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "bd4e95cda60807a5f667671d8ede108d24097e06"
+        },
+        "hint": {
+          "path": "packages/core/src/model.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4810b2ac5b762053cf5bbbc112ce2391db07571d"
+        },
+        "hint": {
+          "path": "packages/core/src/resolve.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "535dcf3a64d0f44be08d3175ece30c6415e774f3"
+        },
+        "hint": {
+          "path": "packages/core/src/guards.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "9c6e0f0f152506314aeea26b1cc5a0cf16828d32"
+        },
+        "hint": {
+          "path": "packages/core/src/coverage.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "891f55957d6fc7e7a5e222e149bd6d004922d984"
+        },
+        "hint": {
+          "path": "packages/core/src/resolve.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "21d213555e7fdf4d32b261b130d9953cc3cbcabb"
+        },
+        "hint": {
+          "path": "packages/core/src/coverage.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "bfcdcf9ceb03c26ce3b05575c2b413c658f37e4a"
+        },
+        "hint": {
+          "path": "packages/core/src/guards.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "0ad492df7b3f08bf7246f45a94b148621d104700"
+        },
+        "hint": {
+          "path": "packages/core/src/tiers.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7423dbd7115ea4a254170a77ebfc81c0179205de"
+        },
+        "hint": {
+          "path": "apps/web/src/lib/db/schema.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "9907f970250746a6710ad733787ca89811a78972"
+        },
+        "hint": {
+          "path": "apps/web/src/lib/db/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4a7330e733dd95685229664d5acfc49fce8509c5"
+        },
+        "hint": {
+          "path": "apps/web/drizzle.config.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7fce047cc4f0d8515e2bab88c0274c019f1c4483"
+        },
+        "hint": {
+          "path": "packages/core/src/carriers.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "35f4f796125014403ddc92e8e93d6403fbed44d9"
+        },
+        "hint": {
+          "path": "packages/core/src/span.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b33ed8c7aec26f365872f5c35acd6079407a7860"
+        },
+        "hint": {
+          "path": "packages/core/src/canonicalize.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7717e6f57cb012d517f4e610bbf88d15c16c2e86"
+        },
+        "hint": {
+          "path": "packages/core/src/carriers.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4cb27f9ae293a3782b7324c195d7ea9655f1cfe3"
+        },
+        "hint": {
+          "path": "packages/core/src/structural.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "33168ce85cfaba3f567def592caa6f003fd791d7"
+        },
+        "hint": {
+          "path": "packages/core/src/fingerprint.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "338d4d4d3969617ab23060f3bb2b117f6495b7cb"
+        },
+        "hint": {
+          "path": "packages/core/src/structural.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "6f7d23a41d309f7656c09e84bf8bdc14e24c3917"
+        },
+        "hint": {
+          "path": "packages/classify/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "5a24989cd30dcf3749ca7e60d4e83d6ddbb14714"
+        },
+        "hint": {
+          "path": "packages/classify/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "a1abd28005b706831a8b3c0d0044f697ebe870a7"
+        },
+        "hint": {
+          "path": "packages/classify/src/classify.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7db5c0d2ca934a17449e8c00a3e63c41d2481dc8"
+        },
+        "hint": {
+          "path": "packages/classify/src/aggregate.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "55168296db10e47ec01d3f405974b6c729175de8"
+        },
+        "hint": {
+          "path": "packages/classify/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "2fae972154fca51ba676eac88d79f12743c26f5d"
+        },
+        "hint": {
+          "path": "packages/classify/src/classify.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4e910a71f2937356b52bdafd49634b01b5bb0984"
+        },
+        "hint": {
+          "path": "packages/analyzer/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "3fbff51dda24b4ff1916a9fde1b79b1a7ff0e2bd"
+        },
+        "hint": {
+          "path": "packages/analyzer/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7012cabe087fb581be0f9297e99eefe24f7dfe65"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/git.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7a0a1169f678a71b7db29d0a2766c3058882804d"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/analyze.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7d7de6105f521b14b326f14c77a8abe14b478437"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/badge.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "e6e60d017f4f232acd3938f8255c6ef55e638e21"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "98907a49e8ff4985574c47c8c68b5644f1b2a2ce"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/analyze.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "472e58493fc05e4806f26f6f4287f1b5e30b98cd"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/git.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b382da7cb52928f5e9d716bf53b452b5d21c5348"
+        },
+        "hint": {
+          "path": "apps/web/src/app/api/analyze/route.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "d1ea1e567951e34c6005ef497d36aca5c5ab215b"
+        },
+        "hint": {
+          "path": "apps/web/src/app/analyze/page.tsx"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "af8ea6016fa7c535a9ae6d1302edf10cdbe82208"
+        },
+        "hint": {
+          "path": "packages/core/src/resolution.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "153b518be06fe1fc2a8decc5b3cc5f316b2d43f1"
+        },
+        "hint": {
+          "path": "packages/core/src/resolution.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "28e20dd597116dcda0affec9b8ae1f75bfadf519"
+        },
+        "hint": {
+          "path": "packages/registry/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f96df2d91274762cb689e4b1eb9d4e864b003a64"
+        },
+        "hint": {
+          "path": "packages/registry/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "7076fbcf64d878be8038fd18c3b6b25d1d702f3e"
+        },
+        "hint": {
+          "path": "packages/registry/src/registry.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "250a7f811c9c2b4fdf1eb094ae727475d7ba1aee"
+        },
+        "hint": {
+          "path": "packages/registry/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "75389381c45a13832948515ba9f4efb79bad8614"
+        },
+        "hint": {
+          "path": "packages/registry/src/registry.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "57c5bc16ea606ddab19645961340b457c6e6377c"
+        },
+        "hint": {
+          "path": "apps/web/src/app/api/resolve/route.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "53ef7bbe9cbf8c640cf76fb619736030f188c514"
+        },
+        "hint": {
+          "path": "apps/web/src/app/r/[algorithm]/[value]/page.tsx"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4162ca5899b02c6916f3a9b57347cf2b6965155b"
+        },
+        "hint": {
+          "path": "PROVISIONING.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f6b07d1fefccbc2ddc4712ca8ffa12c2b8b9a91b"
+        },
+        "hint": {
+          "path": "packages/badge/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "5a24989cd30dcf3749ca7e60d4e83d6ddbb14714"
+        },
+        "hint": {
+          "path": "packages/badge/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "bfe856ee5a01e2497fd7d4bd3d66fa5925d9e29e"
+        },
+        "hint": {
+          "path": "packages/badge/src/badge.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "e2c7e27004a833a72c6323e021d05e718876d2b9"
+        },
+        "hint": {
+          "path": "packages/badge/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "1aa5b00392c06d0e33c761d6feb46a55d860c617"
+        },
+        "hint": {
+          "path": "packages/badge/src/badge.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "bb0bea846bce3d333e1bd290d902542d4dde13f7"
+        },
+        "hint": {
+          "path": "apps/web/src/app/api/badge/route.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "397f0a16ad1a36abcf47234a86e7ac01fbb2ba7d"
+        },
+        "hint": {
+          "path": "packages/core/src/vectors/conformance-v0.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "0aa7cebf7dc92a45c87ae71c5ad029d5ae4299fe"
+        },
+        "hint": {
+          "path": "packages/core/src/conformance.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "2999ca8d08802de9b0541c3957d5f8b4ca64dd1d"
+        },
+        "hint": {
+          "path": "packages/core/src/conformance.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f41472cb369678fb51c3a7b1d2f9ead62199da39"
+        },
+        "hint": {
+          "path": "COMPLIANCE.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "383afc9b9ec72fa42566d83cd34f64b714ae81ef"
+        },
+        "hint": {
+          "path": "packages/core/stryker.config.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "0effc65330f838e597b7034922365de36879831d"
+        },
+        "hint": {
+          "path": "packages/core/vitest.config.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b0ea412b23962335574c4bb2dcebacefd9e56370"
+        },
+        "hint": {
+          "path": "packages/core/src/redteam.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "ba7800cc5bff7374a50da9ef10b17b910aa67107"
+        },
+        "hint": {
+          "path": "packages/core/src/redteam.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4aaa2ea16da111e768d6fd382f5f52244a834e7e"
+        },
+        "hint": {
+          "path": "RED-TEAM.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "fa0704bf8fb99fc0c5223b852f1506f7fa36d53c"
+        },
+        "hint": {
+          "path": "packages/classify/src/benchmark/benchmark-v0.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "5799f82bfd25150685a7da8e303b70e3eb72c4b7"
+        },
+        "hint": {
+          "path": "packages/classify/src/eval.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "bc80143de739482bd61dc78cc6a6d48e6e310b0b"
+        },
+        "hint": {
+          "path": "packages/classify/src/eval.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "9e65f3305e26a391cab075606d067f3b6b18db34"
+        },
+        "hint": {
+          "path": "BENCHMARK.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "ff9a760670d8253ae003978bbd294e9a8a432616"
+        },
+        "hint": {
+          "path": "packages/verifier/package.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "8deadf0ec9ce2ee9d37b7c0a0a8e76b1e09cb7ff"
+        },
+        "hint": {
+          "path": "packages/verifier/tsconfig.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b45096d5a4e339bd4938b5d8155c02eef3b519dd"
+        },
+        "hint": {
+          "path": "packages/verifier/src/suite.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "f909f6b3565c5fe99f1555ce3d84ed15e0e44edd"
+        },
+        "hint": {
+          "path": "packages/verifier/src/sign.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "6bfab75b021666486f92ba8fd4928fba830f1a29"
+        },
+        "hint": {
+          "path": "packages/verifier/src/verify.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "58b10c7a911393877554afd6126377b2c4d55666"
+        },
+        "hint": {
+          "path": "packages/verifier/src/index.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4fe3fb63da84dca6f6298405ccb702ffdedd0a8d"
+        },
+        "hint": {
+          "path": "packages/verifier/src/verify.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "ca659d947cc829158eb9721c4274f374eb318f9c"
+        },
+        "hint": {
+          "path": "VERIFYING.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "a5138bb2928e44e28f2d9ffecc761d0849402e7e"
+        },
+        "hint": {
+          "path": "packages/verifier/vitest.config.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b6461e8fc45ae639daf1c098505bfe8f9f5058e6"
+        },
+        "hint": {
+          "path": "infra/github-app/manifest.json"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "03a781c18535931f049d096c513ebe0296df9805"
+        },
+        "hint": {
+          "path": "infra/github-app/create.html"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4b6b31546e54123ccd8c75f7a9dfa028da36c9ab"
+        },
+        "hint": {
+          "path": "infra/github-app/README.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "4c08a99060777b07dc4e23b0fce9ae3f183a2acb"
+        },
+        "hint": {
+          "path": "infra/cloudflare/redirects.sh"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "17284fbd71730deddb0f3631b8d2c70367eeea01"
+        },
+        "hint": {
+          "path": "infra/cloudflare/README.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "c2945d6885d61086040786495f35911cd927510d"
+        },
+        "hint": {
+          "path": "VISION.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "b45136e8246631120a9069085f0914b6e7e2fb37"
+        },
+        "hint": {
+          "path": "packages/core/src/edges.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "39ceeb62d4637ba80775bb00dd399be62b032af2"
+        },
+        "hint": {
+          "path": "packages/core/src/edges.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "26c2ff71172f1cfebc67c25d857df41446f124f2"
+        },
+        "hint": {
+          "path": "packages/core/src/contention.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "34f2174843615e0e8a9d342b113b2b59fbe55a72"
+        },
+        "hint": {
+          "path": "packages/core/src/contention.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "41821fde716c6d988e3d6da8dbbfb4fe4077711a"
+        },
+        "hint": {
+          "path": "packages/core/src/manifest.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "1bced3fe6f6b50dace74775b2a03cb3a8ef61a0e"
+        },
+        "hint": {
+          "path": "packages/core/src/manifest.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "62589f2078918490529829a1347956f733346dce"
+        },
+        "hint": {
+          "path": "scripts/capture-spans.mjs"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "5b9315b826e409ea05b2d4187a4ab8c171b873dc"
+        },
+        "hint": {
+          "path": "scripts/verify-trailers.mjs"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "c1cecf27f5b64779ac03c97c762a227fc9caa34b"
+        },
+        "hint": {
+          "path": "PROVENANCE.md"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "8b6c54d23b52ade0a6e7c0a6d3dc3c21ead0bab8"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/clone.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    },
+    {
+      "anchor": {
+        "fingerprint": {
+          "algorithm": "git-blob-sha1",
+          "target": "FILE",
+          "value": "8bc32ca2f245aa62f06d5de45466c7f4159cbff6"
+        },
+        "hint": {
+          "path": "packages/analyzer/src/clone.test.ts"
+        }
+      },
+      "attribution": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "operatorId": "mac@macdougherty.com",
+        "source": "claude-code-session-log"
+      }
+    }
+  ]
+}

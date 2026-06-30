@@ -74,18 +74,43 @@ pnpm provenance:capture <commit>   # a specific commit
 added/modified file gets an attestation anchored by its git blob SHA, attributing the AI model (from
 the trailer) under the committer as operator with `source: "git-commit-trailer-v0"`. This records
 *"AI assisted this file, operated by X"* — **not** a fabricated percentage (consistent with "name
-the creator; uncertainty in the tier"). **Line-level spans captured from Claude Code session logs
-(the AI as its own witness) are the next refinement** — the manifest format already holds line hints
-and structural-fingerprint anchors for when that lands.
+the creator; uncertainty in the tier"). A human-only commit (no AI trailer) correctly produces
+**no** attestations.
 
-A human-only commit (no AI trailer) correctly produces **no** attestations.
+### Witnessed evidence — session logs (the recall fix, #68)
+
+The commit trailer under-detects AI: inline autocomplete and many tool edits leave **no trailer**,
+so a heavy AI user can read as ~100% human. The highest-fidelity *honest* signal is the AI tool's
+**own session log** — the tool as its own witness. `capture-session-spans` reads a Claude Code
+transcript (its `Write`/`Edit` tool calls) and records the repo files the AI authored content in,
+with `source: "claude-code-session-log"`:
+
+```bash
+pnpm provenance:capture-session <transcript.jsonl> [commit]   # commit default HEAD
+```
+
+The mirror **folds this evidence in** (`@madeby/analyzer` reads `.madeby/spans` from a checkout or a
+clone) and surfaces "🔬 witnessed AI spans in N files" alongside the commit number — recall the
+trailers missed, as **evidence rather than a noisy heuristic**. (We deliberately do *not* infer AI
+from diff-size/cadence heuristics: they're frequently wrong and risk over-claiming about people who
+never opted in — the one sin the doctrine forbids. For a *stranger's* repo with no session log we
+show only what the trailers support; we never fabricate the gap.)
+
+This is also the reference **emitter**: the `.madeby` manifest is the vendor-neutral contract any
+tool or hook can fill (ship to the tools, don't wait for them). v0 is file-level; line-level spans
+ride the same format (it already holds line hints + structural-fingerprint anchors).
+
+> **Recalibration on a real labeled corpus** (untrailered-recall as the headline number) is tracked
+> separately as the independent ground-truth corpus (#73) — the synthetic benchmark can't measure
+> the real-world untrailered case.
 
 ## 4. What's captured where
 
 | Granularity | Where | Tier it can reach |
 |---|---|---|
 | Commit human/AI | `Co-Authored-By:` trailers (in git) | commit-tier (bound once commits are signed) |
-| File / span | `.madeby/spans/<sha>.json` (sidecar) | span-tier; operator-signed → verified/bound |
+| File / span (trailer-derived) | `.madeby/spans/<sha>.json` · `source: git-commit-trailer-v0` | span-tier |
+| File / span (witnessed) | `.madeby/spans/<sha>.json` · `source: claude-code-session-log` | span-tier; the recall fix (#68) |
 
 All of this lives in git and is resolvable later (#3) — **nothing here depends on `madeby.fyi`
 existing.**

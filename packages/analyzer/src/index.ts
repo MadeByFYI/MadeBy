@@ -7,3 +7,5 @@ export type { AnalysisResult } from "./analyze";
 export { badgeSnippet } from "./badge";
 export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
 export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";
+export { readSpanManifestsFromDir, readSpanManifestsFromGit, summarizeSpanEvidence } from "./provenance";
+export type { SpanEvidence } from "./provenance";
