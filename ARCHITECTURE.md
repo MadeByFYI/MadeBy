@@ -363,7 +363,8 @@ enums where values churn (models, providers, carriers, algorithms).
   a **canonical payload**, and a **Signature**. Is itself content-addressed (claim hash) so
   Claims can reference Claims.
 - **ClaimEdge** — typed link between claims/subjects: `PART_OF` (composition) or
-  `DERIVED_FROM` (derivation).
+  `DERIVED_FROM` (derivation). (A `DISPUTES` edge for contested claims is specced in §11,
+  built later.)
 - **Carrier** — registry entry: identifier + parser/serializer + canonicalization ref +
   whether it supports full verification (→ tier cap).
 - **LegalRepresentation** / **SwornAttestation** — optional overlay on a Claim (the sworn
@@ -385,6 +386,95 @@ enums where values churn (models, providers, carriers, algorithms).
    truth.** (§6)
 7. **Aggregate indices (org or public) surface their tier distribution and are labeled
    estimates with published methodology — never a bare number implying certainty.** (§8)
+8. **Contention is ranked by evidence, never resolved by fiat:** tier → origination/lineage →
+   priority (tiebreaker only); registration priority never overrides stronger evidence; genuine
+   ties are surfaced as open conflicts. (§11)
+9. **No identity-based precedence and no suppression:** a verified/enterprise identity never
+   wins by status alone, and competing claims are ranked + labeled, never deleted. (§11)
+10. **Tier authenticates the statement and signer, not authorship;** origination rests on
+    lineage + priority + native provenance — a valid signature over copied bytes does not
+    establish origin. (§11)
+
+---
+
+## 11. Conflicts, false claims & ownership
+
+Contention is just **uncertainty about *who***, handled the way we handle every uncertainty:
+order the evidence in public, label confidence honestly, never resolve by fiat. We rank; we do
+not adjudicate.
+
+**Two questions, two claim types — keep distinct.**
+- **Authorship / origination** — *who made it.* An Attribution claim (Identity + role).
+- **Ownership / rights** — *who holds it.* A **legal/sworn** claim. Diverges from authorship under
+  work-for-hire, acquisition, or license — both are recorded without conflict (employee authors;
+  org owns). This, not an authorship argument, is the enterprise's primary object.
+
+**Authentication ≠ origination (load-bearing).** A signature proves *who said something over which
+bytes* — statement authenticity (the `verified`/`bound` tiers). It does **not** prove authorship: a
+bad actor can verify their own identity and sign a claim over *copied* bytes, reaching `bound` on
+the statement. Origination is a **separate axis** — **lineage** (upstream history / `DERIVED_FROM`),
+**priority** (earliest tamper-evidently-logged claim), and **native provenance** (the artifact's own
+git/C2PA record). The resolver surfaces these distinctly: "we verified X *said* this" is not "X is
+established as the *origin*."
+
+**Ranking among co-located claims (deterministic, published):**
+1. **Tier** — statement-authenticity strength (bound > verified > sworn > asserted).
+2. **Origination** — lineage / native provenance (an origin outranks its derivative).
+3. **Priority** — earliest logged claim, **tiebreaker only** when 1–2 are level. First-to-register
+   ≠ first-to-create; priority is a signal, never proof.
+4. **Ties stay ties** — genuinely equal evidence is shown as an open conflict, never broken by fiat
+   (fail-safe applies to *who*, exactly as it does to tier).
+
+> **Squatting-resistance falls out of this.** Because priority is the *floor* of the stack, not the
+> top, a squatter (asserted, no lineage) is outranked the instant the real owner asserts verified
+> identity + lineage + ownership — even arriving late. Unlike domains/handles/trademarks, **you
+> cannot hold hostage content you didn't make or own**; an asserted claim grants no exclusivity and
+> locks nothing.
+
+**The challenge / counter-claim model (specced now, built later).** A challenge is **not an appeal to
+a judge** — it is just another claim/edge on the same ladder, so it cannot be weaponized: an unbacked
+challenge against a `bound` claim is itself only `asserted` and renders as visibly weak; we never
+paint a generic "disputed!" stigma on strong content. Three shapes, all tiered graph nodes/edges: a
+**counter-authorship claim** (same fingerprint), a **contradiction** ("this is not the origin") via a
+`DISPUTES` edge, or a **lineage assertion** via `DERIVED_FROM`. Challenges are **identity-backed and
+appended to the transparency log** — contesting is neither free nor anonymous, so frivolous
+challenges accrue to the challenger's record. The record is **append-only and never final**: new
+evidence — including an external **court ruling, entering as a high-tier legal event** — reopens and
+updates the ranking.
+
+**Two doors into one record.**
+- **The individual / "David" door** — reactive, artifact-level, authorship-centric: marshal evidence
+  to outrank. Inherently nuanced; for the motivated creator and genuinely contested edge cases.
+- **The enterprise / "Goliath" door** — connect the source **once** (verify org identity, install
+  org-wide); thereafter every commit/release is **automatically** signed under the org identity,
+  timestamped at push (earliest priority), carrying native lineage — *born dominant*, employees do
+  nothing. The org's object is an **ownership claim on the legal axis**. Enforcement is alert-driven
+  + one-click.
+
+> **No identity-based precedence.** A verified/enterprise identity **never wins by status alone** —
+> dominance always rests on evidence; we only make leaving the legitimate trail effortless
+> (automation at the source), never grant a privileged override. This is what stops a lying Goliath
+> from crushing a truthful David.
+
+**Reactive enterprises & "money buys speed, not outcome."** Most enterprises arrive *after*
+discovering a squatter. The common case resolves automatically (priority is the floor). For a
+genuinely-contested item, resources buy **operational speed** along the legitimate path — expedited
+identity verification (KYB), automated evidence-dossier assembly, guided sworn-ownership filing,
+court-ready export — plus a fast on-ramp to external/legal resolution that writes back as a high-tier
+event. Money accelerates the *evidence-and-legal path*; it never overrides the ranking. A claimant
+who pays but lacks the facts still loses (a false sworn claim is perjury; absent lineage stays absent).
+
+**Residual risk, stated plainly.** The mirror of David-beats-Goliath is a powerful actor filing a
+*false* sworn ownership claim against a small creator. We don't eliminate courtroom power asymmetry,
+but we don't amplify it: a false sworn claim is **legally actionable** and permanent in the record;
+it **does not delete** the creator's claim (which stays visible at its true tier, lineage intact);
+and the evidence export is **symmetric** (the smaller party pulls the same dossier). We make the
+facts legible to whoever holds them; we don't hand the bigger wallet a bigger thumb.
+
+**Hard limits.** No identity override; no deletion/suppression of competing claims (rank + label,
+never censor); priority ≠ proof; we **don't adjudicate ownership/copyright** — we hand courts
+*ordered evidence*. Anti-abuse and legal takedowns (court orders, bulk-claim rate-limits) are an
+**operational/platform policy, orthogonal** to the authorship-evidence machinery.
 
 ---
 
