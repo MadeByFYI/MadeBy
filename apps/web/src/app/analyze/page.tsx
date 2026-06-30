@@ -1,5 +1,6 @@
 import { analyzeRepo, badgeSnippet, isAnalyzeError } from "@madeby/analyzer";
 import { track, FUNNEL } from "@/lib/analytics";
+import { mirrorCoverage } from "@/lib/coverage";
 
 // Clones + analyzes at request time → Node runtime, never prerendered.
 export const runtime = "nodejs";
@@ -85,6 +86,7 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
   const r = result;
   void track(FUNNEL.repoAnalyzed, { repo: r.repo }); // top of the asserted→verified funnel (fire-and-forget)
   const who = r.contributors.map((c) => `${c.name}${c.kind === "ai" ? " (AI)" : ""}`).join(" · ");
+  const cov = mirrorCoverage(r.aiInvolvedPercent);
   const [owner, name] = r.repo.split("/").slice(1, 3);
 
   return (
@@ -101,9 +103,28 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
 
       {/* The bold one-line answer; everything else is opt-in below (progressive disclosure). */}
       <p style={{ fontSize: "1.4rem", margin: "1.25rem 0 0.25rem", lineHeight: 1.3 }}>Made by {who}</p>
-      <p style={{ fontSize: ".95rem", opacity: 0.8, margin: 0 }}>
-        AI-involved on <strong>{pct(r.aiInvolvedPercent)}</strong> of commits.
-      </p>
+
+      {/* Coverage-led, never a confident 'human' ratio: lead with what we can PROVE, make the
+          rest an explicit unattributed fraction (#79). */}
+      <div style={{ margin: "1rem 0 0", padding: "0.9rem 1rem", border: "1px solid #2a3340", borderRadius: 8 }}>
+        <p style={{ margin: 0, fontSize: ".95rem", opacity: 0.85 }}>
+          AI involvement <strong>provable in {pct(cov.provablePercent)}</strong> of commits.
+        </p>
+        <p style={{ margin: ".25rem 0 0", fontSize: "1.25rem", color: "#e6b566" }}>
+          <strong>{pct(cov.unattributedPercent)} unattributed</strong> — we can&apos;t see how it was made.
+        </p>
+        {cov.weakHumanSignal ? (
+          <p style={{ margin: ".4rem 0 0", fontSize: ".82rem", opacity: 0.7 }}>
+            No AI signal in the rest — but for recent repos that often means <em>undisclosed</em> AI,
+            not no AI. We only count AI we can see.
+          </p>
+        ) : null}
+        <p style={{ margin: ".5rem 0 0", fontSize: ".82rem", opacity: 0.75 }}>
+          Raise provable coverage: record your AI tools&apos; own session logs (local capture), then
+          claim &amp; sign your repo. <em>(local capture: #80 · claim/verify: producer-push, #6)</em>
+        </p>
+      </div>
+
       {r.spanEvidence.attestations > 0 ? (
         <p style={{ fontSize: ".95rem", margin: ".4rem 0 0", color: "#9ad29a" }}>
           🔬 AI spans recorded in <strong>{r.spanEvidence.files}</strong> file
