@@ -36,13 +36,19 @@ interface AiPattern {
 
 // Known AI co-author / author signatures. Open-ended — extended over time; unknown AI tools
 // simply read as human until added (a false-negative, which is the safe direction here).
+// EVIDENCE-GRADE only (#78): named AI tools / agent identities, chosen to avoid colliding with
+// human names (e.g. we match `\bcursor(agent)?\b`, never bare "cody"). No behavioral inference.
 const AI_PATTERNS: AiPattern[] = [
   { re: /claude/i, provider: "anthropic", model: "claude" },
   { re: /copilot/i, provider: "github-copilot" },
-  { re: /\bcursor\b/i, provider: "cursor" },
+  { re: /\bcursor(?:agent)?\b/i, provider: "cursor" },
   { re: /\bdevin\b/i, provider: "cognition" },
   { re: /gemini/i, provider: "google" },
   { re: /chatgpt|openai|codex|\bgpt-/i, provider: "openai" },
+  { re: /codeium|windsurf/i, provider: "codeium" },
+  { re: /\baider\b/i, provider: "aider" },
+  { re: /codewhisperer/i, provider: "amazon" },
+  { re: /tabnine/i, provider: "tabnine" },
 ];
 
 function matchAi(text: string): AiContributor | null {
@@ -52,7 +58,9 @@ function matchAi(text: string): AiContributor | null {
   return null;
 }
 
-const TRAILER_RE = /^[ \t]*Co-authored-by:[ \t]*(.+)$/gim;
+// Recognize the AI-attribution trailers tools actually emit, not just Co-authored-by (#78).
+// matchAi still gates AI vs. human per entry, so widening the keys never causes a false positive.
+const TRAILER_RE = /^[ \t]*(?:Co-authored-by|Generated-by|Assisted-by):[ \t]*(.+)$/gim;
 
 // Confidence model (honest about uncertainty):
 //  - an explicit AI trailer/author is STRONG evidence of AI involvement → high confidence
