@@ -5,7 +5,9 @@
 import { execFileSync } from "node:child_process";
 import type { CommitMeta } from "@madeby/classify";
 
-const FIELD = "\x00"; // unit separator between fields
+// NOTE: never use NUL (\x00) here — Node's execFileSync rejects args containing NUL bytes,
+// so every call would throw and (via the catch below) silently return []. Use \x1f.
+const FIELD = "\x1f"; // unit separator between fields
 const RECORD = "\x1e"; // record separator between commits
 
 /**
