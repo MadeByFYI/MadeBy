@@ -8,6 +8,7 @@ import { jcs, canonicalize, type Json } from "./canonicalize";
 import { sha256Fingerprint, gitBlobFingerprint } from "./fingerprint";
 import { resolveTier, type ResolutionContext } from "./resolve";
 import { resolveEdgeTier, type EdgeResolutionContext } from "./edges";
+import { resolveContention, type OriginationInput } from "./contention";
 import type { Claim, Carrier, ClaimEdge } from "./model";
 
 export const CONFORMANCE_VERSION: string = (vectorsJson as { version: string }).version;
@@ -27,6 +28,13 @@ interface EdgeTierVector {
   env: { knownEdgeTypes: string[]; verifySignature: boolean; signerVerified: boolean };
   expected: string;
 }
+interface ContentionVector {
+  name: string;
+  claims: Claim[];
+  inputs?: (OriginationInput | undefined)[];
+  env: { knownCarriers: string[]; verifySignature: boolean; signerVerified: boolean };
+  expected: { open: boolean; originIndex: number | null; divergence: boolean };
+}
 interface Vectors {
   version: string;
   jcs: JcsVector[];
@@ -34,6 +42,7 @@ interface Vectors {
   fingerprint: FpVector[];
   tierResolution: TierVector[];
   edgeTierResolution: EdgeTierVector[];
+  contention: ContentionVector[];
 }
 
 const V = vectorsJson as unknown as Vectors;
@@ -104,6 +113,13 @@ export async function runConformance(): Promise<ConformanceResult[]> {
   for (const v of V.edgeTierResolution) {
     const got = resolveEdgeTier(v.edge, edgeCtxFromEnv(v.env));
     results.push({ category: "edgeTierResolution", name: v.name, pass: got === v.expected, detail: got === v.expected ? undefined : got });
+  }
+
+  for (const v of V.contention) {
+    const r = resolveContention(v.claims, ctxFromEnv(v.env), v.inputs ?? []);
+    const originIndex = r.origin ? v.claims.indexOf(r.origin.claim) : null;
+    const pass = r.open === v.expected.open && originIndex === v.expected.originIndex && r.authenticationDivergesFromOrigination === v.expected.divergence;
+    results.push({ category: "contention", name: v.name, pass, detail: pass ? undefined : JSON.stringify({ open: r.open, originIndex, divergence: r.authenticationDivergesFromOrigination }) });
   }
 
   return results;

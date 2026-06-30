@@ -5,6 +5,7 @@
 // human-readable report (incl. vectors deferred to unbuilt components) is RED-TEAM.md.
 
 import { resolveTier, type ResolutionContext } from "./resolve";
+import { resolveContention } from "./contention";
 import { canonicalize } from "./canonicalize";
 import { assertSubjectIsReference } from "./guards";
 import { carriersForResolution, parseEnvelope, CARRIER_REGISTRY } from "./carriers";
@@ -102,6 +103,22 @@ export function runRedTeam(): AttackResult[] {
     const parsed = parseEnvelope(env);
     const resisted = parsed?.recognized === false;
     safe("malformed-carrier", "carrier-degradation", resisted, `recognized=${parsed?.recognized} (want false → caps at asserted)`);
+  }
+  // 9. Land-grab: an EARLIER-priority asserted squatter must not outrank a later verified owner.
+  {
+    const squatter = claim({ assertedTier: "asserted", createdAt: "2020-01-01T00:00:00Z" });
+    const owner = claim({ attribution: { identityId: "owner", role: "creator" }, assertedTier: "verified", signature: sig(), createdAt: "2026-01-01T00:00:00Z" });
+    const r = resolveContention([squatter, owner], ctx());
+    const resisted = r.origin?.claim === owner && !r.open;
+    safe("priority-land-grab", "contention", resisted, `origin=${r.origin?.claim.attribution.identityId} open=${r.open} (want owner, not the earlier squatter)`);
+  }
+  // 10. Signed-over-copied-bytes: a 'bound' signature on a derivative must not be crowned the origin.
+  {
+    const impostor = claim({ assertedTier: "bound", signature: sig() });
+    const trueOrigin = claim({ attribution: { identityId: "origin", role: "creator" }, assertedTier: "asserted" });
+    const r = resolveContention([impostor, trueOrigin], ctx(), [{ isDerivative: true }, { isDerivative: false }]);
+    const resisted = r.origin === null && r.open && r.authenticationDivergesFromOrigination;
+    safe("signed-copied-bytes", "contention", resisted, `origin=${r.origin === null ? "null" : "CROWNED"} open=${r.open} divergence=${r.authenticationDivergesFromOrigination} (want open + divergence, impostor not crowned)`);
   }
 
   return out;

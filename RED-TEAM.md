@@ -22,6 +22,8 @@ safe outcome. All currently pass.
 | **subject-envelope-injection** | use a MadeBy-internal envelope hash as the subject | two-hash invariant: subject must be a native reference → rejected | ✅ resisted |
 | **canonicalization-tamper** | replay a signature over altered content/attribution | altering any signed field changes the canonical bytes | ✅ resisted |
 | **malformed-carrier** | smuggle a claim in an unrecognized carrier as "recognized" | self-describing parse flags `recognized:false` → caps at `asserted` | ✅ resisted |
+| **priority-land-grab** | an earlier-registered asserted squatter tries to outrank a later verified owner | priority is a weak tiebreaker, never overrides stronger evidence → the owner is the origin (§11) | ✅ resisted |
+| **signed-copied-bytes** | a valid `bound` signature over *copied* bytes claims to be the origin | authenticity ≠ origination (invariant #10): a derivative is not crowned → surfaced as open + divergence, never falsely-verified | ✅ resisted |
 
 **Complementary:** mutation testing (#21) independently proves the tier-resolution tests *kill*
 escalation bugs (≥90% break, ~96% actual) — not just exercise the code.

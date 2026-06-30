@@ -489,9 +489,10 @@ enums where values churn (models, providers, carriers, algorithms).
    truth.** (§6)
 7. **Aggregate indices (org or public) surface their tier distribution and are labeled
    estimates with published methodology — never a bare number implying certainty.** (§8)
-8. **Contention is ranked by evidence, never resolved by fiat:** tier → origination/lineage →
-   priority (tiebreaker only); registration priority never overrides stronger evidence; genuine
-   ties are surfaced as open conflicts. (§11)
+8. **Contention is ranked by evidence across two independent axes** (authenticity tier +
+   origination), never resolved by fiat: a claim is the origin only if it **dominates** (≥ on both,
+   > on one); priority is a weak tiebreaker that never overrides stronger evidence; genuine
+   trade-offs/ties are surfaced as open conflicts. (§11)
 9. **No identity-based precedence and no suppression:** a verified/enterprise identity never
    wins by status alone, and competing claims are ranked + labeled, never deleted. (§11)
 10. **Tier authenticates the statement and signer, not authorship;** origination rests on
@@ -520,13 +521,19 @@ the statement. Origination is a **separate axis** — **lineage** (upstream hist
 git/C2PA record). The resolver surfaces these distinctly: "we verified X *said* this" is not "X is
 established as the *origin*."
 
-**Ranking among co-located claims (deterministic, published):**
-1. **Tier** — statement-authenticity strength (bound > verified > sworn > asserted).
-2. **Origination** — lineage / native provenance (an origin outranks its derivative).
-3. **Priority** — earliest logged claim, **tiebreaker only** when 1–2 are level. First-to-register
-   ≠ first-to-create; priority is a signal, never proof.
-4. **Ties stay ties** — genuinely equal evidence is shown as an open conflict, never broken by fiat
-   (fail-safe applies to *who*, exactly as it does to tier).
+**Ranking among co-located claims (deterministic, published) — by evidence, across two axes:**
+- **Authenticity (tier)** — "we verified X *said* this" (bound > verified > sworn > asserted).
+- **Origination** — "X is the *origin*": lineage + native provenance, with **priority** (earliest
+  logged) as a weak tiebreaker. First-to-register ≠ first-to-create; priority is a signal, never proof.
+
+A claim is the established origin only if it **dominates** — ranks ≥ on *both* axes and strictly
+higher on one. These axes are **independent** (invariant #10): tier does not dominate origination,
+so a valid signature over *copied* bytes (high tier, derivative origination) never out-ranks the
+true origin — it surfaces as **open + divergence**, not a crowned impostor. When no claim dominates
+— one better-authenticated, another better-originated, or genuinely equal evidence — the contention
+is **open**: shown with both axes, the divergence surfaced, **never broken by fiat and never crowned
+by priority alone** (fail-safe applies to *who*, exactly as it does to tier). This is implemented as
+`resolveContention` in `@madeby/core` (evidence-frontier / Pareto dominance).
 
 > **Squatting-resistance falls out of this.** Because priority is the *floor* of the stack, not the
 > top, a squatter (asserted, no lineage) is outranked the instant the real owner asserts verified

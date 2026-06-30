@@ -130,5 +130,52 @@
       "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": true, "signerVerified": false },
       "expected": "asserted"
     }
+  ],
+  "contention": [
+    {
+      "name": "single claim is the uncontested origin",
+      "claims": [
+        { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": false, "originIndex": 0, "divergence": false }
+    },
+    {
+      "name": "verified owner outranks an asserted squatter (index 1 wins)",
+      "claims": [
+        { "id": "sq", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "sq", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" },
+        { "id": "own", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "own", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-02-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": false, "originIndex": 1, "divergence": false }
+    },
+    {
+      "name": "ADVERSARIAL: earlier squatter does NOT override a later verified owner (priority ≠ proof)",
+      "claims": [
+        { "id": "sq", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "sq", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2020-01-01T00:00:00Z" },
+        { "id": "own", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "own", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": false, "originIndex": 1, "divergence": false }
+    },
+    {
+      "name": "ADVERSARIAL: signed copied bytes do not establish origin → open + divergence (invariant #10)",
+      "claims": [
+        { "id": "imp", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "imp", "role": "creator" }, "assertedTier": "bound", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+        { "id": "org", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "org", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "inputs": [{ "isDerivative": true }, { "isDerivative": false }],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": true, "originIndex": null, "divergence": true }
+    },
+    {
+      "name": "ADVERSARIAL: priority alone never crowns — equal evidence, different timestamps stays open",
+      "claims": [
+        { "id": "a", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2024-01-01T00:00:00Z" }, "createdAt": "2024-01-01T00:00:00Z" },
+        { "id": "b", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "b", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": true, "originIndex": null, "divergence": false }
+    }
   ]
 }
