@@ -76,6 +76,16 @@ human/AI ratio** (prestige in the tier mark, never the %); **show conflicts, nev
 resolution.** The page is also the prime **conversion surface** — an unclaimed or contested page is
 exactly where a real author is moved to verify-and-outrank (STRATEGY §4).
 
+> **Progressive disclosure is a hard rule (review 2026-06-29, Concern B).** The 7 questions above
+> are the *full* answer, not the *default view* — presenting all of them, over a 4-tier ladder, two
+> evidence axes, divergence flags, coverage decomposition, and edge tiers, is a graduate seminar for
+> a "who made this?" product. So the **default resolver view is one bold line — "Made by X" + a
+> single tier mark** — and everything else (coverage decomposition, lineage, edge tiers,
+> verify-yourself) collapses behind opt-in expanders. **Never render the two-axis
+> authentication-vs-origination UI unless a conflict actually exists** — no divergence machinery on
+> the ~99% uncontested page. The contention engine stays fully internal. **Concept budget: ≤ ~3 new
+> terms per user-facing surface**; overflow is a design bug caught in review.
+
 ---
 
 ## 2. Hashing: the hash is the *join key*, not the *trust*
@@ -404,6 +414,18 @@ ingestion pipeline** mines it, producing both per-subject claims and aggregate i
 - The vibe-coding angle clicks in here: the AI tool's session log **upgrades** an asserted
   git-blame claim to evidence-backed span attribution, keyed on the same hashes.
 
+> **Consent gate (review 2026-06-29, Finding 3 — launch blocker, not afterthought).** Publishing
+> a public, indexable, **name-attached** "who made this — N% AI" page about a developer who never
+> opted in — from a heuristic that's frequently wrong — is uniquely corrosive for a *trust* brand
+> and carries GDPR exposure (inferred personal data). So: **ingest broadly, but gate the public,
+> name-attached AI-inference page behind a claim** (or owner-connected allowlist). **Pre-claim,
+> show only the neutral "who"** (git authors), never an AI-% headline. The public index ships
+> **aggregate-only — never a per-individual "X is an AI coder" page.** Build the salted/HMAC
+> **private-fingerprint scheme** (specced in §2, currently absent from schema/code) so private
+> content isn't enumerable, and ship a self-serve **opt-out + takedown** endpoint + `privacy@`
+> before the first public ingestion. (Tracked as a launch-blocker ticket; legal pack in
+> `COMPLIANCE.md`.)
+
 ### The index as a computed aggregate view (one engine, two surfaces)
 
 The "State of AI in Open Source" page is a **global `CoverageView`** — the same roll-up
@@ -442,9 +464,11 @@ audience.
   `[![madeby.fyi](https://madeby.fyi/b/owner/repo.svg)](https://madeby.fyi/owner/repo)`.
 - **Pointer, never proof.** Genuineness = follow the link to the authoritative subject page,
   which shows the signed claims, tiers, and verified identities. Forgery is self-defeating.
-- **Mix-led default content** (human/AI ratio headline + tier mark); tier gradient lives in
-  the **trust mark**, not aesthetic quality; honest qualifier ("estimated") doubles as the
-  upgrade pull. See `STRATEGY.md` §5 for the full treatment.
+- **Headline content (v0):** named AI collaborators + a **provenance-coverage** mark, with any
+  ratio labeled "% of commits with AI involvement" — **not** an implied code split (review
+  2026-06-29, Finding 1; `STRATEGY.md` §5). The precise mix-led lines/tokens ratio is reserved for
+  the tiers where span evidence exists. Tier gradient lives in the **trust mark**, not aesthetic
+  quality; the honest qualifier doubles as the upgrade pull.
 
 ---
 
@@ -583,8 +607,20 @@ facts legible to whoever holds them; we don't hand the bigger wallet a bigger th
 
 **Hard limits.** No identity override; no deletion/suppression of competing claims (rank + label,
 never censor); priority ≠ proof; we **don't adjudicate ownership/copyright** — we hand courts
-*ordered evidence*. Anti-abuse and legal takedowns (court orders, bulk-claim rate-limits) are an
-**operational/platform policy, orthogonal** to the authorship-evidence machinery.
+*ordered evidence*.
+
+**Consent, abuse & takedown are launch blockers, not "orthogonal policy" (revised — review
+2026-06-29, Findings 3 + missing-abuse-model).** An earlier draft punted these as orthogonal; for a
+product that publishes inferences about non-consenting third parties and lets *anyone assert
+anything*, that was the wrong call. Required before the public path ships: (a) **consent-gated
+public name-attached pages** + aggregate-only index + salted/HMAC private fingerprints + self-serve
+opt-out/takedown (§8); (b) a **social/economic abuse model** the crypto red-team doesn't cover —
+**identity-cost on asserted claims** (GitHub OAuth to assert, raising mass-squatting cost),
+**bounded "adjudication by display"** (collapse low-tier/duplicate claims behind an "N other
+asserted claims" expander so a contested page never renders unboundedly), and
+**corpus-poisoning detection** (one actor claiming many unrelated repos → flag), wired to the
+trust-&-safety dashboard and sharing one mechanism with API metering. Court-order takedowns remain
+operational, but consent/opt-out/abuse are **product**, designed now.
 
 ---
 
