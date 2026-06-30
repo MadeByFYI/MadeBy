@@ -92,5 +92,43 @@
       "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
       "expected": "asserted"
     }
+  ],
+  "edgeTierResolution": [
+    {
+      "name": "declared + valid sig + verified signer + known type → verified (the cap)",
+      "edge": { "type": "DERIVED_FROM", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF", "DERIVED_FROM", "DISPUTES", "IMPLEMENTS", "MOTIVATED_BY", "DECIDED_BY", "DISCUSSED_IN"], "verifySignature": true, "signerVerified": true },
+      "expected": "verified"
+    },
+    {
+      "name": "inferred edge caps at asserted (even signed + known)",
+      "edge": { "type": "IMPLEMENTS", "fromClaimId": "a", "toClaimId": "b", "method": "inferred", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["IMPLEMENTS"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: unrecognized edge type caps at asserted",
+      "edge": { "type": "TOTALLY_MADE_UP", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF", "DERIVED_FROM"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: declared but unsigned edge caps at asserted",
+      "edge": { "type": "PART_OF", "fromClaimId": "a", "toClaimId": "b", "method": "declared" },
+      "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: declared + forged signature caps at asserted",
+      "edge": { "type": "PART_OF", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": false, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: declared + anonymous signer caps at asserted",
+      "edge": { "type": "PART_OF", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": true, "signerVerified": false },
+      "expected": "asserted"
+    }
   ]
 }

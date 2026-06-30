@@ -4,7 +4,7 @@
 // INVARIANT (two-hash rule): the content hash inside a claim is treated as an opaque string;
 // canonicalization never touches content bytes. Conformance vectors pinned in #17.
 
-import type { Claim } from "./model";
+import type { Claim, ClaimEdge } from "./model";
 
 export type Json = string | number | boolean | null | Json[] | { [k: string]: Json };
 
@@ -121,4 +121,23 @@ export function claimFromPayload(payload: Json): Claim {
 /** The canonical bytes a signature covers. */
 export function canonicalize(claim: Claim): Uint8Array {
   return new TextEncoder().encode(jcs(claimPayload(claim)));
+}
+
+/**
+ * The carrier-independent, signable payload of an edge — excludes the signature it covers.
+ * An edge is a claim about a relationship, so it canonicalizes (and signs) like one (§3, §6).
+ */
+export function edgePayload(edge: ClaimEdge): Json {
+  return compact({
+    type: edge.type,
+    fromClaimId: edge.fromClaimId,
+    toClaimId: edge.toClaimId,
+    method: edge.method,
+    evidence: edge.evidence,
+  });
+}
+
+/** The canonical bytes an edge signature covers. */
+export function canonicalizeEdge(edge: ClaimEdge): Uint8Array {
+  return new TextEncoder().encode(jcs(edgePayload(edge)));
 }

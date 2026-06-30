@@ -5,7 +5,7 @@
 export { TRUST_TIERS, compareTiers, FALLBACK_TIER } from "./tiers";
 export type { TrustTier } from "./tiers";
 
-export { canonicalize, claimPayload, claimFromPayload, jcs } from "./canonicalize";
+export { canonicalize, claimPayload, claimFromPayload, jcs, edgePayload, canonicalizeEdge } from "./canonicalize";
 export type { Json } from "./canonicalize";
 
 export {
@@ -14,6 +14,15 @@ export {
   parseEnvelope,
 } from "./carriers";
 export type { CarrierBinding, ParsedAttestation } from "./carriers";
+
+export {
+  EDGE_TYPES,
+  EDGE_TIER_CAP,
+  isRecognizedEdgeType,
+  knownEdgeTypesForResolution,
+  resolveEdgeTier,
+} from "./edges";
+export type { EdgeCategory, EdgeTypeDef, EdgeResolutionContext } from "./edges";
 
 export type { SpanAnchor, SpanAttribution, SpanAttestationV0 } from "./span";
 
@@ -60,5 +69,6 @@ export type {
   Claim,
   ClaimEdge,
   EdgeType,
+  EdgeMethod,
   Carrier,
 } from "./model";
