@@ -44,6 +44,9 @@ export type { ResolutionContext } from "./resolve";
 export { resolveClaims, resolve } from "./resolution";
 export type { ResolvedClaim, Resolution } from "./resolution";
 
+export { resolveContention } from "./contention";
+export type { Contention, ClaimStanding, OriginationEvidence, OriginationInput } from "./contention";
+
 export { runConformance, CONFORMANCE_VERSION } from "./conformance";
 export type { ConformanceResult } from "./conformance";
 
