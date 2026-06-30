@@ -3,7 +3,7 @@
   "testRunner": "vitest",
   "plugins": ["@stryker-mutator/vitest-runner"],
   "coverageAnalysis": "perTest",
-  "mutate": ["src/resolve.ts", "src/resolution.ts", "src/tiers.ts"],
+  "mutate": ["src/resolve.ts", "src/resolution.ts", "src/tiers.ts", "src/edges.ts"],
   "thresholds": { "high": 95, "low": 90, "break": 90 },
   "reporters": ["clear-text", "progress"],
   "timeoutMS": 20000

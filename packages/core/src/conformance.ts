@@ -7,7 +7,8 @@ import vectorsJson from "./vectors/conformance-v0.json";
 import { jcs, canonicalize, type Json } from "./canonicalize";
 import { sha256Fingerprint, gitBlobFingerprint } from "./fingerprint";
 import { resolveTier, type ResolutionContext } from "./resolve";
-import type { Claim, Carrier } from "./model";
+import { resolveEdgeTier, type EdgeResolutionContext } from "./edges";
+import type { Claim, Carrier, ClaimEdge } from "./model";
 
 export const CONFORMANCE_VERSION: string = (vectorsJson as { version: string }).version;
 
@@ -20,12 +21,19 @@ interface TierVector {
   env: { knownCarriers: string[]; verifySignature: boolean; signerVerified: boolean };
   expected: string;
 }
+interface EdgeTierVector {
+  name: string;
+  edge: ClaimEdge;
+  env: { knownEdgeTypes: string[]; verifySignature: boolean; signerVerified: boolean };
+  expected: string;
+}
 interface Vectors {
   version: string;
   jcs: JcsVector[];
   canonicalize: CanonVector[];
   fingerprint: FpVector[];
   tierResolution: TierVector[];
+  edgeTierResolution: EdgeTierVector[];
 }
 
 const V = vectorsJson as unknown as Vectors;
@@ -43,6 +51,14 @@ function ctxFromEnv(env: TierVector["env"]): ResolutionContext {
   );
   return {
     knownCarriers,
+    verifySignature: () => env.verifySignature,
+    isSignerVerified: () => env.signerVerified,
+  };
+}
+
+function edgeCtxFromEnv(env: EdgeTierVector["env"]): EdgeResolutionContext {
+  return {
+    knownEdgeTypes: new Set(env.knownEdgeTypes),
     verifySignature: () => env.verifySignature,
     isSignerVerified: () => env.signerVerified,
   };
@@ -83,6 +99,11 @@ export async function runConformance(): Promise<ConformanceResult[]> {
   for (const v of V.tierResolution) {
     const got = resolveTier(v.claim, ctxFromEnv(v.env));
     results.push({ category: "tierResolution", name: v.name, pass: got === v.expected, detail: got === v.expected ? undefined : got });
+  }
+
+  for (const v of V.edgeTierResolution) {
+    const got = resolveEdgeTier(v.edge, edgeCtxFromEnv(v.env));
+    results.push({ category: "edgeTierResolution", name: v.name, pass: got === v.expected, detail: got === v.expected ? undefined : got });
   }
 
   return results;
