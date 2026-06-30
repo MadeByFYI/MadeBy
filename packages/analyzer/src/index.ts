@@ -5,3 +5,5 @@ export { readGitLog } from "./git";
 export { analyzeCommits } from "./analyze";
 export type { AnalysisResult } from "./analyze";
 export { badgeSnippet } from "./badge";
+export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
+export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";

@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
-import { readGitLog, analyzeCommits } from "@madeby/analyzer";
+import { analyzeRepo, isAnalyzeError } from "@madeby/analyzer";
 
-// Reads git → Node runtime, never prerendered.
+// Clones + analyzes a public repo → Node runtime, never prerendered.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// v0: analyzes the repo this app runs in (the dogfood path). Arbitrary public-repo analysis
-// (shallow clone via the GitHub App) is ingestion's job (#10).
-export function GET() {
-  const commits = readGitLog(process.cwd());
-  if (commits.length === 0) {
-    return NextResponse.json(
-      { error: "analysis unavailable — no git history available in this environment" },
-      { status: 503 },
-    );
+// GET /api/analyze?repo=github.com/owner/repo — shallow-clone the public repo, analyze, return
+// the breakdown. Nearly stateless (OPERATIONS §3); persistent/at-scale ingestion is #10.
+export async function GET(req: Request) {
+  const repo = new URL(req.url).searchParams.get("repo");
+  if (!repo) {
+    return NextResponse.json({ error: "pass ?repo=<public repo url>" }, { status: 400 });
   }
-  return NextResponse.json(analyzeCommits(commits));
+  const result = await analyzeRepo(repo);
+  if (isAnalyzeError(result)) {
+    return NextResponse.json(result, { status: 422 });
+  }
+  return NextResponse.json(result);
 }
