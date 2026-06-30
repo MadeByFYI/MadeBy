@@ -1,4 +1,8 @@
 import { describe, it, expect } from "vitest";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { readGitLog } from "./git";
 
 describe("readGitLog", () => {
@@ -16,5 +20,30 @@ describe("readGitLog", () => {
 
   it("never throws on a non-existent path (degrades to [])", () => {
     expect(readGitLog("/no/such/repo/path")).toEqual([]);
+  });
+
+  // Regression: the field separator must not be NUL — Node's execFileSync rejects NUL bytes in
+  // args, which silently turned every readGitLog into []. This hermetic repo catches that.
+  it("parses real commits from a throwaway repo (separator is execFile-safe)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "madeby-gittest-"));
+    try {
+      const git = (...args: string[]) => execFileSync("git", ["-C", dir, ...args], { encoding: "utf8" });
+      git("init", "-q");
+      git(
+        "commit",
+        "--allow-empty",
+        "-q",
+        "-m",
+        "First commit\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+        "--author=Mac <mac@madeby.fyi>",
+      );
+      const commits = readGitLog(dir);
+      expect(commits.length).toBe(1);
+      expect(commits[0]!.authorName).toBe("Mac");
+      expect(commits[0]!.authorEmail).toBe("mac@madeby.fyi");
+      expect(commits[0]!.message).toContain("Co-Authored-By: Claude");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
