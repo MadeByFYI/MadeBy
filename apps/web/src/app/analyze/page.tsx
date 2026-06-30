@@ -1,4 +1,5 @@
 import { analyzeRepo, badgeSnippet, isAnalyzeError } from "@madeby/analyzer";
+import { track, FUNNEL } from "@/lib/analytics";
 
 // Clones + analyzes at request time → Node runtime, never prerendered.
 export const runtime = "nodejs";
@@ -8,6 +9,28 @@ const pct = (n: number) => `${Math.round(n)}%`;
 const wrap = { maxWidth: 720, margin: "0 auto", padding: "4rem 1.5rem" } as const;
 
 const EXAMPLES = ["github.com/octocat/Hello-World", "github.com/sindresorhus/slugify"];
+
+function CorrectionForm({ repo }: { repo: string }) {
+  return (
+    <details style={{ marginTop: "1.5rem", fontSize: ".88rem" }}>
+      <summary style={{ cursor: "pointer", opacity: 0.7 }}>Wrong? Tell us who really made it</summary>
+      <form method="post" action="/api/feedback" style={{ marginTop: ".75rem", display: "grid", gap: ".5rem", maxWidth: 460 }}>
+        <input type="hidden" name="repo" value={repo} />
+        <select name="kind" style={{ padding: ".4rem", borderRadius: 6 }}>
+          <option value="wrong-ai-mix">The human/AI mix is wrong</option>
+          <option value="wrong-contributors">The contributors are wrong</option>
+          <option value="not-mine">This isn&apos;t mine / shouldn&apos;t be here</option>
+          <option value="other">Something else</option>
+        </select>
+        <input name="correction" required placeholder="What's actually true?" style={{ padding: ".5rem", borderRadius: 6, border: "1px solid #2a3340", background: "#0d1117", color: "inherit" }} />
+        <button type="submit" style={{ padding: ".5rem 1rem", borderRadius: 6, cursor: "pointer", justifySelf: "start" }}>Submit correction</button>
+      </form>
+      <p style={{ fontSize: ".78rem", opacity: 0.55, marginTop: ".4rem" }}>
+        Corrections become labeled data that improves the estimate — and the fastest path to claiming &amp; verifying your repo.
+      </p>
+    </details>
+  );
+}
 
 function Form({ value }: { value?: string }) {
   return (
@@ -25,8 +48,8 @@ function Form({ value }: { value?: string }) {
   );
 }
 
-export default async function AnalyzePage({ searchParams }: { searchParams: Promise<{ repo?: string }> }) {
-  const { repo } = await searchParams;
+export default async function AnalyzePage({ searchParams }: { searchParams: Promise<{ repo?: string; fb?: string }> }) {
+  const { repo, fb } = await searchParams;
 
   if (!repo) {
     return (
@@ -60,12 +83,18 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
   }
 
   const r = result;
+  void track(FUNNEL.repoAnalyzed, { repo: r.repo }); // top of the asserted→verified funnel (fire-and-forget)
   const who = r.contributors.map((c) => `${c.name}${c.kind === "ai" ? " (AI)" : ""}`).join(" · ");
   const [owner, name] = r.repo.split("/").slice(1, 3);
 
   return (
     <main style={wrap}>
       <h1 style={{ marginBottom: 0 }}>Who made this?</h1>
+      {fb === "thanks" ? (
+        <p style={{ color: "#9ad29a", margin: ".5rem 0 0", fontSize: ".9rem" }}>✓ Thanks — correction recorded.</p>
+      ) : fb === "error" ? (
+        <p style={{ color: "#f0a0a0", margin: ".5rem 0 0", fontSize: ".9rem" }}>⚠ Couldn&apos;t record that — tell us what&apos;s actually true.</p>
+      ) : null}
       <p style={{ opacity: 0.6, marginTop: ".25rem", fontSize: ".85rem" }}>
         {r.repo} · {r.totalCommits} commits · {r.tier} tier (unverified)
       </p>
@@ -118,6 +147,8 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
           </>
         ) : null}
       </details>
+
+      <CorrectionForm repo={r.repo} />
 
       <p style={{ marginTop: "2rem" }}>
         <a href="/analyze">← analyze another repo</a>

@@ -36,3 +36,6 @@ coverage/
 # mutation testing (Stryker)
 .stryker-tmp/
 reports/
+
+# local feedback/label store (durable store is Neon, post-Atlas)
+var/
