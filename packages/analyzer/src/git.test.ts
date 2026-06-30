@@ -29,6 +29,9 @@ describe("readGitLog", () => {
     try {
       const git = (...args: string[]) => execFileSync("git", ["-C", dir, ...args], { encoding: "utf8" });
       git("init", "-q");
+      // Set committer identity in-repo so the commit works in CI (no global git config there).
+      git("config", "user.email", "mac@madeby.fyi");
+      git("config", "user.name", "Mac");
       git(
         "commit",
         "--allow-empty",
