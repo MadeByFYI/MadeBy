@@ -43,6 +43,12 @@ The skeleton builds with no external services. To run against real infrastructur
 `.env.example` → `.env` and provision the providers listed there (Neon, Cloudflare, Modal,
 GitHub App, observability). See `OPERATIONS.md` §4.
 
+## Provenance (we dogfood)
+
+This repo records its own provenance from commit zero — signed commits, `Co-Authored-By:` trailers,
+and a `.madeby/` span manifest. See [`PROVENANCE.md`](./PROVENANCE.md); verify with
+`pnpm provenance:verify-trailers`.
+
 ## Tickets
 
 Work is tracked as GitHub issues, organized under epics (#1 dogfood, #4 foundations,
