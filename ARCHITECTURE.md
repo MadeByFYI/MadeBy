@@ -149,9 +149,12 @@ Operational notes:
   git commit) rather than recomputing — adopt their content hash and signer identity, and
   layer our operator/legal/identity on top. Purest "ride where it exists."
 - **Privacy:** "anyone holding the bytes can query" is a leak vector for proprietary code.
-  Private subjects use scoped or salted/HMAC fingerprints and permissioned resolution, so
-  the registry can confirm provenance to authorized askers without making private code
-  world-queryable. In the model from the start, not bolted on.
+  Private subjects use salted/HMAC fingerprints and permissioned resolution, so the registry can
+  confirm provenance to authorized askers without making private code world-queryable. **Implemented
+  (#70):** `privateFingerprint(nativeFp, ownerKey)` = HMAC-SHA256 that blinds the native hash — same
+  key+content matches, but the bytes alone never yield the lookup key, so hash-enumeration/confirmation
+  fails without the key (`@madeby/core`, `private-fingerprint.ts`). Permissioned resolution (key
+  distribution to authorized askers) rides the live registry (post-Atlas).
 
 ---
 
