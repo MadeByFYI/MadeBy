@@ -17,6 +17,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { captureLocalSpans } from "../packages/analyzer/src/capture-local.ts";
+import { detectParser } from "../packages/analyzer/src/tool-parsers.ts";
 
 const git = (...a) => execFileSync("git", ["-c", "core.quotePath=false", ...a], { encoding: "utf8" }).trim();
 const repoRoot = git("rev-parse", "--show-toplevel");
@@ -40,8 +41,16 @@ if (!transcriptPath || !existsSync(transcriptPath)) {
 }
 const commit = git("rev-parse", process.argv[3] ?? "HEAD");
 
+const transcriptText = readFileSync(transcriptPath, "utf8");
+const parser = detectParser(transcriptText);
+if (!parser) {
+  console.error("Unrecognized log format — no registered tool parser matched. (Claude Code is supported; other tools need a ToolParser + real sample logs — see tool-parsers.ts / #85.)");
+  process.exit(1);
+}
+
 const result = captureLocalSpans({
-  transcript: readFileSync(transcriptPath, "utf8"),
+  transcript: transcriptText,
+  parser,
   repoRoot,
   readFile: (rel) => {
     try {
@@ -64,9 +73,11 @@ if (result.manifest.attestations.length === 0) {
 const out = join(repoRoot, ".madeby", "spans", `${commit}.json`);
 let kept = [];
 if (existsSync(out)) {
+  const thisSource = `${result.tool}-session-log`;
   try {
+    // Replace this tool's session-log attestations; keep everything else (other tools, trailers).
     kept = (JSON.parse(readFileSync(out, "utf8")).attestations ?? []).filter(
-      (a) => a?.attribution?.source !== "claude-code-session-log",
+      (a) => a?.attribution?.source !== thisSource,
     );
   } catch {
     /* overwrite a malformed manifest */
@@ -75,4 +86,4 @@ if (existsSync(out)) {
 const manifest = { ...result.manifest, attestations: [...kept, ...result.manifest.attestations] };
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(manifest, null, 2) + "\n");
-console.log(`wrote ${out} — ${result.matched.length} witnessed file(s) matched, ${result.discarded.length} discarded (not present in the checkout).`);
+console.log(`wrote ${out} — [${result.tool}] ${result.matched.length} witnessed file(s) matched, ${result.discarded.length} discarded (not present in the checkout).`);

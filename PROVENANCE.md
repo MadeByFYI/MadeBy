@@ -108,6 +108,13 @@ This is also the reference **emitter**: the `.madeby` manifest is the vendor-neu
 tool or hook can fill (ship to the tools, don't wait for them). v0 is file-level; line-level spans
 ride the same format (it already holds line hints + structural-fingerprint anchors).
 
+**Multi-tool via a pluggable harness (#85).** Capture is split into a per-tool **`ToolParser`**
+(`tool-parsers.ts`) — `{ id, provider, detect(raw), parse(raw) → AiEdit[] }` — and a shared
+structural-match backend (`capture-local.ts`). Adding a tool (Cursor, Copilot, Windsurf, Aider) is
+one isolated parser that normalizes its logs to `AiEdit[]`; nothing else changes. **Claude Code is
+the reference parser.** Other parsers are intentionally *not* stubbed with guessed schemas — a
+parser lands when we have that tool's real sample logs (evidence, not guessing).
+
 > **Recalibration on a real labeled corpus** (untrailered-recall as the headline number) is tracked
 > separately as the independent ground-truth corpus (#73) — the synthetic benchmark can't measure
 > the real-world untrailered case.
