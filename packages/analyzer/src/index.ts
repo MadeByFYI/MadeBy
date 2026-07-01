@@ -11,3 +11,5 @@ export { readSpanManifestsFromDir, readSpanManifestsFromGit, summarizeSpanEviden
 export type { SpanEvidence } from "./provenance";
 export { captureLocalSpans } from "./capture-local";
 export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
+export { claudeCodeParser, TOOL_PARSERS, detectParser } from "./tool-parsers";
+export type { ToolParser, AiEdit } from "./tool-parsers";
