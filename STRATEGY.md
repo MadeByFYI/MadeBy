@@ -367,6 +367,41 @@ Note: QR codes (central in v1) made sense for physical/visual content. For code,
 markdown shield + social/OG share card + clickable link are the surfaces. QR is retired as
 the centerpiece here (revisit for the eventual creative/visual expansion).
 
+### The "prove-me-wrong" CTA — provocation-to-correct (decision, 2026-07-01)
+
+The `RESEARCH-lowfriction-accuracy.md` study concluded *routing, not attribution* — and left the
+coverage CTA neutral ("Y% unattributed; run capture"). **Decision: make the CTA a provocation.**
+People correct a statement they find wrong about themselves faster than they act on a neutral
+prompt (Cunningham's Law). This turns the mirror's known weakness — the honest *under-count* of the
+untrailered blind spot — into its engagement engine, and the correction **is** the asserted→verified
+conversion action.
+
+**The one rule that keeps it out of court and on-doctrine: the provocation always leans to the
+*under-claim*, never an AI accusation.** Lead with what we can prove and dare the rest:
+
+> *"By what we can see, this is **{provableAI}% provably AI-assisted** — the rest reads human.
+> Think that's wrong? **Prove it → `npx madeby prove`.**"*
+
+- ❌ Never "this appears **AI-written**." A hedged AI accusation is still the cardinal sin (the
+  `TESTING.md §2` over-claim; the §7 non-native-English 61.3%-FP landmine) and "appears" is weak
+  legal cover.
+- ✅ "Looks **human/unverified** to us" is *not defamatory* (no harm in being called human), is
+  *literally true* (a statement about our **visibility**, not about them — truth defense + the
+  honesty moat intact), and is **self-directed** (a dare to the repo owner who can act).
+- **The safe direction is the engaging one:** an AI-proud vibe-coder shown "95% human" is *insulted*
+  and rushes to prove otherwise — so the provocation is strongest exactly where it's libel-proof.
+
+**Guardrails (enforced):** every line literally true (about our signal, never a claim about the
+person); self-directed to the owner; **consent-gated for third parties** (no published, indexable
+over-claims — ARCH §8); and in scope for the ToS/counsel review (a formation deliverable,
+`COMPLIANCE.md`). This is **framing/copy — routing, not a detector** (no doctrine change).
+
+**The command is `prove`** (`npx madeby prove`; alt considered: `receipts`) — the verb is the
+motivation, and zero-install `npx` is the frictionless path the study named as the real flywheel
+bet. It runs the `capture --local` engine (`capture-local.ts`). **Launch prerequisite:** the `npx`
+package must exist before the mirror is public — you cannot publish a CTA to a command that 404s
+(itself a trust-brand tell). Until then the CTA is staged on the localhost mirror.
+
 ---
 
 ## 6. Monetization

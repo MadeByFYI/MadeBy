@@ -124,9 +124,12 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
             count AI we can see.
           </p>
         ) : null}
-        <p style={{ margin: ".5rem 0 0", fontSize: ".82rem", opacity: 0.75 }}>
-          Raise provable coverage: record your AI tools&apos; own session logs (local capture), then
-          claim &amp; sign your repo. <em>(local capture: #80 · claim/verify: producer-push, #6)</em>
+        {/* Provocation-to-correct (STRATEGY §5): dare the owner to close the gap. Always the
+            under-claim ("reads human/unverified"), never an AI accusation — honest + libel-safe. */}
+        <p style={{ margin: ".6rem 0 0", fontSize: ".95rem" }}>
+          Think we&apos;re underselling your AI game? By what we can see, the rest reads human.{" "}
+          <strong>Prove us wrong: <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby prove</code></strong>{" "}
+          reads your own session logs (locally — nothing leaves your machine) and shows what the AI actually wrote.
         </p>
       </div>
 
