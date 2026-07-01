@@ -11,9 +11,11 @@
 > Finding 2 and the re-sequencing list). Each weakness carries an inline **Recommendation**
 > block; the closing **"What I'd re-sequence"** list is the cross-cutting priority order.
 >
-> **Revised 2026-06-30** after the team shipped a remediation pass (PRs #66–#77). The original
-> findings are preserved as the 2026-06-29 baseline; a **Status update** scorecard follows the
-> BLUF, and each finding now ends with a dated **Status** line. Still gated by Stripe Atlas.
+> **Revised 2026-06-30** after two remediation passes — PRs #66–#77 (findings + concerns) and
+> #78–#84 (the mirror-accuracy follow-up + salted fingerprints). The original findings are
+> preserved as the 2026-06-29 baseline; a **Status update** scorecard follows the BLUF, each
+> finding ends with a dated **Status** line, and the Finding 1 follow-up carries an assessment of
+> the accuracy build. Still gated by Stripe Atlas.
 
 ---
 
@@ -61,9 +63,9 @@ abuse controls).
 
 | # | Weakness | Status | Evidence |
 |---|---|---|---|
-| 1 | Trailer-only classifier / overclaimed precision | **Honesty fixed; recall residual open** | session-log span evidence (`provenance.ts`, #68); headline reframed to named collaborators + "% of commits with AI involvement"; independent ground-truth corpus reports untrailered recall **0%** honestly (`GROUND-TRUTH.md`, #73) |
+| 1 | Trailer-only classifier / overclaimed precision | **Honesty fixed; recall closed for Claude Code owners — multi-tool gap open** | local capture (`capture-local.ts`, #80), coverage-led result (`coverage.ts`, #79), wider evidence-grade signals (#78), session-log spans (#68), honest ground-truth corpus (#73). Residuals: Claude-Code-only parser, uncalibrated match threshold, file-not-hunk granularity (see Finding 1 follow-up) |
 | 2 | Atlas gate / unblocked work not prioritized | **Unblocked work shipped; Atlas still the gate** | in-memory mirror built (`clone.ts`, #67); classifier work shipped. Deploy / persistence / verified tier remain blocked on Atlas (per founder) |
-| 3 | Public inference pages w/o consent | **Resolved in design; build pending pre-launch** | consent gate + aggregate-only index + salted-fp + opt-out as launch blockers (ARCH §8/§11); no public path is live yet, so nothing is armed |
+| 3 | Public inference pages w/o consent | **Design done; salted-fp now built, rest pending pre-launch** | consent gate + aggregate-only index (ARCH §8/§11); **salted/HMAC private fingerprints now built** (`private-fingerprint.ts`, #70/#84) — enumeration-resistant. Still pending: opt-out/takedown endpoint + permissioned-resolution wiring (Atlas-gated; no public path live yet) |
 | 4 | Sworn-tier liability | **Resolved** | sworn tier deferred until counsel (STRATEGY §2); product-liability legal pack is a formation deliverable (COMPLIANCE) |
 | A | Feedback not first-class | **Built** | triple-duty `feedback.ts` (correction → eval label → funnel event), corrections store, `analytics.ts` funnel seam, feedback route, correction form, changelog page |
 | B | User-facing complexity | **Resolved** | progressive-disclosure hard rule + concept budget (ARCH §1); analyze page ships a bold one-line answer + "Show the evidence" expander |
@@ -74,10 +76,15 @@ abuse controls).
 | M4 | Agentic-ops over-engineered | **Resolved** | descoped to read-only + propose-PR; rest parked post-traction (OPERATIONS §10) |
 | M5 | Commit-% vs code-% conflation | **Resolved** | labeled exactly "% of commits with AI involvement" across UI + docs |
 
-**Net:** 8 of 12 resolved, 2 resolved-in-design (build correctly deferred behind launch), 1
-partially addressed, 1 (Atlas) untouched because only the founder can clear it. The two things
-worth not losing: the **Finding 1 recall residual** (the mirror's ego-number is honest now but
-still weak on arbitrary repos — see its updated Status), and **driving Atlas to done**.
+**Net (after two remediation rounds, #66–#84):** the honest-and-buildable-without-Atlas work is
+essentially done. The mirror-accuracy plan (Finding 1 follow-up) shipped — local capture,
+evidence-grade signals, coverage-led framing — and the salted-fingerprint privacy primitive
+landed. What's genuinely left splits three ways: **(1) the founder task** (Atlas, gating deploy /
+persistence / verified tier / PostHog transport / signing); **(2) accuracy residuals now that the
+easy wins are in** — multi-tool capture parsers (today Claude Code only), calibrating the
+structural-match threshold, and hunk-level attribution for a real code %; **(3) the
+pre-public-launch checklist** — opt-out/takedown, abuse controls, the legal pack. Nothing left is
+a correctness or honesty defect; it's scope gated on either the founder or the launch.
 
 ---
 
@@ -206,6 +213,59 @@ nudge that never publishes and never names — and even then, later.
 **One-line pick:** build `madeby capture --local` and make the analyze result coverage-led —
 together they make the owner's *first run* both accurate and honest, which is exactly the
 cold-start moment the flywheel depends on, and neither needs Atlas.
+
+#### Assessment of the follow-up build (2026-06-30, PRs #78–#84)
+
+The team shipped this plan quickly and, more importantly, *correctly* — the honest details are
+right, not just present:
+
+- **Move 1 (local capture) — ✅ shipped, well.** `capture-local.ts` reads the user's own Claude
+  Code transcript, anchors AI content by **structural fingerprint** (survives squash/rebase/
+  reformat), and — the part that matters — **discards AI work not structurally present in the
+  commit** (`similarity < threshold` → not attested). That's the doctrine applied correctly: it
+  raises recall with *evidence* and refuses to claim AI content that didn't land. Pure engine +
+  fs/git shell (`scripts/capture-local.mjs`), privacy-clean.
+- **Move 2 (evidence-grade signals) — ✅ shipped.** Wider trailers (`Generated-by`/`Assisted-by`)
+  and more agent identities, with real care not to collide with human names (`\bcursor(?:agent)?\b`,
+  not bare "cody") and `matchAi` still gating per-entry so widening keys can't create a false
+  positive. Evidence, not inference — as asked.
+- **Move 3 (coverage-led) — ✅ shipped.** `coverage.ts` + the analyze page now lead with "AI
+  provable in X%," make the **unattributed fraction prominent** ("we can't see how it was made"),
+  and warn that a no-signal reading on a recent repo often means *undisclosed* AI. The silent
+  "95% human" miss is gone.
+- **Move 4 (hunk-level %) — partial.** Capture attests **per file**, not per hunk/line — so even
+  witnessed, the number is still commit/file involvement, not a true code ratio. Fine for v0;
+  the "% of code" precision still awaits hunk-level attribution.
+- **Move 5 (GitHub App metadata) — correctly deferred** (post-Atlas).
+
+**Residuals worth not losing (sharper now that the easy wins are in):**
+
+1. **The witnessed-recall fix currently covers Claude Code only.** `capture-local.ts` parses the
+   Claude Code transcript schema specifically. Cursor, Copilot, Windsurf, Aider, etc. have
+   entirely different local-log formats and aren't parsed — yet they're part of the same viral
+   surface. **This is now the biggest hole in the accuracy story:** the primary recall fix works
+   for one tool. Next unblocked step is a small pluggable parser per tool (same structural-match
+   backend), prioritized by audience size.
+2. **The match threshold (0.5 cosine) is an uncalibrated knob, and it gates the one place a
+   *witnessed* over-claim could occur.** Too low and capture attests AI content that isn't really
+   what shipped (the over-claim sin, at the estimate layer). It needs calibration against ground
+   truth, biased toward *discard* — this belongs in the probabilistic/calibration regime
+   (TESTING §5), not a hardcoded default.
+3. **Witnessed ≠ verified until signed.** Local capture raises **recall at the asserted tier** —
+   a self-report over your own transcript, hand-forgeable — not trust tier. That's acceptable
+   (classification is the estimate layer; crypto lives in core), but the UI should keep witnessed
+   spans clearly at asserted until commit-signing (Atlas-gated) lifts them.
+4. **The coverage math folds human-authored commits into "unattributed."** `unattributed =
+   100 − provable-AI` labels commits with a *named human author and no AI signal* as "we can't see
+   how it was made." Defensible (can't rule out undisclosed AI) and safe-direction, but slightly
+   overstates the unknown — the named humans *are* attributed. A tighter split would be
+   provable-AI / human-attributed-AI-unknown / fully-unattributed. Minor.
+
+**Net:** the honest-and-buildable-without-Atlas recall work is now essentially done for the
+Claude Code owner. What's left on accuracy is (a) **multi-tool parsers**, (b) **threshold
+calibration**, (c) hunk-level for a real code %, and (d) forge metadata + signing (post-Atlas).
+The stranger's-repo cold-open stays an honest "we can't see it" — correct, but it means the
+*surprising* ego-number now exists only for owners who run capture on a Claude Code repo.
 
 ## 2. The funnel gap is partly forced by the Stripe Atlas bottleneck — but the *unblocked* funnel work still wasn't prioritized, and the human critical path is now the top risk
 
@@ -555,16 +615,19 @@ checklist.
    pole that gates the bank → company card → paid providers → deploy/migration → persistence, the
    real registry, the verified/bound live path, and the PostHog transport (PROVISIONING steps
    3–6). Everything built since is dammed behind it. Only the founder can clear it.
-1. **Close the Finding 1 recall residual — the top *product* risk.** The mirror is honest now but
-   still under-detects AI on any repo lacking a `.madeby` manifest (≈ all of them). The plan is in
-   **"Finding 1 follow-up — how to make the mirror more accurate"** above: primarily ship
-   `madeby capture --local` (local session-log capture at analyze time) and make the result
-   coverage-led, plus the evidence-grade signal expansion — all buildable now, no Atlas. Without
-   this, the flywheel's hook stays weak even once deployed.
-2. **Pre-public-launch checklist (before any indexable, name-attached page ships):** salted/HMAC
-   private fingerprints, self-serve opt-out/takedown + `privacy@`, the asserted-claim abuse
-   controls (M2), and the product-liability legal pack landing with formation (Finding 4). These
-   are designed; they must be *built and live* the moment the public path turns on, not after.
+1. **Finish the Finding 1 recall residual — still the top *product* risk, now narrower.** The
+   primary moves shipped (local capture, coverage-led framing, wider signals — see the follow-up
+   assessment). What remains, all buildable now with no Atlas: **(a) multi-tool capture parsers**
+   (Claude Code is the only one wired — this is the biggest hole, since the viral surface is every
+   AI tool); **(b) calibrate the 0.5 structural-match threshold** against ground truth, biased
+   toward discard, so witnessed capture can't over-claim; **(c) hunk-level attribution** for a real
+   "% of code." Until (a) lands, the surprising ego-number exists only for Claude Code owners who
+   run capture.
+2. **Pre-public-launch checklist (before any indexable, name-attached page ships):** ✅ salted/HMAC
+   private fingerprints now built (`private-fingerprint.ts`); **still to build:** the
+   permissioned-resolution wiring on top of them, self-serve opt-out/takedown + `privacy@`, the
+   asserted-claim abuse controls (M2), and the product-liability legal pack landing with formation
+   (Finding 4). These must be *built and live* the moment the public path turns on, not after.
 3. **On Atlas close:** wire env → deploy → migrate; light up the PostHog funnel and the
    corrections-→-benchmark loop; stand up the claim/verify flow (the asserted→verified conversion
    that the whole monetization rests on).

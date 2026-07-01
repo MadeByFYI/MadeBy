@@ -1,23 +1,33 @@
-// Coverage-led framing for the mirror result (review 2026-06-30, Finding 1 follow-up #3).
-//
-// The trap: an untrailered-AI miss reads as a confident "🧑 95% human" — silent and wrong, since
-// the detector's recall on untrailered AI is 0% (GROUND-TRUTH.md). So we never lead with a "human"
-// ratio. We lead with what we can *prove* (AI involvement we have positive evidence for) and make
-// the rest an explicit **unattributed** fraction — "we can't see how it was made" — which is both
-// honest and a better conversion hook than a fake number.
+// Coverage-led framing for the mirror result (review 2026-06-30, Finding 1 follow-up #3 + v3
+// residual #4). We never lead with a confident "human" ratio — untrailered-AI recall is 0%. We
+// lead with what we can PROVE and split the rest honestly:
+//   - provable AI          — commits with a positive AI signal;
+//   - human-attributed     — a named human committed these, AI involvement UNKNOWN (may be
+//                            undisclosed AI). NOT "we can't see how it was made" — we know who.
+//   - fully unattributed   — no author on record (≈0 in git); genuinely unknown.
+// The earlier v0 folded human-attributed into "unattributed," which overstated the unknown.
 
 export interface MirrorCoverage {
   /** % of commits with a positive AI signal — what we can actually prove */
-  provablePercent: number;
-  /** % of commits with no signal either way — NOT proven human ("we can't see how it was made") */
-  unattributedPercent: number;
-  /** the unattributed fraction dominates → a "human" reading is weak evidence (often undisclosed AI) */
+  provableAiPercent: number;
+  /** % with a named human author but no AI signal — AI involvement unknown (possibly undisclosed) */
+  humanAttributedPercent: number;
+  /** % with no author info at all — genuinely unattributed */
+  fullyUnattributedPercent: number;
+  /** most of the repo is not provably AI → a "human" reading is weak (often undisclosed AI) */
   weakHumanSignal: boolean;
 }
 
-/** Derive the coverage framing from the commit-level AI-involvement estimate. */
-export function mirrorCoverage(aiInvolvedPercent: number): MirrorCoverage {
-  const provable = Math.max(0, Math.min(100, Math.round(aiInvolvedPercent)));
-  const unattributed = 100 - provable;
-  return { provablePercent: provable, unattributedPercent: unattributed, weakHumanSignal: unattributed >= 50 };
+/** Derive the three-way coverage split from the commit-level facets. */
+export function mirrorCoverage(aiInvolvedPercent: number, unattributedPercent: number): MirrorCoverage {
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+  const provableAi = clamp(aiInvolvedPercent);
+  const fullyUnattributed = Math.max(0, Math.min(100 - provableAi, Math.round(unattributedPercent)));
+  const humanAttributed = Math.max(0, 100 - provableAi - fullyUnattributed);
+  return {
+    provableAiPercent: provableAi,
+    humanAttributedPercent: humanAttributed,
+    fullyUnattributedPercent: fullyUnattributed,
+    weakHumanSignal: provableAi < 50,
+  };
 }

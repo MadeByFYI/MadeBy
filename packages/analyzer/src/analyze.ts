@@ -37,6 +37,9 @@ export interface AnalysisResult {
   readonly percent: Readonly<Record<AuthorClass, number>>;
   /** facet: commits with any AI involvement (ai + with_ai) */
   readonly aiInvolvedPercent: number;
+  /** facet: commits with NO author info AND no AI signal — genuinely unattributed (usually ~0 in
+   *  git, where commits carry an author). Distinct from human-attributed-but-AI-unknown. */
+  readonly unattributedPercent: number;
   readonly meanConfidence: number;
   readonly caveat: string;
 }
@@ -52,10 +55,12 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
 
   const humans = new Map<string, Contributor>();
   const ais = new Map<string, Contributor>();
+  let unattributed = 0; // no author info AND no AI signal → genuinely unknown
 
   commits.forEach((commit, i) => {
     const c = classifications[i]!;
     const authorIsAi = c.signals.some((s) => s.startsWith("author:"));
+    if (c.class === "human" && !commit.authorName && !commit.authorEmail) unattributed += 1;
 
     // The human author/operator answers "who" — unless the commit's author is itself an AI.
     if (!authorIsAi && (commit.authorName || commit.authorEmail)) {
@@ -92,6 +97,7 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     contributors,
     percent,
     aiInvolvedPercent: percent.ai + percent.with_ai,
+    unattributedPercent: pct(unattributed),
     meanConfidence: summary.meanConfidence,
     caveat: CAVEAT,
   };

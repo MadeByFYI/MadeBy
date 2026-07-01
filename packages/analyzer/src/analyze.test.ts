@@ -45,6 +45,18 @@ describe("analyzeCommits — answers WHO", () => {
     expect(e.contributors).toEqual([]);
     expect(e.totalCommits).toBe(0);
     expect(e.aiInvolvedPercent).toBe(0);
+    expect(e.unattributedPercent).toBe(0);
+  });
+
+  it("counts only author-less, no-AI-signal commits as fully unattributed", () => {
+    const authored = analyzeCommits([{ message: "fix", authorName: "Mac", authorEmail: "mac@x.com" }]);
+    expect(authored.unattributedPercent).toBe(0); // named author → attributed, not unattributed
+
+    const anon = analyzeCommits([{ message: "fix", authorName: "", authorEmail: "" }]);
+    expect(anon.unattributedPercent).toBe(100); // no author + no AI signal → genuinely unknown
+
+    const anonButAi = analyzeCommits([{ message: "gen\n\nCo-Authored-By: Claude <noreply@anthropic.com>", authorName: "", authorEmail: "" }]);
+    expect(anonButAi.unattributedPercent).toBe(0); // no author but AI signal → provable-AI, not unattributed
   });
 });
 
