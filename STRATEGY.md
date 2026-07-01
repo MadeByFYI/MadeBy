@@ -441,3 +441,50 @@ re-confirms asker-pull as the spine on business grounds.
 9. The badge: literal `madeby.fyi` domain as sentence-stem; live-served + always linked
    (pointer, never proof); mix-led default; moderate gap located in the trust mark; honest
    qualifier doubles as the upsell.
+
+---
+
+## 8. Customer discovery (dated learnings)
+
+A running log of what real evaluation teaches us. Kept here so one conversation becomes a durable
+strategic input, not a lost Slack thread. Findings are evidence about the *market*, not the code
+(the code state lives in `REVIEW.md` / the backlog).
+
+### v0 — 2026-06-30 · n=1, experienced open-source developer (prospective user)
+
+Source: `customer_development.md` (a prospective user evaluating the specs + in-progress code).
+**Sample caveat, load-bearing:** n=1, and the persona is an **OSS developer, not the core
+vibe-coder** the GTM targets. Directional, not representative — treat as a hypothesis check, not a
+verdict.
+
+**Validated — the honesty *is* the moat, and it lands with users.** Unprompted, the evaluator named
+the intellectual honesty (publishing untrailered-recall 0% as the headline; the fail-safe "never
+over-claim about a human"; the executable verifier) as *"the most persuasive thing here"* and
+*"I respect this more than most funded provenance projects."* This is the strongest confirmation of
+our central bet: for a trust company, modeling the tier-honesty we sell is the differentiator. **Do
+not trade it away for a flashier number.**
+
+**Confirmed risk — friction sits exactly on the flywheel's ignition point.** The verdict was a
+*soft no to adopt today*, for one root reason: **the low-friction path (the web mirror) is
+inaccurate for the target user, and the accurate path (`capture --local`) is high-friction and
+today Claude-Code-only.** The curiosity-mirror ego-number — the thing meant to spread — is weakest
+for the heaviest AI users (inline-autocomplete vibe-coders leave no trailer). This is the §4
+cold-start trap seen from the user side.
+
+**User-validated roadmap ("what would flip me to yes"):** (a) a **second tool parser** (Cursor or
+Copilot) so the witnessed path isn't Claude-Code-only; (b) **lead with coverage + make
+`capture --local` the first-contact CTA** — turn the blind spot into the upgrade prompt (largely
+shipped, #79/#87); (c) a **live resolver + one end-to-end verified badge** so there's something real
+to click through to. This is independent confirmation that the existing plan is aimed right — it's
+the same three levers, now with a user's priority order.
+
+**New implication — friction, not just accuracy, is the conversion variable.** Reducing
+`capture --local` to a true one-liner (`npx`, no clone/build) is a first-class GTM lever, not a
+packaging nicety: the coverage CTA only converts if the accurate path is trivial to run.
+
+**What this changes:** nothing in the primary strategy (§3/§6) — it *confirms* mirror → verified
+tier and the capture-led accuracy path. It sharpens two priorities: **frictionless capture** rises
+from "nice" to a conversion blocker, and **the next discovery round must target actual vibe-coders**
+(n>1, the buying persona), ideally sourcing their Cursor/Copilot logs — the same input that unblocks
+the second parser. The remaining gaps the evaluator hit (second parser, live resolver, paid tier)
+are the known **sample-** and **Atlas-** gates, now market-validated as the things that matter.
