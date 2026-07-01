@@ -380,7 +380,17 @@ conversion action.
 *under-claim*, never an AI accusation.** Lead with what we can prove and dare the rest:
 
 > *"By what we can see, this is **{provableAI}% provably AI-assisted** — the rest reads human.
-> Think that's wrong? **Prove it → `npx madeby prove`.**"*
+> Think that's wrong? Prove us wrong — or remove all doubt as to your human authorship.
+> **Either way: `npx madeby prove`.**"*
+
+**The provocation is symmetric — and that is the point.** The same command serves two opposite
+motivations, so it can't be read as pushing a verdict either way:
+- the **AI-proud** vibe-coder, insulted to see "reads human," runs it to prove the AI's share;
+- the **human-proud** author, wanting no ambiguity, runs it to *clear the doubt* and stand behind
+  their own work.
+Both roads are the same asserted→verified conversion action. Framing the CTA as *resolve the doubt*
+(not *disprove an accusation*) is what makes it land as neutral — the tool arbitrates, it doesn't
+allege — which is exactly the honesty posture, not a compromise of it.
 
 - ❌ Never "this appears **AI-written**." A hedged AI accusation is still the cardinal sin (the
   `TESTING.md §2` over-claim; the §7 non-native-English 61.3%-FP landmine) and "appears" is weak
@@ -389,7 +399,8 @@ conversion action.
   *literally true* (a statement about our **visibility**, not about them — truth defense + the
   honesty moat intact), and is **self-directed** (a dare to the repo owner who can act).
 - **The safe direction is the engaging one:** an AI-proud vibe-coder shown "95% human" is *insulted*
-  and rushes to prove otherwise — so the provocation is strongest exactly where it's libel-proof.
+  and rushes to prove otherwise; the human-proud author is drawn by the chance to *settle it*. The
+  provocation is strongest exactly where it's libel-proof — because doubt cuts both ways.
 
 **Guardrails (enforced):** every line literally true (about our signal, never a claim about the
 person); self-directed to the owner; **consent-gated for third parties** (no published, indexable
