@@ -1,24 +1,34 @@
 import { describe, it, expect } from "vitest";
 import { mirrorCoverage } from "./coverage";
 
-describe("mirrorCoverage — lead with provable, never a confident 'human' ratio", () => {
-  it("splits into provable + unattributed (summing to 100)", () => {
-    const c = mirrorCoverage(38);
-    expect(c.provablePercent).toBe(38);
-    expect(c.unattributedPercent).toBe(62);
-    expect(c.provablePercent + c.unattributedPercent).toBe(100);
+describe("mirrorCoverage — three-way honest split, never a confident 'human' ratio", () => {
+  it("splits provable-AI / human-attributed / fully-unattributed (summing to 100)", () => {
+    const c = mirrorCoverage(38, 0);
+    expect(c.provableAiPercent).toBe(38);
+    expect(c.humanAttributedPercent).toBe(62); // named humans, AI unknown — NOT "can't see"
+    expect(c.fullyUnattributedPercent).toBe(0);
+    expect(c.provableAiPercent + c.humanAttributedPercent + c.fullyUnattributedPercent).toBe(100);
   });
 
-  it("flags a weak 'human' signal when the unattributed fraction dominates", () => {
-    expect(mirrorCoverage(5).weakHumanSignal).toBe(true); // 95% unattributed → don't read as 'human'
-    expect(mirrorCoverage(80).weakHumanSignal).toBe(false); // mostly provable AI
-    expect(mirrorCoverage(50).weakHumanSignal).toBe(true); // tie counts as weak
+  it("carves out genuinely author-less commits as fully-unattributed", () => {
+    const c = mirrorCoverage(20, 10); // 20% provable AI, 10% author-less
+    expect(c.provableAiPercent).toBe(20);
+    expect(c.fullyUnattributedPercent).toBe(10);
+    expect(c.humanAttributedPercent).toBe(70);
   });
 
-  it("rounds and clamps to [0,100]", () => {
-    expect(mirrorCoverage(37.6).provablePercent).toBe(38);
-    expect(mirrorCoverage(-3).provablePercent).toBe(0);
-    expect(mirrorCoverage(150).provablePercent).toBe(100);
-    expect(mirrorCoverage(150).unattributedPercent).toBe(0);
+  it("flags a weak 'human' signal when most of the repo isn't provably AI", () => {
+    expect(mirrorCoverage(5, 0).weakHumanSignal).toBe(true);
+    expect(mirrorCoverage(80, 0).weakHumanSignal).toBe(false);
+    expect(mirrorCoverage(50, 0).weakHumanSignal).toBe(false); // exactly 50% provable → not weak
+    expect(mirrorCoverage(49, 0).weakHumanSignal).toBe(true);
+  });
+
+  it("rounds and clamps; the three parts never exceed 100", () => {
+    const c = mirrorCoverage(37.6, 200); // absurd unattributed clamps under the AI remainder
+    expect(c.provableAiPercent).toBe(38);
+    expect(c.fullyUnattributedPercent).toBe(62);
+    expect(c.humanAttributedPercent).toBe(0);
+    expect(c.provableAiPercent + c.humanAttributedPercent + c.fullyUnattributedPercent).toBe(100);
   });
 });
