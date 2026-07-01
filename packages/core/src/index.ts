@@ -45,6 +45,8 @@ export {
 } from "./fingerprint";
 export type { Fingerprint } from "./fingerprint";
 
+export { generateFingerprintKey, privateFingerprint, isPrivateFingerprint } from "./private-fingerprint";
+
 export { structuralFingerprint, cosineSimilarity, normalizeSource } from "./structural";
 export type { StructuralResult } from "./structural";
 

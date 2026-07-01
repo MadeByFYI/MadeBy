@@ -39,6 +39,6 @@ designed containment; the red-team coverage lands with the component.
 | **Corpus poisoning** | Pending the ingestion pipeline (#10) — bounded/sampled corpus + asserted-tier-only for ingested claims limits blast radius. |
 | **Real cryptographic signature forgery** | Modeled here via an injected `verifySignature` → false. Real-crypto verification arrives with the signing/verification path (#18). |
 | **End-to-end badge image forgery** | A faked badge image carries no trust state; the resolver page is authoritative (badge is a pointer, never proof — `STRATEGY.md` §5). Full integration test lands with the live badge service / resolver pages. |
-| **Hash enumeration against private content** | The resolver returns *not-found* for unknown fingerprints (no leak beyond existence); salted/scoped fingerprints for private subjects are pending (`ARCHITECTURE.md` §2). |
+| **Hash enumeration against private content** | Salted/HMAC private fingerprints are **now implemented** (#70, `private-fingerprint.ts`): a private subject's join key is `HMAC(ownerKey, native-hash)`, so an attacker with the bytes but not the key cannot reproduce the key to confirm presence (unit-tested). Permissioned resolution wiring (key distribution) rides the live registry. |
 
 Owned by the **Trust-QA epic (#16)**; updated as new attack surfaces and components land.
