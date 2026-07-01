@@ -124,11 +124,13 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
             count AI we can see.
           </p>
         ) : null}
-        {/* Provocation-to-correct (STRATEGY §5): dare the owner to close the gap. Always the
-            under-claim ("reads human/unverified"), never an AI accusation — honest + libel-safe. */}
+        {/* Provocation-to-correct (STRATEGY §5): dare the owner to close the gap. Symmetric —
+            appeals to the AI-proud (prove more) AND the human-proud (clear the doubt); the tool
+            resolves doubt in either direction, never accuses. Always the under-claim, never "appears AI". */}
         <p style={{ margin: ".6rem 0 0", fontSize: ".95rem" }}>
-          Think we&apos;re underselling your AI game? By what we can see, the rest reads human.{" "}
-          <strong>Prove us wrong: <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby prove</code></strong>{" "}
+          Think we&apos;re underselling your AI game? By what we can see, the rest reads human.
+          Prove us wrong — or remove all doubt as to your human authorship.{" "}
+          <strong>Either way: <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby prove</code></strong>{" "}
           reads your own session logs (locally — nothing leaves your machine) and shows what the AI actually wrote.
         </p>
       </div>
