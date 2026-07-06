@@ -262,10 +262,21 @@ applied to attestation (OSI publishes license *text* — its own speech; repos a
 **What this buys:** takedown is trivial and fail-safe — the declaration lives in *their* repo; they
 delete the file → next asker-pull detects its absence → the pointer degrades to `asserted`; we never
 held a copy to be asked to remove. We point to a *fact* ("repo X at commit Y contains declaration
-vN"), we don't reproduce their claim — an intermediary posture, not a publisher's. The template
-text + detector are **buildable now** (they extend this carrier registry / the classifier); only the
+vN"), we don't reproduce their claim — an intermediary posture, not a publisher's. Only the
 sworn *launch* waits on counsel, whose scope shrinks from "regulate a hosting regime" to "vet our
 template wording + the detector/pointer disclaimer."
+
+**Reference implementation (landed).** `packages/core/src/declaration.ts` is the detector: a
+versioned template registry, canonical-operative-text hashing (recognition survives whitespace
+drift but not wording changes), signature-field extraction, and the fail-safe `declarationTier`
+ladder. The published instrument is `packages/core/templates/MADEBY-ATTESTATION-v1.md`.
+`resolveTier` gained a `recognizesSwornRepresentation` gate so the trust-critical path caps
+unrecognized/draft representations at asserted (mutation-tested). The analyzer
+(`packages/analyzer/src/declaration.ts`) reads a self-hosted declaration from a repo and produces
+the **pointer** (path, template id, signatory, tier) — folded into the mirror. **The counsel gate
+is a code fact:** the v1 template ships with `status: 'draft'`, so a perfectly-formed signed
+declaration is *detected and pointed to* but still resolves to `asserted`; finalizing the wording
+flips status → the sworn tier unlocks with no other change.
 
 ---
 

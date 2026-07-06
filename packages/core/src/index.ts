@@ -53,6 +53,18 @@ export type { StructuralResult } from "./structural";
 export { resolveTier } from "./resolve";
 export type { ResolutionContext } from "./resolve";
 
+export {
+  DECLARATION_TEMPLATES,
+  MADEBY_ATTESTATION_V1_OPERATIVE,
+  canonicalizeOperative,
+  operativeHash,
+  detectDeclaration,
+  declarationTier,
+  recognizesSwornRepresentation,
+  swornAttestationFrom,
+} from "./declaration";
+export type { DeclarationTemplate, TemplateStatus, DeclarationDetection } from "./declaration";
+
 export { resolveClaims, resolve } from "./resolution";
 export type { ResolvedClaim, Resolution } from "./resolution";
 

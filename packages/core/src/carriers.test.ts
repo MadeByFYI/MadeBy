@@ -65,6 +65,7 @@ describe("unknown-carrier degradation (TESTING.md §3)", () => {
       knownCarriers: carriersForResolution(),
       verifySignature: () => true,
       isSignerVerified: () => true,
+      recognizesSwornRepresentation: () => true,
     };
     const unknown = claim({ signature: { ...sig, carrierId: "some-future-format" } });
     expect(resolveTier(unknown, ctx)).toBe("asserted");
