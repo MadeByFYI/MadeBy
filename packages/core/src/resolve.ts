@@ -14,12 +14,20 @@ export interface ResolutionContext {
   verifySignature: (claim: Claim, sig: Signature) => boolean;
   /** whether the signer's identity is verified (required for 'verified'/'bound') */
   isSignerVerified: (sig: Signature) => boolean;
+  /**
+   * whether a sworn overlay's representationCode names a recognized, FINALIZED declaration
+   * template (the invariant #3 analog for the sworn carrier — see declaration.ts). An unrecognized
+   * or still-draft representation caps at asserted, exactly like an unknown carrier.
+   */
+  recognizesSwornRepresentation: (representationCode: string) => boolean;
 }
 
 /**
  * Resolve the EFFECTIVE tier of a claim. Degrades downward, never upward:
  * - asserted : always (the floor)
- * - sworn    : iff a sworn attestation exists (legal consequence, no crypto)
+ * - sworn    : a sworn overlay that (a) names a recognized, FINALIZED declaration template and
+ *              (b) carries a legal signature (a signatory name). Legal consequence, no crypto.
+ *              Unrecognized/draft template or missing signature → caps at asserted.
  * - verified : valid signature in a recognized carrier + verified signer
  * - bound    : everything 'verified' requires + an exact-byte fingerprint
  *              (a fuzzy/structural fingerprint can't be byte-bound → degrades to 'verified')
@@ -28,7 +36,13 @@ export function resolveTier(claim: Claim, ctx: ResolutionContext): TrustTier {
   const wants = claim.assertedTier;
 
   if (wants === "asserted") return "asserted";
-  if (wants === "sworn") return claim.sworn ? "sworn" : FALLBACK_TIER;
+  if (wants === "sworn") {
+    const s = claim.sworn;
+    if (!s) return FALLBACK_TIER; // no overlay → nothing sworn
+    if (!s.signatureName) return FALLBACK_TIER; // no legal signature → not consequential
+    if (!ctx.recognizesSwornRepresentation(s.representationCode)) return FALLBACK_TIER; // unknown/draft template → cap
+    return "sworn";
+  }
 
   // verified / bound require cryptographic evidence.
   const sig = claim.signature;

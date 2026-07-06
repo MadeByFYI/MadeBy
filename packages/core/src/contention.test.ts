@@ -18,6 +18,7 @@ const ctx = (over: Partial<ResolutionContext> = {}): ResolutionContext => ({
   knownCarriers: new Map<string, Carrier>([["in-toto", { id: "in-toto", verificationCapable: true }]]),
   verifySignature: () => true,
   isSignerVerified: () => true,
+  recognizesSwornRepresentation: () => true,
   ...over,
 });
 

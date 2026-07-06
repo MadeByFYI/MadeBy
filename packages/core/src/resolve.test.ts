@@ -27,6 +27,7 @@ function ctx(over: Partial<ResolutionContext> = {}): ResolutionContext {
     knownCarriers: new Map<string, Carrier>([["in-toto", { id: "in-toto", verificationCapable: true }]]),
     verifySignature: () => true,
     isSignerVerified: () => true,
+    recognizesSwornRepresentation: () => true,
     ...over,
   };
 }
@@ -35,8 +36,8 @@ describe("resolveTier — happy paths", () => {
   it("asserted is the floor", () => {
     expect(resolveTier(claim({ assertedTier: "asserted" }), ctx())).toBe("asserted");
   });
-  it("sworn requires a sworn overlay", () => {
-    const sworn = { representationCode: "PERJURY", signatureName: "Jane Doe", signedAt: "2026-01-01T00:00:00Z" };
+  it("sworn requires a recognized template + a legal signature", () => {
+    const sworn = { representationCode: "madeby-attestation-v1", signatureName: "Jane Doe", signedAt: "2026-01-01T00:00:00Z" };
     expect(resolveTier(claim({ assertedTier: "sworn", sworn }), ctx())).toBe("sworn");
   });
   it("verified with valid sig + known carrier + verified signer", () => {
@@ -50,6 +51,14 @@ describe("resolveTier — happy paths", () => {
 describe("resolveTier — fails safe (never escalates above the evidence)", () => {
   it("sworn without an overlay degrades to asserted", () => {
     expect(resolveTier(claim({ assertedTier: "sworn" }), ctx())).toBe("asserted");
+  });
+  it("sworn with an UNRECOGNIZED/draft template caps at asserted", () => {
+    const sworn = { representationCode: "some-unknown-template", signatureName: "Jane Doe", signedAt: "2026-01-01T00:00:00Z" };
+    expect(resolveTier(claim({ assertedTier: "sworn", sworn }), ctx({ recognizesSwornRepresentation: () => false }))).toBe("asserted");
+  });
+  it("sworn with a recognized template but NO legal signature caps at asserted", () => {
+    const sworn = { representationCode: "madeby-attestation-v1", signatureName: "", signedAt: "2026-01-01T00:00:00Z" };
+    expect(resolveTier(claim({ assertedTier: "sworn", sworn }), ctx())).toBe("asserted");
   });
   it("verified/bound without a signature caps at asserted", () => {
     expect(resolveTier(claim({ assertedTier: "verified" }), ctx())).toBe("asserted");

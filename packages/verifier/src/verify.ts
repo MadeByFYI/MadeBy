@@ -157,6 +157,9 @@ export async function verifyAttestation(
         knownCarriers: carriersForResolution(),
         verifySignature: () => signatureValid,
         isSignerVerified: () => trustSigner,
+        // this verifier confirms cryptographic byte-binding (asks for 'bound'); the sworn/legal
+        // carrier is out of its scope, so it recognizes no sworn representation here (fail-safe).
+        recognizesSwornRepresentation: () => false,
       },
     );
   }

@@ -9,6 +9,8 @@ export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
 export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";
 export { readSpanManifestsFromDir, readSpanManifestsFromGit, summarizeSpanEvidence } from "./provenance";
 export type { SpanEvidence } from "./provenance";
+export { readDeclarationFromDir, readDeclarationFromGit, summarizeDeclaration } from "./declaration";
+export type { DeclarationEvidence } from "./declaration";
 export { captureLocalSpans } from "./capture-local";
 export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
 export { claudeCodeParser, TOOL_PARSERS, detectParser } from "./tool-parsers";
