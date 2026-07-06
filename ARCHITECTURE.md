@@ -216,6 +216,57 @@ Governance is lightweight (media-type-registry style — who may claim a binding
 The format itself is open and governed: an adopted open spec is a moat; a proprietary one is
 a liability.
 
+### The sworn carrier: self-hosted declarations, we detect and point (decision, 2026-07-06)
+
+The `sworn` tier is *"no crypto binding, but legally consequential"* (`packages/core/src/tiers.ts`).
+The legal force comes from the **declarant adopting standardized declaration language** — not from
+us hosting it. Hosting third-party legal representations was only ever the *liability* of the sworn
+tier, never its *mechanism*. So we don't host them. **We publish the instrument; the user self-hosts
+the declaration in their own repo; we detect it and store a pointer.** This is the OSI/SPDX model
+applied to attestation (OSI publishes license *text* — its own speech; repos adopt it; `licensee`
+*detects* and points), and it makes MadeBy a **detector/indexer, not a publisher** of others' claims.
+
+- **The instrument** — a canonical, **versioned** attestation template we publish openly (a
+  `MADEBY-ATTESTATION-vN` text with an SPDX-style identifier), carrying the legally-operative
+  declaration language. Publishing our own template text is low-liability, like publishing a license.
+- **The carrier is the user's repo.** They commit a declaration file (e.g. `PROVENANCE` /
+  `.madeby/attestation`) that **references** their `.madeby/` manifest (two-hash invariant #1
+  preserved — the declaration points at the native content hash, nothing re-hashes into our
+  envelope). This is a new self-describing carrier in the registry above.
+- **We store a pointer, never a copy** — `(repo, commit SHA, path, template-version-id,
+  hash-of-detected-text)`. Detection is **canonical-text match** (same discipline as license
+  detection and the trailer classifier): hash the *legally-operative body* (whitespace-normalized;
+  fill-in fields — name, date, scope — excluded from the hash). Altering the oath wording breaks the
+  match, so a declaration cannot be watered down and keep its tier.
+- **Signature-attachable by design — legal first, cryptographic optional.** The template carries a
+  **legal signature block**: the declarant signs it (typed name + declaration + date, e-signature-
+  equivalent). This *legal* signature — not a cryptographic one — is what makes the statement
+  consequential (misrepresentation/perjury exposure) and is the sworn tier's actual mechanism,
+  consistent with `tiers.ts` ("no crypto binding, but legally consequential") and STRATEGY §2 (the
+  orthogonal legal axis: bind the claim to *a person who bears consequences*, no cryptography needed).
+  A **cryptographic** signature (signed commit, or a detached signature over the canonical
+  declaration bytes — invariant #2) is a welcome *addition*, not a requirement: it further binds the
+  declaration to a checkable identity and is the clean, in-band **upgrade path to `verified`** with no
+  format change.
+
+**Tier mapping (fail-safe / invariant #3):**
+
+- Recognized declaration text, **legally signed by an identifiable party** (repo self-attestation) →
+  **sworn**. Legal signature + identifiable declarant; no cryptography required.
+- **+ a valid cryptographic signature** by a checkable/known party → **verified**.
+- Modified/unrecognized text, or no identifiable signatory → capped at **asserted**, flagged
+  "declaration not recognized / declarant unverified." (Whether the legal signature alone clears the
+  sworn bar in a given jurisdiction is a counsel question — see `COMPLIANCE.md`; the sworn *launch*
+  stays counsel-gated.)
+
+**What this buys:** takedown is trivial and fail-safe — the declaration lives in *their* repo; they
+delete the file → next asker-pull detects its absence → the pointer degrades to `asserted`; we never
+held a copy to be asked to remove. We point to a *fact* ("repo X at commit Y contains declaration
+vN"), we don't reproduce their claim — an intermediary posture, not a publisher's. The template
+text + detector are **buildable now** (they extend this carrier registry / the classifier); only the
+sworn *launch* waits on counsel, whose scope shrinks from "regulate a hosting regime" to "vet our
+template wording + the detector/pointer disclaimer."
+
 ---
 
 ## 4. AI span-demarcation convention

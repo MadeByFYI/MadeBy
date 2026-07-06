@@ -46,9 +46,12 @@ required.** This removes what is normally the most time-sensitive post-formation
 ## Product-liability legal pack (formation deliverable — review 2026-06-29, Finding 4)
 
 This runbook covers *entity/tax*; it was **silent on product liability**, which is the larger
-exposure for a product that publishes inferences about third parties and (later) hosts sworn legal
-attestations. Forming the entity without this layer leaves the highest-liability surfaces legally
-naked. Engage counsel **at formation** for:
+exposure for a product that publishes inferences about third parties. (We **no longer host** sworn
+legal attestations — decision 2026-07-06, `ARCHITECTURE.md §3`: users self-host a legally-signed
+declaration in their own repo, we detect it and store a pointer. This removes the
+attestation-hosting exposure entirely; the inference-publishing exposure remains and is unchanged.)
+Forming the entity without this layer leaves the highest-liability surfaces legally naked. Engage
+counsel **at formation** for:
 
 - **Terms of Service + Acceptable Use Policy** — including the "we order evidence, we don't
   adjudicate" posture and prohibited-use terms for the free assert tier.
@@ -57,9 +60,12 @@ naked. Engage counsel **at formation** for:
   consent/opt-out design, `ARCHITECTURE.md` §8/§11).
 - **DMCA/takedown agent registration + intermediary-liability / safe-harbor posture** — before any
   public, name-attached pages ship.
-- **Counsel on the sworn tier specifically** — hosting legal representations, the "powerful actor
-  files a false sworn claim" case, and MadeBy-as-record-keeper-not-notary structure. The sworn tier
-  does **not** launch until this clears (`STRATEGY.md` §2).
+- **Counsel on the sworn tier specifically** — now a *narrower* scope since we don't host the
+  declarations (`ARCHITECTURE.md §3`): vet **our published template wording** (does a self-hosted,
+  legally-signed declaration clear the "sworn"/consequential bar, and in which jurisdictions), the
+  **detector/pointer disclaimer** (we index a fact, we don't republish the claim), and the "powerful
+  actor files a false sworn claim" case. MadeBy-as-detector-not-notary. The sworn tier does **not**
+  launch until this clears (`STRATEGY.md` §2).
 - **`security@` + `privacy@` contacts** live before launch.
 
 ## Deferred until they apply
