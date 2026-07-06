@@ -379,28 +379,59 @@ conversion action.
 **The one rule that keeps it out of court and on-doctrine: the provocation always leans to the
 *under-claim*, never an AI accusation.** Lead with what we can prove and dare the rest:
 
-> *"By what we can see, this is **{provableAI}% provably AI-assisted** — the rest reads human.
-> Think that's wrong? Prove us wrong — or remove all doubt as to your human authorship.
-> **Either way: `npx madeby prove`.**"*
+> *"By what we can see, this is **{provableAI}% provably AI-assisted** — past that we honestly can't
+> tell either way. Think that's wrong? Prove us wrong — or remove all doubt as to your human
+> authorship. **Either way: `npx madeby prove`.**"*
 
 **The provocation is symmetric — and that is the point.** The same command serves two opposite
 motivations, so it can't be read as pushing a verdict either way:
-- the **AI-proud** vibe-coder, insulted to see "reads human," runs it to prove the AI's share;
+- the **AI-proud** vibe-coder, wanting credit for the AI's share we can't yet see, runs it to prove it;
 - the **human-proud** author, wanting no ambiguity, runs it to *clear the doubt* and stand behind
   their own work.
 Both roads are the same asserted→verified conversion action. Framing the CTA as *resolve the doubt*
 (not *disprove an accusation*) is what makes it land as neutral — the tool arbitrates, it doesn't
 allege — which is exactly the honesty posture, not a compromise of it.
 
+**The two defaults — and why we only lean in one of them (decision, 2026-07-06).** Pressed on "why
+is *human* the safe default when we can't tell — why not *AI*?", the answer is that we conflated two
+different defaults, and only one is defensible:
+
+1. **The tier/verification default is `unknown`/`asserted` — direction-neutral, not "human."** This
+   is the real fail-safe (invariant #5: never *falsely-verified*). It asserts no direction at all.
+2. **The narrative default must also be *unknown*, not "human."** Earlier copy ("the rest reads
+   human") quietly promoted *absence of an AI signal* into a *human claim* — the mild form of the
+   very sin we forbid. Fixed: past what we can prove, we say **"can't tell either way"**, never
+   "reads human."
+
+So we do **not** default to a substantive authorship claim in either direction. But when a *lean* is
+unavoidable, human-leaning is correct — and **not because human is more likely** (for vibe-coders in
+2026 the base rate favors AI; as a *prediction* human is the wrong bet, and under-counting is the
+"fatal bug", §4). The lean is justified on three grounds that are about *claim-discipline and harm*,
+not likelihood:
+
+- **Evidence asymmetry.** A commit carries a named author/committer — human authorship is *attested*
+  (asserted tier), on the record. Untrailered AI has **zero carrier** in our view. Defaulting to
+  "AI" would assert a subject we have no evidence for — an invariant #1 violation ("evidence, not
+  guessing"), not a safer guess. Fail-safe means *assert no more than we can see*, not *guess the
+  likeliest truth*.
+- **Cost asymmetry beats the base rate.** A false-AI call harms a *named person* (dignity + the §7
+  non-native-English 61.3%-FP defamation landmine); a false-human call over-credits *no identifiable
+  victim*. When error costs are asymmetric you minimize expected *cost*, not error *rate* — which is
+  the right objective for a trust brand even when the odds favor AI.
+- **Never tax the honest state.** An AI-leaning default would penalize non-disclosure — the opposite
+  of the participation we're trying to grow.
+
 - ❌ Never "this appears **AI-written**." A hedged AI accusation is still the cardinal sin (the
   `TESTING.md §2` over-claim; the §7 non-native-English 61.3%-FP landmine) and "appears" is weak
   legal cover.
-- ✅ "Looks **human/unverified** to us" is *not defamatory* (no harm in being called human), is
-  *literally true* (a statement about our **visibility**, not about them — truth defense + the
-  honesty moat intact), and is **self-directed** (a dare to the repo owner who can act).
-- **The safe direction is the engaging one:** an AI-proud vibe-coder shown "95% human" is *insulted*
-  and rushes to prove otherwise; the human-proud author is drawn by the chance to *settle it*. The
-  provocation is strongest exactly where it's libel-proof — because doubt cuts both ways.
+- ❌ Never "the rest **reads human**." Absence of an AI signal is *unknown*, not human — say "can't
+  tell either way."
+- ✅ "**Provably** AI in X%; past that, unverified either way" is *literally true* (a statement about
+  our **visibility**, not about them — truth defense + honesty moat intact) and **self-directed** (a
+  dare to the repo owner who can act).
+- **The neutral direction is the engaging one:** the AI-proud want the credit we can't yet see; the
+  human-proud want to settle it. The provocation is strongest exactly where it's libel-proof —
+  because unresolved doubt, not an accusation, is what pulls both.
 
 **Guardrails (enforced):** every line literally true (about our signal, never a claim about the
 person); self-directed to the owner; **consent-gated for third parties** (no published, indexable
@@ -412,6 +443,21 @@ motivation, and zero-install `npx` is the frictionless path the study named as t
 bet. It runs the `capture --local` engine (`capture-local.ts`). **Launch prerequisite:** the `npx`
 package must exist before the mirror is public — you cannot publish a CTA to a command that 404s
 (itself a trust-brand tell). Until then the CTA is staged on the localhost mirror.
+
+**Consequence — the public draw is a coverage metric, not an "AI%" (decision, 2026-07-06).** Once
+the default is *unknown* rather than *human*, we lose the ability to publish an honest site-wide
+"X% of code is AI" headline — and that is correct, because that number was never viable for two
+independent reasons: (a) with ~0% untrailered recall (`GROUND-TRUTH.md`) the honest aggregate is
+dominated by our blind spot — the truthful number is wrong-low, the impressive number is dishonest,
+and even the invariant-#6-compliant labeled version is misleading-by-omission; (b) an AI% treats
+"unknown" as a denominator we score, which *taxes the honest state* we're trying to grow. **The draw
+is instead a provenance-coverage / transparency metric** — "X% of this repo has *verifiable*
+provenance" — which is honest, aggregatable, *rises* as the network adopts, and whose gap **is** the
+CTA (same curiosity/competition pull, pointed at a number that rewards participation instead of one
+we can't compute). This is `RESEARCH`'s *routing-not-attribution* and this section's *celebrate
+transparency, neutral on ratio*, applied to the growth surface. **Named tradeoff:** "60% of code is
+AI" is a punchier hook than "raise your coverage" — we are trading a viral-but-false draw for a
+slower-but-true one, the same honesty-as-moat bet the rest of the strategy makes.
 
 ---
 
