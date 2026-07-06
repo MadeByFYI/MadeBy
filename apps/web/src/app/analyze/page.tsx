@@ -126,9 +126,10 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
         ) : null}
         {/* Provocation-to-correct (STRATEGY §5): dare the owner to close the gap. Symmetric —
             appeals to the AI-proud (prove more) AND the human-proud (clear the doubt); the tool
-            resolves doubt in either direction, never accuses. Always the under-claim, never "appears AI". */}
+            resolves doubt in either direction, never accuses. The default past what we can prove is
+            UNKNOWN, not human — we say "can't tell either way", never "reads human" (STRATEGY §5). */}
         <p style={{ margin: ".6rem 0 0", fontSize: ".95rem" }}>
-          Think we&apos;re underselling your AI game? By what we can see, the rest reads human.
+          Think we&apos;re underselling your AI game? Past what we can prove, we honestly can&apos;t tell either way.
           Prove us wrong — or remove all doubt as to your human authorship.{" "}
           <strong>Either way: <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby prove</code></strong>{" "}
           reads your own session logs (locally — nothing leaves your machine) and shows what the AI actually wrote.
