@@ -1,9 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { MADEBY_ATTESTATION_V1_OPERATIVE } from "@madeby/core";
+import { fileURLToPath } from "node:url";
+import { MADEBY_ATTESTATION_V1_OPERATIVE, canonicalizeOperative } from "@madeby/core";
 import { readDeclarationFromDir, summarizeDeclaration } from "./declaration";
+
+describe("published template ↔ code (no drift)", () => {
+  it("MADEBY-ATTESTATION-v1.md embeds the operative constant verbatim", () => {
+    const path = fileURLToPath(new URL("../../core/templates/MADEBY-ATTESTATION-v1.md", import.meta.url));
+    const md = readFileSync(path, "utf8");
+    const block = /-----BEGIN MADEBY ATTESTATION v1-----\n([\s\S]*?)\n-----END MADEBY ATTESTATION v1-----/.exec(md);
+    expect(block).not.toBeNull();
+    expect(canonicalizeOperative(block![1]!)).toBe(canonicalizeOperative(MADEBY_ATTESTATION_V1_OPERATIVE));
+  });
+});
 
 function declarationFile(signed = true): string {
   const sig = signed

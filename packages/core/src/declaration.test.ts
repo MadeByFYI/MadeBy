@@ -1,10 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import {
   DECLARATION_TEMPLATES,
   MADEBY_ATTESTATION_V1_OPERATIVE,
-  canonicalizeOperative,
   operativeHash,
   detectDeclaration,
   declarationTier,
@@ -24,14 +21,8 @@ describe("declaration — template registry integrity", () => {
     expect(await operativeHash(MADEBY_ATTESTATION_V1_OPERATIVE)).toBe(v1.operativeHash);
   });
 
-  it("the published template file embeds the operative constant verbatim (no drift)", () => {
-    const path = fileURLToPath(new URL("../templates/MADEBY-ATTESTATION-v1.md", import.meta.url));
-    const md = readFileSync(path, "utf8");
-    const block = /-----BEGIN MADEBY ATTESTATION v1-----\n([\s\S]*?)\n-----END MADEBY ATTESTATION v1-----/.exec(md);
-    expect(block).not.toBeNull();
-    // Canonicalized, the published block equals the code's operative source of truth.
-    expect(canonicalizeOperative(block![1]!)).toBe(canonicalizeOperative(MADEBY_ATTESTATION_V1_OPERATIVE));
-  });
+  // (The published-template-file drift check needs node:fs, which core deliberately lacks — it
+  // lives in the analyzer's declaration.test.ts instead.)
 
   it("v1 seed is still a DRAFT (counsel gate) — it must not silently confer a tier", () => {
     expect(v1.status).toBe("draft");
