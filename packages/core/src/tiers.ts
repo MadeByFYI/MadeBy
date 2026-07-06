@@ -1,8 +1,11 @@
 /**
  * The honest trust ladder (STRATEGY.md §2, ARCHITECTURE.md), ordered ascending.
  * - asserted : a claim, from anyone. Discovery/credit only.
- * - sworn    : no crypto binding, but legally consequential.
- * - verified : the signer is a known, verified party.
+ * - sworn    : no crypto binding, but legally consequential. Reached via a self-hosted,
+ *              legally-signed declaration in the user's own repo that we detect and point to
+ *              (we don't host it) — see ARCHITECTURE.md §3, "the sworn carrier".
+ * - verified : the signer is a known, verified party (a cryptographic signature over the
+ *              declaration is the in-band upgrade from sworn).
  * - bound    : cryptographic binding to the exact bytes.
  */
 export const TRUST_TIERS = ["asserted", "sworn", "verified", "bound"] as const;

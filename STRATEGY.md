@@ -75,15 +75,23 @@ useful in a dispute even when the bytes later drift. The registry quietly become
 > We **order evidence; we do not assert truth.** When two parties claim the same content,
 > we rank by tier, timestamp, and lineage — we do not adjudicate.
 
-> **Defer the sworn tier (review 2026-06-29, Finding 4).** Sworn is the **highest-liability
-> surface** (hosting legal representations, publishing ranked ownership evidence) and has the
-> *least* operational design — jurisdiction, intermediary-liability/safe-harbor, co-defendant
-> exposure, the "powerful actor files a false sworn claim" case. **We do not launch sworn until
-> counsel signs off.** The wedge runs on **asserted + verified** at a fraction of the liability.
-> When sworn does ship, MadeBy is the **record-keeper hosting ordered evidence, never the notary
-> or judge** (claimant-to-claimant counterparty; symmetric export + non-deletion enforced). The
-> **product-liability legal pack** (ToS, privacy policy, AUP, DMCA-agent registration,
-> safe-harbor posture) is a named **formation deliverable** — see `COMPLIANCE.md`.
+> **Defer the sworn tier (review 2026-06-29, Finding 4).** Sworn has the *least* operational design
+> and the "powerful actor files a false sworn claim" case, so **we do not launch sworn until counsel
+> signs off.** The wedge runs on **asserted + verified** at a fraction of the liability.
+>
+> **We do not host the sworn declarations (decision, 2026-07-06).** The tier's legal force comes
+> from the declarant adopting standardized, **legally-signed** declaration language — not from us
+> hosting it; hosting was only the liability, never the mechanism. So we **publish the template
+> instrument, the user self-hosts the signed declaration in their own repo, and we detect it and
+> store a pointer** (OSI/SPDX model — we are a *detector/indexer*, not a publisher of others'
+> claims). The signature is a **legal** one (binds the claim to a person who bears consequences);
+> a cryptographic signature is an optional add-on that further unlocks *verified*. This flips
+> MadeBy from **record-keeper-hosting-evidence** to **pointer-to-self-hosted-evidence** — takedown
+> is trivial and fail-safe (they delete the file → the pointer degrades to `asserted`; we held no
+> copy), and counsel's scope shrinks to *our template wording + the pointer disclaimer* rather than
+> a hosting regime. Mechanism: `ARCHITECTURE.md §3` (the sworn carrier). The **product-liability
+> legal pack** (ToS, privacy policy, AUP, DMCA-agent registration, safe-harbor posture) remains a
+> named **formation deliverable** — see `COMPLIANCE.md`.
 
 ---
 
