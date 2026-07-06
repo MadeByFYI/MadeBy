@@ -19,7 +19,7 @@ interface FpVector { name: string; algorithm: string; content: string; expected:
 interface TierVector {
   name: string;
   claim: Claim;
-  env: { knownCarriers: string[]; verifySignature: boolean; signerVerified: boolean };
+  env: { knownCarriers: string[]; verifySignature: boolean; signerVerified: boolean; recognizedRepresentations?: string[] };
   expected: string;
 }
 interface EdgeTierVector {
@@ -58,10 +58,12 @@ function ctxFromEnv(env: TierVector["env"]): ResolutionContext {
   const knownCarriers = new Map<string, Carrier>(
     env.knownCarriers.map((id) => [id, { id, verificationCapable: true }]),
   );
+  const recognized = new Set(env.recognizedRepresentations ?? []);
   return {
     knownCarriers,
     verifySignature: () => env.verifySignature,
     isSignerVerified: () => env.signerVerified,
+    recognizesSwornRepresentation: (code) => recognized.has(code),
   };
 }
 

@@ -5,6 +5,7 @@
 import {
   resolve,
   carriersForResolution,
+  recognizesSwornRepresentation,
   type Resolution,
   type ResolutionContext,
   type Subject,
@@ -42,13 +43,16 @@ export class InMemoryRegistry implements Registry {
 /**
  * v0 resolution context: signatures cannot be cryptographically verified until the verification
  * path (#18), so verify/signer both return false ⇒ everything caps at the asserted tier. Honest
- * and fail-safe — the resolver never over-claims a tier it can't yet check.
+ * and fail-safe — the resolver never over-claims a tier it can't yet check. The sworn recognizer is
+ * the real one (declaration.ts): the seed template is 'draft', so sworn also caps at asserted until
+ * counsel finalizes it — the counsel gate holds through the resolver too.
  */
 export function resolutionContext(): ResolutionContext {
   return {
     knownCarriers: carriersForResolution(),
     verifySignature: () => false,
     isSignerVerified: () => false,
+    recognizesSwornRepresentation,
   };
 }
 

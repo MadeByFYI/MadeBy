@@ -145,6 +145,16 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
         </p>
       ) : null}
 
+      {/* Sworn carrier (ARCHITECTURE §3): we POINT to a self-hosted declaration, we don't host it.
+          Tier is fail-safe — 'asserted' while the v1 template is a counsel-pending draft. */}
+      {r.declaration.present ? (
+        <p style={{ fontSize: ".95rem", margin: ".4rem 0 0", color: "#9ad29a" }}>
+          📜 Self-hosted attestation found at <code>{r.declaration.path}</code>
+          {r.declaration.signatory ? <> — signed by <strong>{r.declaration.signatory}</strong></> : ""}. {}
+          <span style={{ opacity: 0.7 }}>Pointer only ({r.declaration.tier} tier — {r.declaration.note}); we detect it, we don&apos;t host it.</span>
+        </p>
+      ) : null}
+
       <ul style={{ listStyle: "none", padding: 0, marginTop: "1rem", opacity: 0.9, fontSize: ".9rem" }}>
         {r.contributors.map((c) => (
           <li key={`${c.kind}:${c.name}`} style={{ padding: "0.12rem 0" }}>

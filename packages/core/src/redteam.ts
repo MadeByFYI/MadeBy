@@ -44,6 +44,7 @@ function ctx(over: Partial<ResolutionContext> = {}): ResolutionContext {
     knownCarriers: carriersForResolution(),
     verifySignature: () => true,
     isSignerVerified: () => true,
+    recognizesSwornRepresentation: () => true,
     ...over,
   };
 }
@@ -78,6 +79,19 @@ export function runRedTeam(): AttackResult[] {
   {
     const t = resolveTier(claim({ assertedTier: "bound", subject: fuzzyFp, signature: sig() }), ctx());
     safe("fuzzy-bound", "tier-escalation", t === "verified", `bound over fuzzy fp → ${t} (want verified, not bound)`);
+  }
+  // 5b. Forge 'sworn' by adopting an UNRECOGNIZED / draft declaration template (the sworn-carrier
+  //     analog of carrier-confusion): a signed overlay naming an unknown representationCode.
+  {
+    const sworn = { representationCode: "not-a-real-template", signatureName: "Jane Doe", signedAt: "2026-01-01T00:00:00Z" };
+    const t = resolveTier(claim({ assertedTier: "sworn", sworn }), ctx({ recognizesSwornRepresentation: () => false }));
+    safe("unrecognized-sworn-template", "tier-escalation", t === "asserted", `unknown/draft template → ${t} (want asserted)`);
+  }
+  // 5c. Forge 'sworn' from a recognized template but with NO legal signature (no signatory name).
+  {
+    const sworn = { representationCode: "madeby-attestation-v1", signatureName: "", signedAt: "2026-01-01T00:00:00Z" };
+    const t = resolveTier(claim({ assertedTier: "sworn", sworn }), ctx());
+    safe("unsigned-sworn", "tier-escalation", t === "asserted", `recognized template, no signature → ${t} (want asserted)`);
   }
   // 6. Inject a MadeBy-internal envelope hash as the subject (break the two-hash invariant).
   {
