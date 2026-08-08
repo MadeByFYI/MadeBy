@@ -185,10 +185,11 @@ choices double as the distribution mechanism:
 
 ### The first buildable wedge: "analyze your existing git history"
 
-A free analyzer that reads **existing** git history and shows your human-vs-AI authorship
-breakdown — using data that already exists (`Co-Authored-By` trailers are already in
-millions of commits, plus git blame + heuristics). "Connect your GitHub, see how much of
-your code is AI-written," producing a shareable report + badge.
+A free analyzer that reads **existing** git history — using data that already exists
+(`Co-Authored-By` trailers are already in millions of commits, plus signed commits, AI-tool
+configs, `.madeby` manifests) — producing a shareable report + badge. **(Reframed 2026-07-06,
+below: the headline is a *Disclosure Score*, not an AI ratio — the AI-% framing gives the wrong
+answer to inline-AI users. Read the reframe subsection before this one.)**
 
 - **No behavior change** — it works on history people already have. Value first; the
   hardest part (doing something at creation time) is deferred to the upgrade path.
@@ -201,6 +202,55 @@ your code is AI-written," producing a shareable report + badge.
 The upgrade ladder doubles as the trust ladder: free asserted breakdown → "verify your
 identity & sign your commits" → verified/bound badge. Converting asserted→verified is what
 fills the registry with *real* identities, which is what makes the proof core valuable.
+
+### Reframe: the mirror measures *disclosure*, not an AI ratio (decision, 2026-07-06)
+
+**The wrong-answer problem.** The wedge as first framed ("how much of your code is AI") gives the
+*wrong answer to its exact target user*: for heavy inline-AI users (Copilot/Cursor tab-completion,
+stripped/squashed trailers) there is no signal, so a trailer/metadata mirror reports ~100% human —
+false, and false for the very people the wedge is courting. `RESEARCH-lowfriction-accuracy.md`
+establishes we **cannot** fix this by detecting harder: no zero-shot method holds ≤1–2% false-
+positives at useful recall on real, mixed-language, short-fragment human code. "Give the correct
+AI% at zero network" is a bet against our own research.
+
+**The fix — change the question, not the detector.** The bug is that we render *absence of a
+signal* as a *content claim* ("human"). So we stop selling an AI ratio and sell **disclosure /
+verifiability completeness** — a question we can *always* answer correctly at zero network:
+
+> Not *"how much of this is AI"* → **"how verifiably is this code's origin disclosed?"**
+
+The mirror's headline becomes a **Disclosure Score**: the share of the code carrying a verifiable
+origin signal (trailer, signed commit, AI-tool config, `@generated`, `.madeby` manifest,
+declaration), tier distribution surfaced, the remainder labeled **"undisclosed"** — never "human."
+"Undisclosed" is the *correct* answer for the blind spot where "human" was a lie.
+
+**Why this is the right frame, not a retreat:**
+- **Correct by construction** at zero network — we assert only what we can see (invariant #5,
+  extended from the tier to the headline).
+- **Cheap on what's built** — the proof core, tiers, carriers, sworn declarations, and verifier all
+  survive unchanged; only the mirror's *question* changes. A positioning reframe, not a rewrite.
+- **Points the same way as the paying asker** — a diligence/compliance asker wants exactly "is this
+  disclosed and verifiable." The zero-network wedge and the eventual customer finally align.
+
+**The cascade (apply consistently):**
+- **The mirror** leads with the Disclosure Score; "undisclosed," never "human" (`apps/web/.../analyze`).
+- **The live index** (below) becomes **"State of AI *Disclosure* in Open Source"** — how much of
+  open source *discloses* its AI use. "Only N% of commits disclose AI involvement" is honest,
+  citable, and correct, where a global "X% is AI" is wrong-low (same 0%-recall problem; consistent
+  with the coverage-not-AI% decision, §5).
+- **The badge / CTA** show your Disclosure Score; the CTA is *"raise it"* (prove / capture / sign).
+
+**Branch B is fuel, not frame.** Harvesting *more* zero-network evidence — reading file contents
+(the mirror currently blobless-clones metadata only) for AI-tool config presence (`.cursor/`,
+Copilot/aider), `@generated`, more trailer formats; plus offline signature verification — now
+honestly *raises the disclosed slice* instead of pretending to measure AI. Off-limits (per the
+research): stylistic "this looks AI" detectors — the reframe is precisely what frees us from needing
+them.
+
+**Honest cost:** "how verifiably disclosed" is a less visceral hook than "60% AI." This completes the
+trade the coverage-not-AI% decision (§5) began: MadeBy is the **disclosure / verifiability ledger**,
+not an AI detector — the correct identity for a trust company, a narrower curiosity pull, but every
+answer is true.
 
 ### Cold-start: user #1 is using a mirror, not a provenance tool
 
@@ -249,8 +299,10 @@ trust, or network:
 ### The live index: "State of AI in Open Source"
 
 Not a one-off study — a **constantly-updated page**, powered by continuous public-git
-ingestion, reporting how much of open source is AI-written: a headline global number, trends
-over time, and breakdowns by language/ecosystem. (Technical home: `ARCHITECTURE.md` §8.)
+ingestion. **Reframed (2026-07-06, see the reframe subsection above): the headline is AI
+*disclosure*, not AI *authorship* — "how much of open source discloses its AI use" (honest and
+citable), not "how much is AI-written" (wrong-low, ~0% untrailered recall).** Trends over time and
+breakdowns by language/ecosystem. (Technical home: `ARCHITECTURE.md` §8.)
 
 Why it's a strategic asset, not just marketing:
 - **Authority moat.** Being *the* canonical, citable source for "how much of open source is
