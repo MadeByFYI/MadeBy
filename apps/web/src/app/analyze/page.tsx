@@ -56,7 +56,7 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
     return (
       <main style={wrap}>
         <h1>Who made this?</h1>
-        <p style={{ opacity: 0.7 }}>Paste a public repo and see who made it — humans and AI, named.</p>
+        <p style={{ opacity: 0.7 }}>Paste a public repo. We name the contributors and score how verifiably its origin is disclosed — we never guess a human/AI ratio.</p>
         <Form />
         <p style={{ fontSize: ".8rem", opacity: 0.55 }}>
           Try{" "}
@@ -104,35 +104,36 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
       {/* The bold one-line answer; everything else is opt-in below (progressive disclosure). */}
       <p style={{ fontSize: "1.4rem", margin: "1.25rem 0 0.25rem", lineHeight: 1.3 }}>Made by {who}</p>
 
-      {/* Coverage-led, never a confident 'human' ratio: lead with what we can PROVE, and split the
-          rest honestly — named humans are attributed (AI unknown), not "we can't see it" (#79/#87). */}
+      {/* Disclosure Score is the headline (STRATEGY §3 reframe): we measure how verifiably the
+          origin is DISCLOSED, never an AI ratio we can't compute. The blind spot is "undisclosed"
+          — the correct answer — NEVER "human". Provable-AI is demoted to a labeled sub-fact. */}
       <div style={{ margin: "1rem 0 0", padding: "0.9rem 1rem", border: "1px solid #2a3340", borderRadius: 8 }}>
-        <p style={{ margin: 0, fontSize: ".95rem", opacity: 0.85 }}>
-          AI involvement <strong>provable in {pct(cov.provableAiPercent)}</strong> of commits.
+        <p style={{ margin: 0, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".08em", opacity: 0.6 }}>
+          Disclosure Score
         </p>
-        <p style={{ margin: ".25rem 0 0", fontSize: "1.25rem", color: "#e6b566" }}>
-          <strong>{pct(cov.humanAttributedPercent)} human-attributed</strong> — a person committed these; whether AI helped is undisclosed.
+        <p style={{ margin: ".1rem 0 0", fontSize: "2rem", fontWeight: 700, lineHeight: 1.1 }}>
+          {pct(r.disclosedPercent)}{" "}
+          <span style={{ fontSize: "1rem", fontWeight: 400, opacity: 0.7 }}>of commits disclose their origin</span>
         </p>
-        {cov.fullyUnattributedPercent > 0 ? (
-          <p style={{ margin: ".2rem 0 0", fontSize: ".9rem", opacity: 0.75 }}>
-            {pct(cov.fullyUnattributedPercent)} unattributed — no author on record.
-          </p>
-        ) : null}
-        {cov.weakHumanSignal ? (
-          <p style={{ margin: ".4rem 0 0", fontSize: ".82rem", opacity: 0.7 }}>
-            For recent repos, &quot;no AI signal&quot; often means <em>undisclosed</em> AI, not no AI. We only
-            count AI we can see.
-          </p>
-        ) : null}
-        {/* Provocation-to-correct (STRATEGY §5): dare the owner to close the gap. Symmetric —
-            appeals to the AI-proud (prove more) AND the human-proud (clear the doubt); the tool
-            resolves doubt in either direction, never accuses. The default past what we can prove is
-            UNKNOWN, not human — we say "can't tell either way", never "reads human" (STRATEGY §5). */}
+        <p style={{ margin: ".4rem 0 0", fontSize: ".9rem", opacity: 0.85 }}>
+          Disclosed via {pct(r.disclosedByTrailerPercent)} AI-authorship trailers ·{" "}
+          {pct(r.disclosedBySignaturePercent)} signed commits.{" "}
+          <strong style={{ color: "#e6b566" }}>{pct(r.undisclosedPercent)} undisclosed</strong> — origin
+          neither declared nor verifiable. We don&apos;t guess whether that&apos;s human or AI.
+        </p>
+        <p style={{ margin: ".4rem 0 0", fontSize: ".82rem", opacity: 0.7 }}>
+          Of what we can see, AI involvement is provable in {pct(cov.provableAiPercent)} of commits — a floor,
+          not a ratio. We never report an AI percentage for the undisclosed part; no method does that
+          reliably on real code (that&apos;s why we score disclosure, not authorship).
+        </p>
+        {/* Provocation-to-correct (STRATEGY §5), now pointed at the Disclosure Score. Symmetric —
+            the AI-proud raise it by proving the AI's share; the human-proud raise it by signing +
+            attesting their own work. Either way the action is "raise your score", never an accusation. */}
         <p style={{ margin: ".6rem 0 0", fontSize: ".95rem" }}>
-          Think we&apos;re underselling your AI game? Past what we can prove, we honestly can&apos;t tell either way.
-          Prove us wrong — or remove all doubt as to your human authorship.{" "}
+          Think that undisclosed slice is too high? <strong>Raise your Disclosure Score</strong> — prove
+          the AI&apos;s share, or sign &amp; attest your own authorship.{" "}
           <strong>Either way: <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby prove</code></strong>{" "}
-          reads your own session logs (locally — nothing leaves your machine) and shows what the AI actually wrote.
+          reads your own session logs locally (nothing leaves your machine) and records what it finds.
         </p>
       </div>
 

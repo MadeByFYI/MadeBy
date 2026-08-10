@@ -41,6 +41,16 @@ export interface AnalysisResult {
    *  git, where commits carry an author). Distinct from human-attributed-but-AI-unknown. */
   readonly unattributedPercent: number;
   readonly meanConfidence: number;
+  /**
+   * Disclosure Score (STRATEGY §3 reframe): the share of commits that DISCLOSE their origin with a
+   * verifiable per-commit signal — an AI-authorship trailer or a commit signature. This is correct
+   * by construction at zero network (we count signals we can see; we never infer an AI ratio). The
+   * remainder is `undisclosedPercent` — origin not declared/verifiable — NEVER relabeled "human".
+   */
+  readonly disclosedPercent: number;
+  readonly disclosedByTrailerPercent: number;
+  readonly disclosedBySignaturePercent: number;
+  readonly undisclosedPercent: number;
   readonly caveat: string;
 }
 
@@ -56,11 +66,21 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
   const humans = new Map<string, Contributor>();
   const ais = new Map<string, Contributor>();
   let unattributed = 0; // no author info AND no AI signal → genuinely unknown
+  let disclosedByTrailer = 0; // commit discloses AI via a trailer/author signal
+  let disclosedBySignature = 0; // commit carries a signature (presence)
+  let disclosed = 0; // discloses origin via ANY per-commit signal (the Disclosure Score numerator)
 
   commits.forEach((commit, i) => {
     const c = classifications[i]!;
     const authorIsAi = c.signals.some((s) => s.startsWith("author:"));
     if (c.class === "human" && !commit.authorName && !commit.authorEmail) unattributed += 1;
+
+    // Disclosure: what origin signal did this commit actually carry (never inferred)?
+    const byTrailer = c.aiContributors.length > 0;
+    const bySignature = commit.signed === true;
+    if (byTrailer) disclosedByTrailer += 1;
+    if (bySignature) disclosedBySignature += 1;
+    if (byTrailer || bySignature) disclosed += 1;
 
     // The human author/operator answers "who" — unless the commit's author is itself an AI.
     if (!authorIsAi && (commit.authorName || commit.authorEmail)) {
@@ -99,6 +119,10 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     aiInvolvedPercent: percent.ai + percent.with_ai,
     unattributedPercent: pct(unattributed),
     meanConfidence: summary.meanConfidence,
+    disclosedPercent: pct(disclosed),
+    disclosedByTrailerPercent: pct(disclosedByTrailer),
+    disclosedBySignaturePercent: pct(disclosedBySignature),
+    undisclosedPercent: pct(total - disclosed),
     caveat: CAVEAT,
   };
 }

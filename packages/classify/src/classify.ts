@@ -9,6 +9,10 @@ export interface CommitMeta {
   message: string;
   authorName?: string;
   authorEmail?: string;
+  /** commit SHA (used by the mirror to join per-commit provenance signals; classify ignores it) */
+  sha?: string;
+  /** a cryptographic signature is present on the commit (presence only, not validity) */
+  signed?: boolean;
 }
 
 export interface AiContributor {
