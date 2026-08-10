@@ -126,6 +126,18 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
           not a ratio. We never report an AI percentage for the undisclosed part; no method does that
           reliably on real code (that&apos;s why we score disclosure, not authorship).
         </p>
+        {/* Repo-level evidence (Branch B): committed AI-tool config proves tooling is in use even
+            where per-commit trailers don't — the honest signal for the inline-AI user. Kept OUT of
+            the per-commit score (category error); it sharpens the CTA instead. */}
+        {r.tooling.tools.length > 0 ? (
+          <p style={{ margin: ".4rem 0 0", fontSize: ".82rem", opacity: 0.75 }}>
+            🛠 AI tooling in use: <strong>{r.tooling.tools.map((t) => t.name).join(", ")}</strong>{" "}
+            (config committed to the repo)
+            {r.disclosedByTrailerPercent < 50
+              ? " — yet most commits don't disclose it. That gap is exactly what capturing closes."
+              : "."}
+          </p>
+        ) : null}
         {/* Provocation-to-correct (STRATEGY §5), now pointed at the Disclosure Score. Symmetric —
             the AI-proud raise it by proving the AI's share; the human-proud raise it by signing +
             attesting their own work. Either way the action is "raise your score", never an accusation. */}
