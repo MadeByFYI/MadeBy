@@ -82,6 +82,21 @@ export { assertSubjectIsReference } from "./guards";
 export { computeCoverage, percentByTier } from "./coverage";
 export type { CoverageView } from "./coverage";
 
+export {
+  DISCLOSURE_KINDS,
+  recognizeDcoSignoffs,
+  hasDcoSignoff,
+  recognizeSpdxIdentifiers,
+  disclosureKindsPresent,
+} from "./disclosure";
+export type {
+  DisclosureKind,
+  DisclosureKindMeta,
+  DisclosureNativeness,
+  ParserStatus,
+  DisclosureSignal,
+} from "./disclosure";
+
 export type {
   Identity,
   IdentityType,

@@ -62,6 +62,14 @@ describe("analyzeCommits — answers WHO", () => {
     expect(d.undisclosedPercent).toBe(100); // NOT "100% human"
   });
 
+  it("recognizes DCO sign-offs as existing external disclosure (raises the score)", () => {
+    const dco = (m: string): CommitMeta => ({ message: `${m}\n\nSigned-off-by: Jane <jane@x.org>`, authorName: "Jane", authorEmail: "jane@x.org" });
+    const d = analyzeCommits([dco("a"), dco("b"), human("c"), human("d")]); // 2 of 4 carry a DCO sign-off
+    expect(d.disclosedByDcoPercent).toBe(50);
+    expect(d.disclosedPercent).toBe(50); // disclosed via DCO even with no AI trailer / signature
+    expect(d.undisclosedPercent).toBe(50);
+  });
+
   it("empty history yields no contributors and zeros, not NaN", () => {
     const e = analyzeCommits([]);
     expect(e.contributors).toEqual([]);
