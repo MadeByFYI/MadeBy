@@ -13,6 +13,7 @@ import {
   type ClassificationSummary,
   type AuthorClass,
 } from "@madeby/classify";
+import { hasDcoSignoff } from "@madeby/core";
 
 export type ContributorKind = "human" | "ai";
 
@@ -50,6 +51,7 @@ export interface AnalysisResult {
   readonly disclosedPercent: number;
   readonly disclosedByTrailerPercent: number;
   readonly disclosedBySignaturePercent: number;
+  readonly disclosedByDcoPercent: number;
   readonly undisclosedPercent: number;
   readonly caveat: string;
 }
@@ -68,6 +70,7 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
   let unattributed = 0; // no author info AND no AI signal → genuinely unknown
   let disclosedByTrailer = 0; // commit discloses AI via a trailer/author signal
   let disclosedBySignature = 0; // commit carries a signature (presence)
+  let disclosedByDco = 0; // commit carries a DCO Signed-off-by (certified origin)
   let disclosed = 0; // discloses origin via ANY per-commit signal (the Disclosure Score numerator)
 
   commits.forEach((commit, i) => {
@@ -75,12 +78,16 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     const authorIsAi = c.signals.some((s) => s.startsWith("author:"));
     if (c.class === "human" && !commit.authorName && !commit.authorEmail) unattributed += 1;
 
-    // Disclosure: what origin signal did this commit actually carry (never inferred)?
+    // Disclosure: what origin signal did this commit actually carry (never inferred)? Recognizes
+    // BOTH MadeBy-native and external existing signals — an AI trailer, a commit signature, or a
+    // DCO sign-off (the huge OSS DCO population already discloses origin this way).
     const byTrailer = c.aiContributors.length > 0;
     const bySignature = commit.signed === true;
+    const byDco = hasDcoSignoff(commit.message);
     if (byTrailer) disclosedByTrailer += 1;
     if (bySignature) disclosedBySignature += 1;
-    if (byTrailer || bySignature) disclosed += 1;
+    if (byDco) disclosedByDco += 1;
+    if (byTrailer || bySignature || byDco) disclosed += 1;
 
     // The human author/operator answers "who" — unless the commit's author is itself an AI.
     if (!authorIsAi && (commit.authorName || commit.authorEmail)) {
@@ -122,6 +129,7 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     disclosedPercent: pct(disclosed),
     disclosedByTrailerPercent: pct(disclosedByTrailer),
     disclosedBySignaturePercent: pct(disclosedBySignature),
+    disclosedByDcoPercent: pct(disclosedByDco),
     undisclosedPercent: pct(total - disclosed),
     caveat: CAVEAT,
   };

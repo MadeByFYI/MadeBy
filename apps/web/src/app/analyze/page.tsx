@@ -117,7 +117,8 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
         </p>
         <p style={{ margin: ".4rem 0 0", fontSize: ".9rem", opacity: 0.85 }}>
           Disclosed via {pct(r.disclosedByTrailerPercent)} AI-authorship trailers ·{" "}
-          {pct(r.disclosedBySignaturePercent)} signed commits.{" "}
+          {pct(r.disclosedBySignaturePercent)} signed commits
+          {r.disclosedByDcoPercent > 0 ? ` · ${pct(r.disclosedByDcoPercent)} DCO sign-offs` : ""}.{" "}
           <strong style={{ color: "#e6b566" }}>{pct(r.undisclosedPercent)} undisclosed</strong> — origin
           neither declared nor verifiable. We don&apos;t guess whether that&apos;s human or AI.
         </p>

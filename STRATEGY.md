@@ -252,6 +252,60 @@ trade the coverage-not-AI% decision (§5) began: MadeBy is the **disclosure / ve
 not an AI detector — the correct identity for a trust company, a narrower curiosity pull, but every
 answer is true.
 
+### The adoption wedge: the OSS maintainer PR-disclosure gate (decision, 2026-08-10)
+
+**Not the enterprise buyer.** Security/compliance are where the *pain and budget* eventually sit, but
+they are terrible *first* customers (multi-quarter procurement, security review, champion churn,
+they want references we don't have). Rejected as the wedge.
+
+**The wedge is the OSS maintainer.** Maintainers are drowning *now* in AI-PR slop and the
+license/DCO anxiety it brings, and several projects have already posted "no AI" / "disclose AI"
+contribution policies. This is the forcing function every earlier framing lacked:
+- the maintainer is an **asker with pain AND the authority to compel the creator** — one maintainer
+  adopting forces disclosure from every contributor (the asker-vs-creator split, solved);
+- it works in a **network of one repo** (cold-start, solved);
+- a **GitHub Action / check is self-serve, free, and viral among maintainers** (no sales motion);
+- every gated PR **produces a disclosure record → fills the corpus → powers the public index** (the
+  flywheel finally has a motor).
+
+**The mechanism is a DCO-style disclosure sign-off — disclosure, never detection.** Modeled on the
+Developer Certificate of Origin (`Signed-off-by:`) every maintainer already trusts: the contributor
+goes **on the record** ("this PR contains no AI-generated code," or "AI use is disclosed per this
+manifest"), recorded with provenance at the asserted/sworn tier. This is the **first real use of the
+sworn carrier (#96)**. We **never** ship an AI *detector*: `RESEARCH` shows any code detector
+false-positives on real human code (the §7 61.3%-FP-on-non-native-English landmine), and
+false-accusing contributors at PR scale is the cardinal sin industrialized. Detector = harm +
+lawsuit; disclosure gate = honest, trusted-pattern, defensible. **That distinction is the product.**
+
+**We provide the mechanism; the maintainer owns the policy.** If a maintainer turns a required
+disclosure sign-off into a de-facto AI ban, that is *their repo's call* — we neither advise it nor
+stand in its way. We ship a neutral instrument (state your origin, on the record); what a project
+gates on is theirs. We do not build the banhammer, and we do not moralize about it.
+
+**Recognize existing disclosure — "recognize everything, own nothing."** The index and the gate are
+worth little if they only read MadeBy-native disclosure. Value is proportional to how much *existing,
+in-the-wild* disclosure we recognize, so we build an **open disclosure-signal recognizer registry**
+(`packages/core/src/disclosure.ts`) spanning ours + external standards: AI-authorship trailers, the
+**DCO `Signed-off-by:`**, commit signatures, committed **AI-tool configs**, **SPDX/REUSE** metadata,
+**in-toto/SLSA** provenance, and our own manifests/declarations. Same open posture as the carrier
+registry (`ARCHITECTURE §3`) and detect-don't-host.
+
+**The flywheel (now with a forcing function):** the gate compels disclosure → the recognizer reads
+it (ours + others') → the index aggregates it into public authority → authority drives more
+maintainers to the gate.
+
+**Build sequence:**
+1. **The disclosure-signal recognizer registry** — the shared engine for gate *and* index; buildable
+   now; consolidates what we already recognize + adds DCO/SPDX/in-toto. (Landing now.)
+2. **The PR-gate GitHub Action** — the actual wedge a maintainer installs: read a PR's disclosure,
+   post a summary, optionally require the disclosure sign-off (maintainer-configurable).
+3. **The public disclosure index** — "State of AI Disclosure in Open Source"; trails on ingestion
+   infra (Modal/DB), but the recognizer is its engine.
+
+This **re-sequences** the §3 GTM: the maintainer gate leads; the enterprise dashboard (below) is a
+*later monetization*, not the wedge; the aggregate index becomes the *disclosure* index (per the
+reframe above).
+
 ### Cold-start: user #1 is using a mirror, not a provenance tool
 
 This is where products with a beautiful flywheel usually die, so it gets first-class
