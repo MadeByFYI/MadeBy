@@ -40,12 +40,36 @@ describe("analyzeCommits — answers WHO", () => {
     expect(r.aiInvolvedPercent).toBe(50);
   });
 
+  it("Disclosure Score = commits disclosing origin via a trailer OR a signature; rest undisclosed", () => {
+    // a: unsigned human (undisclosed) · b: signed human (disclosed-by-signature) ·
+    // c: AI trailer (disclosed-by-trailer) · d: AI author, unsigned (disclosed-by-trailer)
+    const cs: CommitMeta[] = [
+      { message: "a", authorName: "Mac", authorEmail: "mac@x.com" },
+      { message: "b", authorName: "Mac", authorEmail: "mac@x.com", signed: true },
+      withClaude("c"),
+      aiAuthored("d"),
+    ];
+    const d = analyzeCommits(cs);
+    expect(d.disclosedByTrailerPercent).toBe(50); // c + d
+    expect(d.disclosedBySignaturePercent).toBe(25); // b
+    expect(d.disclosedPercent).toBe(75); // b, c, d (a is the only undisclosed one)
+    expect(d.undisclosedPercent).toBe(25); // a
+  });
+
+  it("never relabels the undisclosed blind spot: an unsigned, no-trailer repo is 100% undisclosed", () => {
+    const d = analyzeCommits([human("x"), human("y")]);
+    expect(d.disclosedPercent).toBe(0);
+    expect(d.undisclosedPercent).toBe(100); // NOT "100% human"
+  });
+
   it("empty history yields no contributors and zeros, not NaN", () => {
     const e = analyzeCommits([]);
     expect(e.contributors).toEqual([]);
     expect(e.totalCommits).toBe(0);
     expect(e.aiInvolvedPercent).toBe(0);
     expect(e.unattributedPercent).toBe(0);
+    expect(e.disclosedPercent).toBe(0);
+    expect(e.undisclosedPercent).toBe(0);
   });
 
   it("counts only author-less, no-AI-signal commits as fully unattributed", () => {

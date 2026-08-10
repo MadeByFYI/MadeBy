@@ -22,7 +22,11 @@ export function readGitLog(repoPath: string, limit?: number): CommitMeta[] {
       "log",
       "--no-merges", // merge commits aren't authored content — exclude them from attribution
       ...(limit ? ["-n", String(limit)] : []),
-      `--format=%an${FIELD}%ae${FIELD}%B${RECORD}`,
+      // %G? is a signature-PRESENCE probe for the Disclosure Score: 'N' = unsigned; any other code
+      // (G/U/E/…) = a signature is present (E = present but unverifiable here — no keyring). We only
+      // read presence, never validity (that's the verified tier). If gpg is absent git returns 'N',
+      // which under-counts disclosure — the fail-safe direction (never a false "disclosed").
+      `--format=%H${FIELD}%an${FIELD}%ae${FIELD}%G?${FIELD}%B${RECORD}`,
     ];
     const out = execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
     return out
@@ -31,10 +35,12 @@ export function readGitLog(repoPath: string, limit?: number): CommitMeta[] {
       .filter((r) => r.length > 0)
       .map((rec) => {
         const parts = rec.split(FIELD);
-        const authorName = parts[0] ?? "";
-        const authorEmail = parts[1] ?? "";
-        const message = parts.slice(2).join(FIELD).trimEnd();
-        return { authorName, authorEmail, message };
+        const sha = parts[0] ?? "";
+        const authorName = parts[1] ?? "";
+        const authorEmail = parts[2] ?? "";
+        const sig = parts[3] ?? "N";
+        const message = parts.slice(4).join(FIELD).trimEnd();
+        return { sha, authorName, authorEmail, signed: sig !== "N" && sig !== "", message };
       });
   } catch {
     return [];
