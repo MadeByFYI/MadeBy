@@ -9,7 +9,7 @@
 // nothing else matters.
 
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
@@ -165,6 +165,19 @@ describe("madeby recognize — the raw disclosure primitive (no policy)", () => 
   });
 });
 
+describe("madeby init — align a repo (create policy + CI check), idempotently", () => {
+  it("creates .madeby/policy.json + the workflow, and leaves them as-is on re-run", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    const first = runCmd("init", d);
+    expect(first.code).toBe(0);
+    expect(existsSync(join(d, ".madeby", "policy.json"))).toBe(true);
+    expect(existsSync(join(d, ".github", "workflows", "disclosure.yml"))).toBe(true);
+    const second = runCmd("init", d);
+    expect(second.out).toMatch(/left as-is/); // idempotent — never clobbers
+  });
+});
+
 // Drive the stdio MCP server: write JSON-RPC requests, collect responses by id, resolve once all are
 // in. Kills the (long-lived) server on completion/timeout.
 function mcpCall(cwd: string, requests: Array<Record<string, unknown>>): Promise<Map<number, Record<string, unknown>>> {
@@ -256,5 +269,25 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     const out = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { written: boolean; matched: number };
     expect(out.written).toBe(true);
     expect(out.matched).toBe(1);
+  }, 30000);
+
+  it("init tool + resources make aligning a repo self-serve AND discoverable", async () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    const res = await mcpCall(d, [
+      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "init", arguments: {} } },
+      { jsonrpc: "2.0", id: 2, method: "resources/list" },
+      { jsonrpc: "2.0", id: 3, method: "resources/read", params: { uri: "madeby://guide/align" } },
+    ]);
+    // init tool wrote the setup files (the capability gap, closed)
+    const init = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { created: string[]; nextSteps: string[] };
+    expect(init.created).toContain(".madeby/policy.json");
+    expect(init.created).toContain(".github/workflows/disclosure.yml");
+    expect(init.nextSteps.join(" ")).toMatch(/going forward/i); // honest: history isn't backfilled
+    // resources let the agent discover HOW (the discoverability gap, closed)
+    const uris = (res.get(2)!.result as { resources: { uri: string }[] }).resources.map((r) => r.uri);
+    expect(uris).toEqual(expect.arrayContaining(["madeby://guide/align", "madeby://schema/policy"]));
+    const guide = (res.get(3)!.result as { contents: { text: string }[] }).contents[0]!.text;
+    expect(guide).toMatch(/Aligning a repository with MadeBy/);
   }, 30000);
 });

@@ -11,12 +11,15 @@
 import { checkCommand } from "./commands/check";
 import { recognizeCommand } from "./commands/recognize";
 import { proveCommand } from "./commands/prove";
+import { initCommand } from "./commands/init";
 import { startMcpServer } from "./mcp";
 
 function help(): void {
   console.log(`madeby — verifiable content provenance
 
 Usage:
+  madeby init                    Align this repo: write .madeby/policy.json + the CI disclosure check.
+                                 --required to enforce now; --host azure-devops for Azure Pipelines.
   madeby check [<range>]         Evaluate commits against .madeby/policy.json (disclosure gate).
                                  <range> e.g. origin/main..HEAD; in CI the PR range is auto-detected.
                                  --json for a machine-readable result (exit code still gates).
@@ -34,6 +37,9 @@ code is AI. What a project requires is set in its .madeby/policy.json — the ma
 const [cmd, ...rest] = process.argv.slice(2);
 
 switch (cmd) {
+  case "init":
+    initCommand(rest);
+    break;
   case "check":
     checkCommand(rest);
     break;
