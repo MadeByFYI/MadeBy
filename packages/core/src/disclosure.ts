@@ -65,6 +65,31 @@ export interface DisclosureSignal {
   subjectRef?: string;
 }
 
+// AI-authorship trailers (the disclosure-recognition view). @madeby/classify keeps its own richer
+// probabilistic AI_PATTERNS for classification; this is the lean "is origin disclosed via an AI
+// trailer" check so the disclosure vocabulary + policy check stay self-contained (node-free, no
+// classify dependency — the strip-types CLI can import this file directly). Consolidating the two
+// tool lists is a future cleanup.
+const AI_TRAILER_RE = /^[ \t]*(?:Co-authored-by|Generated-by|Assisted-by)[ \t]*:[ \t]*(.+?)[ \t]*$/gim;
+const AI_MARKER_RE = /\b(?:claude|copilot|cursor(?:agent)?|devin|gemini|chatgpt|openai|codex|gpt-|codeium|windsurf|aider|codewhisperer|tabnine)\b/i;
+
+/** Recognize AI-authorship trailers that name a known AI tool (one signal per trailer). */
+export function recognizeAiTrailers(message: string): DisclosureSignal[] {
+  const out: DisclosureSignal[] = [];
+  for (const m of message.matchAll(AI_TRAILER_RE)) {
+    const who = m[1]!;
+    if (AI_MARKER_RE.test(who)) out.push({ kind: "ai-trailer", evidence: who, tier: "asserted", subjectRef: who });
+  }
+  return out;
+}
+
+/** Cheap boolean: does this commit disclose AI involvement via a trailer naming an AI tool? */
+export function hasAiTrailer(message: string): boolean {
+  AI_TRAILER_RE.lastIndex = 0;
+  for (const m of message.matchAll(AI_TRAILER_RE)) if (AI_MARKER_RE.test(m[1]!)) return true;
+  return false;
+}
+
 const DCO_RE = /^[ \t]*Signed-off-by[ \t]*:[ \t]*(.+?)[ \t]*$/gim;
 const SPDX_ID_RE = /SPDX-License-Identifier[ \t]*:[ \t]*([^\n\r]+)/gi;
 const SPDX_COPYRIGHT_RE = /SPDX-FileCopyrightText[ \t]*:/i;
@@ -99,4 +124,17 @@ export function recognizeSpdxIdentifiers(text: string): DisclosureSignal[] {
 /** The distinct disclosure kinds present in a set of signals (for the index / summary). */
 export function disclosureKindsPresent(signals: readonly DisclosureSignal[]): DisclosureKind[] {
   return [...new Set(signals.map((s) => s.kind))];
+}
+
+/**
+ * The per-commit disclosure kinds a single commit carries — the atom the PR-gate policy check
+ * evaluates. Pure and self-contained (message recognizers + the signature-presence bit read from
+ * git). Repo-level signals (tool config, declaration) are NOT per-commit and are handled separately.
+ */
+export function commitDisclosureKinds(commit: { message: string; signed?: boolean }): DisclosureKind[] {
+  const kinds: DisclosureKind[] = [];
+  if (hasAiTrailer(commit.message)) kinds.push("ai-trailer");
+  if (hasDcoSignoff(commit.message)) kinds.push("dco-signoff");
+  if (commit.signed === true) kinds.push("commit-signature");
+  return kinds;
 }
