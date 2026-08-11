@@ -277,17 +277,23 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     const res = await mcpCall(d, [
       { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "init", arguments: {} } },
       { jsonrpc: "2.0", id: 2, method: "resources/list" },
-      { jsonrpc: "2.0", id: 3, method: "resources/read", params: { uri: "madeby://guide/align" } },
+      { jsonrpc: "2.0", id: 3, method: "resources/read", params: { uri: "madeby://guide/enforce" } },
+      { jsonrpc: "2.0", id: 4, method: "resources/read", params: { uri: "madeby://guide/backfill" } },
     ]);
     // init tool wrote the setup files (the capability gap, closed)
     const init = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { created: string[]; nextSteps: string[] };
     expect(init.created).toContain(".madeby/policy.json");
     expect(init.created).toContain(".github/workflows/disclosure.yml");
-    expect(init.nextSteps.join(" ")).toMatch(/going forward/i); // honest: history isn't backfilled
-    // resources let the agent discover HOW (the discoverability gap, closed)
+    expect(init.nextSteps.join(" ")).toMatch(/honestly|not fabricated/i); // honest: history isn't invented
+    // resources let the agent discover HOW — including the two exercises-for-the-reader we made explicit
     const uris = (res.get(2)!.result as { resources: { uri: string }[] }).resources.map((r) => r.uri);
-    expect(uris).toEqual(expect.arrayContaining(["madeby://guide/align", "madeby://schema/policy"]));
-    const guide = (res.get(3)!.result as { contents: { text: string }[] }).contents[0]!.text;
-    expect(guide).toMatch(/Aligning a repository with MadeBy/);
+    expect(uris).toEqual(expect.arrayContaining(["madeby://guide/align", "madeby://guide/enforce", "madeby://guide/backfill", "madeby://schema/policy"]));
+    // enforce guide gives concrete commands (point 1: not left to the reader)
+    const enforce = (res.get(3)!.result as { contents: { text: string }[] }).contents[0]!.text;
+    expect(enforce).toMatch(/required_status_checks|build validation/i);
+    // backfill guide gives the honest strategy (point 2: unknown, never fabricated)
+    const backfill = (res.get(4)!.result as { contents: { text: string }[] }).contents[0]!.text;
+    expect(backfill).toMatch(/adoption boundary/i);
+    expect(backfill).toMatch(/never fabricate|unknown/i);
   }, 30000);
 });

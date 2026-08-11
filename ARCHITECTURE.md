@@ -629,6 +629,14 @@ AI-generated: 22%, all operator-attested.
 Serves both go-to-markets: a CI badge a vibe-coder shows off, *and* a supply-chain risk
 metric a CISO gates on. It surfaces the *unattributed* fraction honestly.
 
+**Adoption boundary (honest backfill).** For a repo that adopts MadeBy mid-life, coverage is reported
+**relative to the adoption boundary** — the commit that introduced `.madeby/policy.json` (derivable:
+`git log --diff-filter=A -- .madeby/policy.json`). Post-boundary commits are in-regime and measured;
+pre-boundary commits default to **`unknown`** (never "human"/"AI") unless independently disclosed by
+what's already in history (recognized trailers/DCO/signatures/bots) or attached evidence (`prove` on
+an old session log). This makes the pre-adoption gap explicit and dated rather than hidden, and never
+fabricates disclosure for the past. Full strategy: `STRATEGY.md §4` (honest backfill).
+
 ### Modeling constraints
 
 - **"Percent authored by" is a contestable *view*, not ground truth.** Lines/tokens/bytes/
