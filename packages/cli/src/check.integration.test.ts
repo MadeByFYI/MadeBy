@@ -49,11 +49,18 @@ function writePolicy(dir: string, mode: string): void {
 // on non-zero exit, so we read the status directly. We neutralize any ambient host-CI env (our own
 // CI sets GITHUB_EVENT_*) so the no-range cases test "recent history" deterministically; the
 // auto-detect path has its own test that sets the env explicitly.
-function run(dir: string, ...args: string[]): { code: number; out: string } {
+function cleanEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
   delete env.GITHUB_EVENT_NAME;
   delete env.GITHUB_EVENT_PATH;
-  const r = spawnSync(process.execPath, [BIN, "check", ...args], { cwd: dir, encoding: "utf8", env });
+  return env;
+}
+function run(dir: string, ...args: string[]): { code: number; out: string } {
+  const r = spawnSync(process.execPath, [BIN, "check", ...args], { cwd: dir, encoding: "utf8", env: cleanEnv() });
+  return { code: r.status ?? -1, out: (r.stdout ?? "") + (r.stderr ?? "") };
+}
+function runCmd(cmd: string, dir: string, ...args: string[]): { code: number; out: string } {
+  const r = spawnSync(process.execPath, [BIN, cmd, ...args], { cwd: dir, encoding: "utf8", env: cleanEnv() });
   return { code: r.status ?? -1, out: (r.stdout ?? "") + (r.stderr ?? "") };
 }
 
@@ -128,5 +135,32 @@ describe("madeby check — the disclosure gate fires per policy", () => {
   it("exits 2 when run outside a git repository (no false pass, no false fail)", () => {
     const { code } = run(tmpRepo()); // fresh dir, never `git init`ed
     expect(code).toBe(2);
+  });
+
+  it("check --json: machine-readable result, exit code still gates", () => {
+    writePolicy(repo, "required");
+    const { code, out } = run(repo, "--json");
+    const parsed = JSON.parse(out) as { pass: boolean; mode: string; undisclosed: { subject: string }[] };
+    expect(parsed.pass).toBe(false);
+    expect(parsed.mode).toBe("required");
+    expect(parsed.undisclosed.some((u) => u.subject === "chore: initial commit")).toBe(true);
+    expect(code).toBe(1); // JSON output does not disable the gate
+  });
+});
+
+describe("madeby recognize — the raw disclosure primitive (no policy)", () => {
+  it("--json: reports per-commit disclosure kinds, never gates (exit 0)", () => {
+    const { code, out } = runCmd("recognize", repo, "--json");
+    expect(code).toBe(0); // a primitive reports; it does not gate
+    const parsed = JSON.parse(out) as { commits: { subject: string; disclosed: boolean; disclosures: string[] }[] };
+    const root = parsed.commits.find((c) => c.subject === "chore: initial commit")!;
+    expect(root.disclosed).toBe(false);
+    expect(parsed.commits.find((c) => c.subject.startsWith("feat: add b"))!.disclosures).toContain("ai-trailer");
+    expect(parsed.commits.find((c) => c.subject.startsWith("fix: tweak c"))!.disclosures).toContain("dco-signoff");
+  });
+  it("human output lists commits and a disclosed count", () => {
+    const { code, out } = runCmd("recognize", repo);
+    expect(code).toBe(0);
+    expect(out).toMatch(/disclose origin/);
   });
 });
