@@ -481,6 +481,14 @@ proud of it. If the badge implies "more human = better," we alienate our entire 
 surface. All prestige lives in the **tier**, never in the ratio. (This is also consistent
 with "order evidence, don't assert truth.")
 
+**Corollary — neutral on *absence*, too (carrot never stick).** The same rule extends to a subject
+that hasn't disclosed at all: **celebrate disclosure, stay neutral on its absence.** An unclaimed /
+undisclosed page reads *"not yet disclosed,"* never a red flag, failing grade, or "hides its
+origins"; claiming is framed as *adding* provenance, never *removing a stain*. A trust company must
+not run the Glassdoor **shame-to-claim** dark pattern — it converts better short-term and is exactly
+the corrosion we refuse (§6). Enforced by the page semantics + the *demand-generated, not crawled*
+rule (answer questions, don't build dossiers) in `ARCHITECTURE §1`.
+
 ### The tier aesthetic gradient *is* the conversion funnel
 
 ```

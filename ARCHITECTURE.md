@@ -86,6 +86,32 @@ exactly where a real author is moved to verify-and-outrank (STRATEGY §4).
 > the ~99% uncontested page. The contention engine stays fully internal. **Concept budget: ≤ ~3 new
 > terms per user-facing surface**; overflow is a design bug caught in review.
 
+#### Neutral-tone semantics for the unclaimed page — carrot, never stick (decision, 2026-08-11)
+
+The page is a conversion surface, which is exactly where a trust company can slide into the Glassdoor
+**shame-to-claim** dark pattern. Hard rule, a *standing refusal* (like the ruled-out monetizations,
+STRATEGY §6): **celebrate disclosure, stay neutral on its absence — "transparency you can *add*,"
+never "shame you must *remove*."**
+
+- **Default status is a neutral absence, not a verdict** — *"provenance not yet disclosed" /
+  "unclaimed,"* **never** "hides its origins," "undisclosed AI," "untrustworthy," a red flag, a
+  scarlet letter, or a failing grade. Absence = *not-yet-known*, not *concealment*.
+- **No default negative score** — unclaimed reads *"not measured,"* never *"0 / F."* Positive marks
+  for disclosure; neutrality (never negativity) for its absence.
+- **Claiming is *adding*, not *fixing*** — *"add verified provenance,"* never *"clear your record."*
+- **Any demand signal is producer-facing + informational, never a public pressure counter** — no
+  *"N people are watching this undisclosed project"* display; that is the extortion play.
+- **Consumer "unknown" is a limit of knowledge, not an insinuation** — *"we can't verify who made
+  this,"* never editorialized toward suspicion.
+
+**The structural safeguard — demand-generated, not crawled (falls out of asker-pull).** A per-subject
+page exists **because someone asked** about that subject; we resolve queries and cache/index the
+answer, we do **not** mass-crawl the world into unsolicited profile pages. *Answer questions, don't
+build dossiers.* (The aggregate "State of AI Disclosure" index, §8, is separate and fine — it is
+*statistics*, no individual targeting.) Combined with **factual-only + correctable + opt-out** and
+the **consent-gate for name-attached** negatives (§8), this keeps the conversion surface honest
+transparency rather than reputation extortion.
+
 ---
 
 ## 2. Hashing: the hash is the *join key*, not the *trust*
