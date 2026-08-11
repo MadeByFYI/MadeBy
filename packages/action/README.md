@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0            # so the action can scope to the PR's own commits (base..head)
-      - uses: MacDougherty/MadeBy/packages/action@main
+      - uses: MacDougherty/MadeBy/packages/action@v0.1.0
 ```
 
 That's the whole thing: **commit two files.** No app to install, nothing hosted, no data leaves your
