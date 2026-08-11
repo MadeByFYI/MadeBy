@@ -15,7 +15,7 @@ interface BenchmarkCase extends CommitMeta {
 }
 const CASES = (benchmarkJson as unknown as { cases: BenchmarkCase[] }).cases;
 
-const CLASSES: AuthorClass[] = ["human", "ai", "with_ai"];
+const CLASSES: AuthorClass[] = ["human", "ai", "with_ai", "bot"];
 const isAiInvolved = (c: AuthorClass) => c === "ai" || c === "with_ai";
 
 export interface EvalReport {

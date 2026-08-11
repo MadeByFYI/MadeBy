@@ -15,13 +15,13 @@ import {
 } from "@madeby/classify";
 import { hasDcoSignoff } from "@madeby/core";
 
-export type ContributorKind = "human" | "ai";
+export type ContributorKind = "human" | "ai" | "bot";
 
 export interface Contributor {
   kind: ContributorKind;
-  /** display name: the author's name (human) or the AI provider (ai) */
+  /** display name: the author's name (human/bot) or the AI provider (ai) */
   name: string;
-  /** email (human) or model (ai), when known */
+  /** email (human/bot) or model (ai), when known */
   detail?: string;
   /** number of commits this contributor appears in */
   commits: number;
@@ -38,6 +38,8 @@ export interface AnalysisResult {
   readonly percent: Readonly<Record<AuthorClass, number>>;
   /** facet: commits with any AI involvement (ai + with_ai) */
   readonly aiInvolvedPercent: number;
+  /** facet: commits authored by a machine/automation committer (bots) — DISCLOSED, not inferred */
+  readonly botAuthoredPercent: number;
   /** facet: commits with NO author info AND no AI signal — genuinely unattributed (usually ~0 in
    *  git, where commits carry an author). Distinct from human-attributed-but-AI-unknown. */
   readonly unattributedPercent: number;
@@ -67,6 +69,7 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
 
   const humans = new Map<string, Contributor>();
   const ais = new Map<string, Contributor>();
+  const bots = new Map<string, Contributor>(); // machine/automation committers (a disclosed kind)
   let unattributed = 0; // no author info AND no AI signal → genuinely unknown
   let disclosedByTrailer = 0; // commit discloses AI via a trailer/author signal
   let disclosedBySignature = 0; // commit carries a signature (presence)
@@ -75,7 +78,8 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
 
   commits.forEach((commit, i) => {
     const c = classifications[i]!;
-    const authorIsAi = c.signals.some((s) => s.startsWith("author:"));
+    const isBot = c.class === "bot";
+    const authorIsAi = c.signals.some((s) => s.startsWith("author:") && s !== "author:bot");
     if (c.class === "human" && !commit.authorName && !commit.authorEmail) unattributed += 1;
 
     // Disclosure: what origin signal did this commit actually carry (never inferred)? Recognizes
@@ -84,13 +88,21 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     const byTrailer = c.aiContributors.length > 0;
     const bySignature = commit.signed === true;
     const byDco = hasDcoSignoff(commit.message);
+    // A bot committer inherently DISCLOSES a machine origin (a named automation identity), so it
+    // counts as disclosed — a 76%-bot repo isn't "undisclosed," we know a machine made it.
     if (byTrailer) disclosedByTrailer += 1;
     if (bySignature) disclosedBySignature += 1;
     if (byDco) disclosedByDco += 1;
-    if (byTrailer || bySignature || byDco) disclosed += 1;
+    if (byTrailer || bySignature || byDco || isBot) disclosed += 1;
 
-    // The human author/operator answers "who" — unless the commit's author is itself an AI.
-    if (!authorIsAi && (commit.authorName || commit.authorEmail)) {
+    // Who made it — three distinct, always-named kinds (never abdicate, never lump a bot into human):
+    if (isBot) {
+      const key = commit.authorEmail || commit.authorName || "bot";
+      const cur =
+        bots.get(key) ??
+        ({ kind: "bot", name: commit.authorName || commit.authorEmail || "bot", detail: commit.authorEmail, commits: 0 } as Contributor);
+      bots.set(key, { ...cur, commits: cur.commits + 1 });
+    } else if (!authorIsAi && (commit.authorName || commit.authorEmail)) {
       const key = commit.authorEmail || commit.authorName!;
       const cur =
         humans.get(key) ??
@@ -98,7 +110,7 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
       humans.set(key, { ...cur, commits: cur.commits + 1 });
     }
 
-    // AI contributors (distinct per commit).
+    // AI contributors (distinct per commit); bot commits carry none.
     const seen = new Set<string>();
     for (const ai of c.aiContributors) {
       if (seen.has(ai.provider)) continue;
@@ -109,12 +121,13 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     }
   });
 
-  const contributors = [...humans.values(), ...ais.values()].sort((a, b) => b.commits - a.commits);
+  const contributors = [...humans.values(), ...ais.values(), ...bots.values()].sort((a, b) => b.commits - a.commits);
 
   const percent = {
     human: pct(summary.byClass.human),
     ai: pct(summary.byClass.ai),
     with_ai: pct(summary.byClass.with_ai),
+    bot: pct(summary.byClass.bot),
   };
 
   return {
@@ -124,6 +137,7 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
     contributors,
     percent,
     aiInvolvedPercent: percent.ai + percent.with_ai,
+    botAuthoredPercent: percent.bot,
     unattributedPercent: pct(unattributed),
     meanConfidence: summary.meanConfidence,
     disclosedPercent: pct(disclosed),
