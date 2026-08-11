@@ -216,6 +216,37 @@ Governance is lightweight (media-type-registry style — who may claim a binding
 The format itself is open and governed: an adopted open spec is a moat; a proprietary one is
 a liability.
 
+### The anchor registry: substrate-agnostic non-repudiation (design commitment, 2026-08-10)
+
+Non-repudiation — *this claim existed at time T and the record wasn't altered* — is the layer
+MadeBy owns (`STRATEGY.md §2`). But it must not be welded to one ledger, exactly as the claim is not
+welded to one carrier or one identity provider. Being a Rekor client is not a protocol; being
+**ledger-agnostic** is.
+
+- An **`Anchor`** = `{ substrate, proof, anchoredAt }`, sitting beside `Signature` in the model. An
+  open **anchor registry** — a sibling of the carrier registry above — holds, per substrate, how to
+  *produce* and *verify* its inclusion/timestamp proof.
+- **Rekor is one backend among several:** an **RFC-3161 TSA** (decades-old, already legally
+  recognized), a Certificate-Transparency-style log, decentralized timestamping (OpenTimestamps →
+  a chain), and the **signed public git commit** we already have as a weak-but-real anchor.
+- **Multi-anchor by default:** a claim may be anchored to several substrates at once; its
+  non-repudiation is as strong as the **strongest surviving** one.
+- **Fail-safe / graceful degradation (invariant #3 analog):** an unknown or unverifiable anchor is
+  parsed but not trusted → caps at asserted. If a ledger *loses*, an anchored claim **degrades, it
+  does not die** — re-anchor to a live substrate; a multi-anchored claim never lost non-repudiation;
+  the claim's semantics + signature + legal overlay persist regardless. Ledger death ≠ orphaning.
+- **Agnostic ≠ flattened:** each substrate has different strengths (Rekor = public auditability; a
+  TSA = legal weight; a chain = censorship-resistance). Surface the *kind* of proof per anchor — the
+  way a carrier carries `verificationCapable` — never pretend all anchors are equal.
+- **Orthogonal axis:** non-repudiation (unanchored → multi-anchored → legally-recognized) is
+  independent of authentication (asserted→bound), the same way the legal axis is orthogonal to the
+  crypto axis (`STRATEGY.md §2`).
+
+**Build note (not now):** ship the anchor-registry *harness* plus the two cheapest, most-neutral
+backends first — the **RFC-3161 TSA** (legal-friendly) and the **signed-git-commit** weak anchor we
+already hold; add Rekor/chains later through the registry. Backends are post-Tier-2 (`OPERATIONS.md
+§4a`); this section fixes the *shape* so we never build ourselves into a single-ledger corner.
+
 ### The sworn carrier: self-hosted declarations, we detect and point (decision, 2026-07-06)
 
 The `sworn` tier is *"no crypto binding, but legally consequential"* (`packages/core/src/tiers.ts`).
