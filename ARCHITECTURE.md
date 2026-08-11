@@ -284,8 +284,15 @@ optional call to the authority the file's pointer names.** The base read-and-ver
 server; the network is only for hash-only lookups and optional enrichment.
 
 **The `.madeby` carrier is also the read/verify surface (not just a store).** Because a package ships
-its `.madeby` and a repo carries it in-tree, the provenance **travels with the code** to every
-consumer — so a consumer reads a dependency's provenance from files it *already has*, with no hosted
+its `.madeby` and a repo carries it in-tree, the provenance **travels with the code** — **artifact-
+scoped, not a broadcast**: it rides the *specific artifact* it describes wherever that artifact is
+copied/installed/forked. **Cross-repo by default** (vendoring, monorepo, submodule, clone);
+**cross-org only** via a **published package that includes `.madeby`** (installed by another org) or
+a **fork/clone** another org pulls — so cross-org density is shaped like the **dependency graph** (you
+accumulate provenance for what you actually depend on), which is exactly what the supply-chain
+reliance products need. (Distinct from the org-scoped *reporting-push* path, `OPERATIONS §4a` — that
+is how records reach an authority, not how files travel between consumers.) A consumer thus reads a
+dependency's provenance from files it *already has*, with no hosted
 UI or API placement (this is what un-gates the "provenance score in review/registry/IDE" — it's an
 in-tree local read; `STRATEGY.md §6`). Two properties make the traveled file trustworthy without a
 network: it's an **open format**, and it's **offline-verifiable** — the two-hash invariant binds each
@@ -316,7 +323,7 @@ option not an absolute.) **(3) agnostic + default-gravity** — the pointer is a
 reference, but the *default* is madeby.fyi, so the ubiquitous `.madeby` files reference our authority
 by default and every enrichment/validity call routes to us. **This is where default gravity concretely
 lives in the carrier:** the default carrier points at the default authority — a continuous-traffic
-link to the moat surface, riding a file that already travels everywhere.
+link to the moat surface, riding a file that travels with each artifact to that artifact's consumers.
 
 ### The sworn carrier: self-hosted declarations, we detect and point (decision, 2026-07-06)
 
