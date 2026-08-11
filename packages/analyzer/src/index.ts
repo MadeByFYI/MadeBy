@@ -19,8 +19,10 @@ export { enrichIdentity, enrichContributors, resolveHandles } from "./enrich";
 export type { EnrichOptions } from "./enrich";
 // Host-adapter seam (ARCHITECTURE §12): git-native core, host-adapted. GitHub is the reference impl;
 // third parties register siblings (Azure DevOps, GitLab, …) through the same registry.
+import "./host/azure"; // side-effect: register the Azure adapter (bare import survives bundling)
 export { registerHostAdapter, getHostAdapter, listHostAdapters, detectCiRange } from "./host/registry";
 export { githubAdapter } from "./host/github";
+export { azureAdapter } from "./host/azure";
 export type { HostAdapter, RepoRef, HostApiOptions } from "./host/types";
 export type { IdentityProfile } from "./analyze";
 export { captureLocalSpans } from "./capture-local";

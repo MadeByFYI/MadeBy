@@ -80,6 +80,25 @@ jobs:
 That's the whole thing: **commit two files.** No app to install, nothing hosted, no data leaves your
 CI. When you're ready to *gate*, set `"mode": "required"` and add the check to branch protection.
 
+## Other hosts — Azure DevOps (and more)
+
+The gate is **git-native, host-adapted**: the same `.madeby/policy.json` and the same `madeby check`
+run anywhere git does. Only the CI wrapper differs. For **Azure DevOps**, use the Pipelines steps
+template ([`azure-pipelines-disclosure.yml`](./azure-pipelines-disclosure.yml)) and wire it as a **PR
+build-validation branch policy**:
+
+```yaml
+steps:
+  - template: azure-pipelines-disclosure.yml@MadeBy   # or a local/relative path
+    parameters:
+      version: latest
+```
+
+On a PR build `madeby check` **auto-scopes to the PR's own commits** from the Azure environment — no
+range logic in your YAML (the `azure-devops` host adapter reads `BUILD_REASON` +
+`SYSTEM_PULLREQUEST_*`). Any other forge is a single adapter away; until one ships, run
+`npx madeby check <range>` as a plain CI step on that host.
+
 ## What a contributor does to pass a `required` gate
 
 Whatever discloses origin — add a `Co-Authored-By:` / `Generated-by:` trailer, a DCO `Signed-off-by:`,
