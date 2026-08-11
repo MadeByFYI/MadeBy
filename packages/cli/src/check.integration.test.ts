@@ -219,7 +219,7 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     expect((res.get(1)!.result as { serverInfo: { name: string } }).serverInfo.name).toBe("madeby");
     // tools/list
     const names = (res.get(2)!.result as { tools: { name: string }[] }).tools.map((t) => t.name);
-    expect(names).toEqual(expect.arrayContaining(["recognize", "check", "list_host_adapters", "resolve_identity"]));
+    expect(names).toEqual(expect.arrayContaining(["recognize", "check", "prove", "list_host_adapters", "resolve_identity"]));
     // recognize tool → the AI-trailer commit is surfaced
     const rec = JSON.parse((res.get(3)!.result as { content: { text: string }[] }).content[0]!.text) as { commits: { disclosures: string[] }[] };
     expect(rec.commits.some((c) => c.disclosures.includes("ai-trailer"))).toBe(true);
@@ -233,5 +233,28 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     // resolve_identity → the noreply handle
     const idn = JSON.parse((res.get(6)!.result as { content: { text: string }[] }).content[0]!.text) as { handle: string | null };
     expect(idn.handle).toBe("octocat");
+  }, 30000);
+
+  it("the prove tool records witnessed spans (the agent discloses its own work)", async () => {
+    // A prove-able repo: a committed file whose content matches a session transcript.
+    const AI_SRC = "export function add(a, b) {\n  return a + b;\n}\n";
+    const proot = tmpRepo();
+    git(proot, "init", "-q", "-b", "main");
+    writeFileSync(join(proot, "math.ts"), AI_SRC);
+    git(proot, "add", "-A");
+    git(proot, "commit", "--no-verify", "-m", "add math");
+    // The tool resolves the root via `git rev-parse --show-toplevel` (which canonicalizes symlinks,
+    // e.g. macOS /var → /private/var); the transcript's file_path must use that same resolved root.
+    const resolved = git(proot, "rev-parse", "--show-toplevel");
+    const log = join(proot, "session.jsonl");
+    writeFileSync(
+      log,
+      JSON.stringify({ type: "assistant", message: { model: "claude-opus-4-8", content: [{ type: "tool_use", name: "Write", input: { file_path: join(resolved, "math.ts"), content: AI_SRC } }] } }) + "\n",
+    );
+
+    const res = await mcpCall(proot, [{ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "prove", arguments: { log } } }]);
+    const out = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { written: boolean; matched: number };
+    expect(out.written).toBe(true);
+    expect(out.matched).toBe(1);
   }, 30000);
 });

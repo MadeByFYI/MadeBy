@@ -102,10 +102,16 @@ so the trust guarantees hold no matter who runs them.
 `madeby mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over stdio, so
 an AI agent can use MadeBy with no human in the loop. It exposes the same primitives as typed tools:
 
-- **`recognize`** `{ path?, range? }` — per-commit disclosure kinds (no policy).
-- **`check`** `{ path?, range? }` — the gate result (`pass`, `mode`, `undisclosed[]`).
-- **`list_host_adapters`** — the known forges and each one's capabilities.
-- **`resolve_identity`** `{ name?, email?, host? }` — a committer's stable key + public handle.
+- **`recognize`** `{ path?, range? }` — per-commit disclosure kinds (no policy). *read*
+- **`check`** `{ path?, range? }` — the gate result (`pass`, `mode`, `undisclosed[]`). *read*
+- **`prove`** `{ path?, log?, ref? }` — record witnessed AI spans from the agent's own session log
+  into `.madeby/spans` (asserted tier, local; only spans structurally present are kept). *write*
+- **`list_host_adapters`** — the known forges and each one's capabilities. *read*
+- **`resolve_identity`** `{ name?, email?, host? }` — a committer's stable key + public handle. *read*
+
+With `check` + `prove` an agent closes its own loop: check its commits, and where its AI work is
+undisclosed, record it — no human in the loop. `prove` cannot claim a higher tier or attribute to
+anyone else, and nothing leaves the machine.
 
 Point an MCP client at the command (e.g. a `claude_desktop_config.json` / `.mcp.json` entry):
 
