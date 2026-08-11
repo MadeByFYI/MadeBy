@@ -402,6 +402,22 @@ trust, or network:
 > forcing-function loop bought with honesty, relying on a few high-leverage maintainers each
 > conscripting many, not on virality.
 
+> **OPEN PROBLEM — the viral single-player flywheel is missing; come back to it (flagged 2026-08-11).**
+> The maintainer loop above is **conscription** (a maintainer with pain acts and *forces* others in),
+> not **virality** (any one user gets value and the getting-it spreads on its own). Trading the shock
+> "60% AI" number for an honest Disclosure Score (the §3 reframe) gave up the one genuinely viral
+> single-player hook and did **not** replace it. This is a known GAP, not a solved node. A replacement
+> must clear **all** of: **(1) selfish, zero-network payoff** — complete value to user #1 in a network
+> of one; **(2) self-spreading** — obtaining the payoff recruits the *next* first-user (the share *is*
+> the growth); **(3) honest** — no fake AI ratio; the reframe is not up for renegotiation; ideally
+> **(4) produces provenance/density as a byproduct.** The old mirror had (1)+(2) but bought (2) with
+> dishonesty; the badge has (2) but no zero-network value. **The crux of the problem is criterion
+> (2)'s hard part: the shared artifact must be compelling/credible to a stranger who has never heard
+> of MadeBy** (the shock number had that for free; an honest score does not). Unexplored directions to
+> test later (NOT decisions): an honest "year-in-code / wrapped"-style personal artifact (a truthful,
+> shareable ego-object), and the **credit/receipt** angle (a proud builder's verifiable *"I made
+> this"* they *want* to display) — each stands or falls on whether it clears (2)'s stranger test.
+
 ### The live index: "State of AI in Open Source"
 
 Not a one-off study — a **constantly-updated page**, powered by continuous public-git
