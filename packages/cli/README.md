@@ -65,8 +65,8 @@ its own error, and never invents a stricter gate than the maintainer wrote.
 
 ## Use it as a PR check
 
-A ready-made GitHub Action and an Azure DevOps Pipelines template wrap `madeby check` — nothing
-hosted, nothing leaves your CI. See
+A ready-made GitHub Action, an Azure DevOps Pipelines template, and a GitLab CI job wrap
+`madeby check` — nothing hosted, nothing leaves your CI. See
 [`packages/action`](https://github.com/MacDougherty/MadeBy/tree/main/packages/action#readme).
 
 ## Extend it anywhere — primitives you run, not code you ship
@@ -83,19 +83,16 @@ environment**:
   (`commitDisclosureKinds`, `evaluateDisclosurePolicy`).
 
 **A new host needs no adapter from us** — compute the range however that host exposes it and pass it.
-GitLab CI, for example, ships nothing to MadeBy:
+Any CI without a built-in adapter ships nothing to MadeBy; e.g. a Jenkins pipeline:
 
-```yaml
-disclosure:
-  image: node:20
-  rules: [{ if: '$CI_PIPELINE_SOURCE == "merge_request_event"' }]
-  script:
-    - npx --yes madeby check "$CI_MERGE_REQUEST_DIFF_BASE_SHA..$CI_COMMIT_SHA"
+```groovy
+sh 'npx --yes madeby check "origin/${CHANGE_TARGET}...HEAD"'
 ```
 
-We ship built-in adapters (GitHub, Azure DevOps) so those hosts are turnkey — but they're a
-convenience, not the extension path. Whatever you compose can only report what the primitives permit,
-so the trust guarantees hold no matter who runs them.
+We ship built-in adapters (GitHub, Azure DevOps, GitLab) so those hosts are turnkey — the CI env
+auto-scopes the range with no arguments — but they're a *convenience, not the extension path*.
+Whatever you compose can only report what the primitives permit, so the trust guarantees hold no
+matter who runs them.
 
 ## Agent-native — the MCP server
 

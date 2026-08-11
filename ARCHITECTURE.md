@@ -983,8 +983,8 @@ independently of our release cadence.
 
 Each is a typed contract; our built-in is the reference impl:
 
-- **Host adapter** — `{compute the CI range, resolve identity, enrich profile}` for a forge (GitHub
-  first; Azure DevOps, GitLab, Bitbucket, Gitea, bare-git next). **The git substrate is universal;
+- **Host adapter** — `{compute the CI range, resolve identity, enrich profile}` for a forge (GitHub,
+  Azure DevOps, and GitLab ship today; Bitbucket, Gitea, bare-git next). **The git substrate is universal;
   nothing host-specific may enter `core` — the host is an adapter surface, never a spine assumption.**
   (This is the host-agnostic boundary that triggered this section: git-native core, host-adapted.)
 - **Carrier** — parse/serialize/canonicalize a claim binding (§3).

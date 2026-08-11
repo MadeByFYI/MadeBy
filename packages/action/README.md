@@ -96,8 +96,18 @@ steps:
 
 On a PR build `madeby check` **auto-scopes to the PR's own commits** from the Azure environment — no
 range logic in your YAML (the `azure-devops` host adapter reads `BUILD_REASON` +
-`SYSTEM_PULLREQUEST_*`). Any other forge is a single adapter away; until one ships, run
-`npx madeby check <range>` as a plain CI step on that host.
+`SYSTEM_PULLREQUEST_*`).
+
+For **GitLab**, include the CI job ([`gitlab-ci-disclosure.yml`](./gitlab-ci-disclosure.yml)) — on a
+merge-request pipeline it auto-scopes from `CI_MERGE_REQUEST_DIFF_BASE_SHA` + `CI_COMMIT_SHA`:
+
+```yaml
+include:
+  - remote: 'https://raw.githubusercontent.com/MacDougherty/MadeBy/v0.1.0/packages/action/gitlab-ci-disclosure.yml'
+```
+
+Any other forge is a single adapter away; until one ships, run `npx madeby check <range>` as a plain
+CI step on that host (compute the range from that host's env).
 
 ## What a contributor does to pass a `required` gate
 
