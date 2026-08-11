@@ -3,7 +3,10 @@
 // v0 signal: `Co-Authored-By:` trailers + commit author. Span-level + session-log evidence
 // (higher tier) lands with ingestion (#10) and the dogfood Phase 0 (#2).
 
-export type AuthorClass = "human" | "ai" | "with_ai";
+// human = a person; ai/with_ai = disclosed AI (LLM) involvement; bot = a machine/automation
+// committer (codegen, dependency bots, CI) — machine-authored but NOT necessarily AI. Kept distinct
+// so we count machine authorship from a DISCLOSED signal (the committer identity) without inferring.
+export type AuthorClass = "human" | "ai" | "with_ai" | "bot";
 
 export interface CommitMeta {
   message: string;
@@ -72,10 +75,33 @@ const TRAILER_RE = /^[ \t]*(?:Co-authored-by|Generated-by|Assisted-by):[ \t]*(.+
 const CONF_WITH_AI = 0.9;
 const CONF_AI = 0.85;
 const CONF_HUMAN = 0.55;
+const CONF_BOT = 0.95; // a bot identity is a strong, near-deterministic disclosed signal
+
+// Recognize machine/automation committers from their identity — DISCLOSED, not inferred. The
+// GitHub App `[bot]` suffix is official and near-zero human collision; the named set is evidence-
+// grade (specific automation identities, not a generic "bot" substring that could hit a human name).
+const KNOWN_BOTS =
+  /\b(?:dependabot|renovate(?:-bot)?|greenkeeper|snyk-bot|github-actions|semantic-release-bot|stainless-app|allcontributors|mergify|codecov-commenter|pre-commit-ci|imgbot|whitesource-bot|copybara)\b/i;
+
+/** Is this committer a machine/automation identity? (the `[bot]` suffix or a known automation name) */
+export function isBotIdentity(name?: string, email?: string): boolean {
+  const n = (name ?? "").trim();
+  const e = (email ?? "").trim();
+  if (/\[bot\]$/i.test(n) || /\[bot\]@/i.test(e)) return true; // GitHub App bots
+  if (e === "actions@github.com") return true; // GitHub Actions
+  return KNOWN_BOTS.test(n) || KNOWN_BOTS.test(e);
+}
 
 export function classifyCommit(commit: CommitMeta): CommitClassification {
   const signals: string[] = [];
   const aiContributors: AiContributor[] = [];
+
+  // A machine/automation committer is machine-authored by disclosure of its own identity — decided
+  // first, before the human/AI logic. (Precedence: the committer *is* the bot; AI-of-the-content is
+  // a separate question we don't infer here.)
+  if (isBotIdentity(commit.authorName, commit.authorEmail)) {
+    return { class: "bot", confidence: CONF_BOT, signals: ["author:bot"], aiContributors };
+  }
 
   const trailers = [...commit.message.matchAll(TRAILER_RE)].map((m) => m[1]!.trim());
   let humanCoAuthors = 0;

@@ -70,6 +70,18 @@ describe("analyzeCommits — answers WHO", () => {
     expect(d.undisclosedPercent).toBe(50);
   });
 
+  it("recognizes bot/automation committers as a distinct machine-authored kind (not human)", () => {
+    const bot = (m: string): CommitMeta => ({ message: m, authorName: "stainless-app[bot]" });
+    const r = analyzeCommits([bot("a"), bot("b"), human("c"), human("d")]); // 2 of 4 bot
+    expect(r.botAuthoredPercent).toBe(50);
+    const botC = r.contributors.find((c) => c.kind === "bot");
+    expect(botC).toMatchObject({ kind: "bot", name: "stainless-app[bot]", commits: 2 });
+    expect(r.contributors.some((c) => c.kind === "human" && c.name === "stainless-app[bot]")).toBe(false);
+    // a bot committer discloses a machine origin → counts as disclosed, not undisclosed
+    expect(r.disclosedPercent).toBe(50); // the 2 bot commits; the 2 plain humans are undisclosed
+    expect(r.undisclosedPercent).toBe(50);
+  });
+
   it("empty history yields no contributors and zeros, not NaN", () => {
     const e = analyzeCommits([]);
     expect(e.contributors).toEqual([]);

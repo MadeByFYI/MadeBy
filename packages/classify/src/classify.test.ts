@@ -1,6 +1,25 @@
 import { describe, it, expect } from "vitest";
-import { classifyCommit, summarize } from "./index";
+import { classifyCommit, summarize, isBotIdentity } from "./index";
 import type { CommitMeta } from "./index";
+
+describe("bot / automation recognition (a disclosed machine committer, not inferred, not AI)", () => {
+  it("classifies a [bot] committer as bot, not human", () => {
+    expect(
+      classifyCommit({ message: "bump", authorName: "dependabot[bot]", authorEmail: "49699333+dependabot[bot]@users.noreply.github.com" }).class,
+    ).toBe("bot");
+    expect(classifyCommit({ message: "regen sdk", authorName: "stainless-app[bot]" }).class).toBe("bot");
+  });
+  it("recognizes known automation identities + github-actions", () => {
+    expect(isBotIdentity("renovate[bot]")).toBe(true);
+    expect(isBotIdentity("GitHub Actions", "actions@github.com")).toBe(true);
+    expect(isBotIdentity("snyk-bot")).toBe(true);
+  });
+  it("does NOT misfire on human names containing 'bot'", () => {
+    expect(isBotIdentity("Botond Nagy", "botond@example.com")).toBe(false);
+    expect(isBotIdentity("Robert Bott", "rbott@x.com")).toBe(false);
+    expect(classifyCommit({ message: "fix", authorName: "Jane Dev", authorEmail: "jane@x.org" }).class).toBe("human");
+  });
+});
 
 const human: CommitMeta = { message: "Fix off-by-one in pager", authorName: "Mac", authorEmail: "mac@example.com" };
 const withAi: CommitMeta = {
