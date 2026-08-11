@@ -11,6 +11,7 @@
 import { checkCommand } from "./commands/check";
 import { recognizeCommand } from "./commands/recognize";
 import { proveCommand } from "./commands/prove";
+import { startMcpServer } from "./mcp";
 
 function help(): void {
   console.log(`madeby — verifiable content provenance
@@ -23,6 +24,7 @@ Usage:
                                  Compose it into your own gate/dashboard/index. --json for structured output.
   madeby prove [<log>] [<ref>]   Capture your AI session log's witnessed spans into .madeby/spans.
                                  <log> defaults to the auto-discovered Claude Code transcript.
+  madeby mcp                     Run the MCP server (stdio) — the primitives as agent-callable tools.
   madeby help                    Show this help.
 
 Disclosure, never detection: madeby states what origin was disclosed; it never asserts whether
@@ -37,6 +39,9 @@ switch (cmd) {
     break;
   case "recognize":
     recognizeCommand(rest);
+    break;
+  case "mcp":
+    startMcpServer();
     break;
   case "prove":
   case "capture":

@@ -26,6 +26,7 @@ madeby check     [<range>]     Evaluate commits against .madeby/policy.json (the
 madeby recognize [<range>]     The raw disclosure primitive: per-commit disclosure kinds, no policy.
                                --json for structured output. Compose it into your own gate/view.
 madeby prove     [<log>] [<ref>]  Capture your AI session log's witnessed spans into .madeby/spans.
+madeby mcp                     Run the MCP server (stdio) — the primitives as agent-callable tools.
 madeby help
 ```
 
@@ -95,6 +96,26 @@ disclosure:
 We ship built-in adapters (GitHub, Azure DevOps) so those hosts are turnkey — but they're a
 convenience, not the extension path. Whatever you compose can only report what the primitives permit,
 so the trust guarantees hold no matter who runs them.
+
+## Agent-native — the MCP server
+
+`madeby mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over stdio, so
+an AI agent can use MadeBy with no human in the loop. It exposes the same primitives as typed tools:
+
+- **`recognize`** `{ path?, range? }` — per-commit disclosure kinds (no policy).
+- **`check`** `{ path?, range? }` — the gate result (`pass`, `mode`, `undisclosed[]`).
+- **`list_host_adapters`** — the known forges and each one's capabilities.
+- **`resolve_identity`** `{ name?, email?, host? }` — a committer's stable key + public handle.
+
+Point an MCP client at the command (e.g. a `claude_desktop_config.json` / `.mcp.json` entry):
+
+```json
+{ "mcpServers": { "madeby": { "command": "npx", "args": ["-y", "madeby", "mcp"] } } }
+```
+
+Dependency-free and self-contained: stdout carries only protocol messages, an unreadable repo or bad
+input comes back as a tool error (the agent sees it, never a crash), and — like every surface — the
+tools can only report what the primitives permit.
 
 ## Honest scope
 

@@ -1014,11 +1014,12 @@ Open third-party extension is safe **only because the core, not the plugin, enfo
 MadeBy should be operable end-to-end **by an AI agent with no human in the loop** — the same agents
 writing today's code are the ones that should disclose it and can adopt the tooling at machine speed.
 
-- **A first-class MCP server** is the agent client: tools with published schemas (`check`, `prove`,
-  `resolve`, `explain-tier`, `attest`, `grant`, `list-adapters`, `scaffold-adapter`), self-describing
+- **A first-class MCP server** is the agent client: tools with published schemas, self-describing
   capability discovery, structured JSON I/O, agent-held token auth, idempotent ops, and *actionable
   structured errors* (never a human-only stack trace). The CLI already gives agents a scriptable
-  surface (stable exit codes); MCP is the same core, made discoverable + typed.
+  surface (stable exit codes); MCP is the same core, made discoverable + typed. **Shipped** as
+  `madeby mcp` (stdio, dependency-free) — today `recognize`, `check`, `list_host_adapters`,
+  `resolve_identity`; `attest`, `grant`, `explain-tier`, `scaffold-adapter` land as those primitives do.
 - **Zero-choice by default** (§3 default profile) *is* the agent-native ethos applied to config:
   "offer every choice, default to none" means an agent operates without a single human decision.
   Every operation must keep a no-human-intervention path (auth, adapter selection, plugin publish).
