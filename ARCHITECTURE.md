@@ -71,9 +71,11 @@ honestly, for any subject:
    reference verifier (`VERIFYING.md`). Genuineness = this page, not the badge image.
 
 Design discipline (the mission guardrails): **altitude** — richness lives here so the badge stays
-short; **name the creator, uncertainty in the tier**; **celebrate transparency, neutral on the
-human/AI ratio** (prestige in the tier mark, never the %); **show conflicts, never fake a
-resolution.** The page is also the prime **conversion surface** — an unclaimed or contested page is
+short; **name the creator, uncertainty in the tier**; the *who*-headline is **human/machine** (a
+confidence gradient — provable-machine floor / unverified / attested-human), with the bot-vs-AI /
+codegen-vs-generative detail **underneath**, never in the headline (`STRATEGY §3`); **celebrate
+transparency, neutral on the human/AI ratio** (prestige in the tier mark, never the %); **show
+conflicts, never fake a resolution.** The page is also the prime **conversion surface** — an unclaimed or contested page is
 exactly where a real author is moved to verify-and-outrank (STRATEGY §4).
 
 > **Progressive disclosure is a hard rule (review 2026-06-29, Concern B).** The 7 questions above
