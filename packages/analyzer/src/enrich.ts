@@ -28,8 +28,30 @@ function reachLine(followers: number | undefined, topRepos: { name: string; star
   return parts.length ? parts.join(" · ") : undefined;
 }
 
-/** Fetch a GitHub profile + reach for one handle. Returns null on any failure (graceful). */
-export async function enrichIdentity(handle: string, opts: { token: string; timeoutMs?: number }): Promise<IdentityProfile | null> {
+// In-memory TTL cache — the same maintainers/handles recur across analyses, so a warm cache slashes
+// API calls (rate budget) and latency. Per-process (resets on deploy); good enough for the mirror.
+const TTL_MS = 6 * 60 * 60 * 1000; // 6h — handles/reach are stable at this granularity
+interface Cached<T> {
+  value: T;
+  expires: number;
+}
+function memo<T>(cache: Map<string, Cached<T>>, key: string, fetcher: () => Promise<T>): Promise<T> {
+  const hit = cache.get(key);
+  if (hit && hit.expires > Date.now()) return Promise.resolve(hit.value);
+  return fetcher().then((value) => {
+    cache.set(key, { value, expires: Date.now() + TTL_MS });
+    return value;
+  });
+}
+const profileCache = new Map<string, Cached<IdentityProfile | null>>();
+const handleCache = new Map<string, Cached<string | null>>();
+
+/** Fetch a GitHub profile + reach for one handle (cached). Returns null on any failure (graceful). */
+export function enrichIdentity(handle: string, opts: { token: string; timeoutMs?: number }): Promise<IdentityProfile | null> {
+  return memo(profileCache, handle.toLowerCase(), () => fetchIdentityProfile(handle, opts));
+}
+
+async function fetchIdentityProfile(handle: string, opts: { token: string; timeoutMs?: number }): Promise<IdentityProfile | null> {
   try {
     const res = await fetch("https://api.github.com/graphql", {
       method: "POST",
@@ -68,7 +90,16 @@ export async function enrichIdentity(handle: string, opts: { token: string; time
  * even for personal emails (this is how it shows "@login" on a commit). Reaches the established
  * maintainers that noreply-parsing (identity.ts) misses. Returns null on any failure.
  */
-async function resolveHandleViaCommits(
+function resolveHandleViaCommits(
+  owner: string,
+  repo: string,
+  email: string,
+  opts: { token: string; timeoutMs?: number },
+): Promise<string | null> {
+  return memo(handleCache, `${owner}/${repo}/${email.toLowerCase()}`, () => fetchHandleViaCommits(owner, repo, email, opts));
+}
+
+async function fetchHandleViaCommits(
   owner: string,
   repo: string,
   email: string,
@@ -106,17 +137,48 @@ export interface EnrichOptions {
  */
 export async function resolveHandles(contributors: Contributor[], opts: EnrichOptions = {}): Promise<Contributor[]> {
   const { token, repo } = opts;
-  if (!token || !repo) return contributors; // noreply handles are already set; the rest needs token+repo
-  const targets = contributors.filter((c) => c.kind === "human" && !c.handle && c.detail).slice(0, opts.top ?? 5);
-  const resolved = await Promise.all(
-    targets.map(async (c) => {
-      const handle = await resolveHandleViaCommits(repo.owner, repo.name, c.detail!, { token, timeoutMs: opts.timeoutMs });
-      return handle ? ([c, handle] as const) : null;
-    }),
-  );
-  const byC = new Map<Contributor, string>();
-  for (const r of resolved) if (r) byC.set(r[0], r[1]);
-  return byC.size ? contributors.map((c) => (byC.has(c) ? { ...c, handle: byC.get(c)! } : c)) : contributors;
+  let withHandles = contributors;
+  if (token && repo) {
+    const targets = contributors.filter((c) => c.kind === "human" && !c.handle && c.detail).slice(0, opts.top ?? 5);
+    const resolved = await Promise.all(
+      targets.map(async (c) => {
+        const handle = await resolveHandleViaCommits(repo.owner, repo.name, c.detail!, { token, timeoutMs: opts.timeoutMs });
+        return handle ? ([c, handle] as const) : null;
+      }),
+    );
+    const byC = new Map<Contributor, string>();
+    for (const r of resolved) if (r) byC.set(r[0], r[1]);
+    if (byC.size) withHandles = contributors.map((c) => (byC.has(c) ? { ...c, handle: byC.get(c)! } : c));
+  }
+  // Merge git-identities that resolved to the SAME handle (a person split across personal emails) —
+  // accurate concentration. Runs even without a token (merges noreply-derived handles, identity.ts).
+  return mergeByResolvedHandle(withHandles);
+}
+
+/** Combine human contributors that now share a resolved handle; sum commits, keep the top name. */
+function mergeByResolvedHandle(contributors: Contributor[]): Contributor[] {
+  const merged = new Map<string, Contributor>();
+  const topSingle = new Map<string, number>();
+  const passthrough: Contributor[] = [];
+  for (const c of contributors) {
+    const key = c.kind === "human" && c.handle ? `gh:${c.handle.toLowerCase()}` : null;
+    if (!key) {
+      passthrough.push(c);
+      continue;
+    }
+    const ex = merged.get(key);
+    if (ex) {
+      ex.commits += c.commits;
+      if (c.commits > (topSingle.get(key) ?? 0)) {
+        ex.name = c.name;
+        topSingle.set(key, c.commits);
+      }
+    } else {
+      merged.set(key, { ...c });
+      topSingle.set(key, c.commits);
+    }
+  }
+  return [...merged.values(), ...passthrough].sort((a, b) => b.commits - a.commits);
 }
 
 /**

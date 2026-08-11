@@ -64,6 +64,7 @@ export function readDeclarationFromGit(repoDir: string): { path: string; text: s
       const text = execFileSync("git", ["-C", repoDir, "cat-file", "-p", `HEAD:${p}`], {
         encoding: "utf8",
         maxBuffer: 4 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "ignore"], // absent path → git prints "fatal: path…" to stderr; we catch + try next
       });
       return { path: p, text };
     } catch {
