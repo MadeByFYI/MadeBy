@@ -94,6 +94,10 @@ rows, quote the issue title back to them.
 - **"You own the policy"** — respects that it's their repo; we're not moralizing about AI.
 - **The ask is feedback, not commitment** — and inviting "tell me where it's useless" is disarming
   *and* the real research.
+- **The quickstart link *is* the demo.** Its "See it work" section opens with real `madeby check`
+  output — a synthetic PR failing on an undisclosed commit, then passing after a one-line trailer.
+  A maintainer sees the exact mechanic before installing anything. (Deliberately no third-party repo
+  is graded — that would be the shame pattern we refuse; the only real number shown is our own repo's.)
 - **Never** promise it blocks AI or detects AI (it does neither). Never imply we detect. Never dress
   a validation ask as a launch. Honesty is the moat — the outreach has to embody it or the whole
   positioning is hollow.
