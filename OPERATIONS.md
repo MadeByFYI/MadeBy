@@ -117,6 +117,52 @@ Deliberate, revisable bets. "Graduation" = when scale or revenue justifies movin
 
 ---
 
+## 4a. Service footprint after the disclosure-ledger reframe (decision, 2026-08-10)
+
+The `STRATEGY.md §3` reframe (disclosure ledger, maintainer wedge) and the detect-don't-host /
+CLI-in-their-CI decisions **moved compute and storage out of our infra and into the user's repo, CI,
+and laptop.** The stack in §4 is still the right *stake in the ground*, but **most of it is now
+deferred behind a trigger, not day-one.** Re-sequence what we actually operate:
+
+**Tier 0 — we operate nothing (the growth engine).** The `madeby` CLI (`packages/cli`), the GitHub
+Action (`packages/action`), local `prove` capture, self-hosted `.madeby` declarations, and the
+disclosure recognizer/vocabulary. Hosted by **npm / GitHub / the user's CI**. Our cost is package
+maintenance, not servers. *The thing that drives adoption costs us ≈ $0 to run.*
+
+**Tier 1 — thin hosted surfaces (cheap, mostly stateless).** The **mirror** on Vercel (scale-to-
+zero, no DB); later the **badge SVG** service and the **public disclosure index page**. Key change:
+the index's compute is now **cheap recognition (regex/path matching), not GPU ML** — we recognize
+declared signals, we don't run detectors — so it can start as a **scheduled batch → static JSON →
+static page**, not a live pipeline.
+
+**Tier 2 — the real services (deferred; where revenue lives).** The **resolver + registry store**
+(Neon — needed only once there's cross-content data and askers querying; today an in-memory demo),
+**ingestion at scale** for a live index (Modal/batch, CPU not GPU), and the monetized core —
+**verified identity / KYB / signing** and the **enterprise private-repo dashboard** (§6). These are
+the heaviest to operate (security, private data, identity) and **none are built.**
+
+**Consequences for §2/§3/§4/§9:**
+- **Day-one footprint = a Vercel app + an npm package.** Everything else graduates in behind a real
+  trigger (see §9). Neon, queues, badge-edge, and Modal are **not** launch infra.
+- **The Modal *GPU-classification* justification (§4) weakens:** the cold path is cheap CPU batch
+  for the index only. Heavy ML detection is off the roadmap by doctrine (disclosure, not detection).
+- **The corpus existential risk (§3) shrank:** we no longer need to ingest-and-process everything to
+  answer the question — we recognize what repos *already disclose*. The bounded-sample index is now
+  a bounded-*recognition* pass, cheaper still.
+- **Cost and revenue are co-located in Tier 2** — the free/distribution layer is ≈ free; the
+  expensive services are the ones that charge. Runway-friendly. The flip side: **everything shipped
+  so far is Tier 0–1, so we are cheaper and more adoptable but no closer to revenue** until Tier 2 is
+  built.
+
+**New standing ops item — CLI supply chain (introduced by the packaging, #102).** `npx madeby` now
+runs in other people's CI and on their machines, making our published package a **supply-chain trust
+artifact** — for a provenance company, both a risk and an obligation. Requirements: **publish with
+provenance** (npm provenance / Sigstore attestations — dogfood our own thesis on our own release),
+**2FA-locked publish**, **minimal/audited deps**, and a compromised-package runbook (treat as a
+fatal incident, same tier as a credential leak, §1.5). This did not exist before we shipped a CLI.
+
+---
+
 ## 5. The similarity index (pgvector-first)
 
 The fuzzy/structural fingerprint nearest-neighbor lookup is the one specialized, expensive
@@ -180,6 +226,12 @@ Several are product-critical, not just ops — two are the public product pointe
 - **Specialized stack → hyperscaler consolidation:** when integration overhead or committed
   spend makes one cloud cheaper than the sum of services.
 - **Auth.js → Clerk/WorkOS:** when enterprise SSO (SAML/SCIM) demand appears.
+- **Demo registry → Neon-backed resolver (Tier 2, §4a):** when there is cross-content data worth
+  resolving *and* askers querying by hash — not before (an empty store serves no one).
+- **Static index page → live ingestion pipeline (§4a):** when a batch → static-JSON index can no
+  longer keep the coverage/freshness the authority story needs.
+- **Nothing → verified-identity / KYB / enterprise dashboard (Tier 2, §4a):** when a paying design
+  partner pulls it — this is the revenue layer, built to a customer, not speculatively.
 
 ---
 
