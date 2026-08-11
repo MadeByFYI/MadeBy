@@ -10,7 +10,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { recognizeCommits, evaluateRepoDisclosure, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
+import { recognizeCommits, evaluateRepoDisclosure, proveRepo, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
 const SERVER_INFO = { name: "madeby", version: "0.1.0" };
@@ -64,6 +64,25 @@ const TOOLS: Tool[] = [
       "invalid policy degrades to 'off' (never a false gate).",
     inputSchema: repoInput,
     handler: (args) => evaluateRepoDisclosure(rootFor(args.path as string | undefined), { range: args.range as string | undefined }),
+  },
+  {
+    name: "prove",
+    description:
+      "WRITE: record witnessed AI-authorship spans from YOUR OWN session log into the repo's " +
+      ".madeby/spans (asserted tier, self-reported) — how an agent DISCLOSES its own contribution. " +
+      "Honest by construction: it records only spans whose AI-authored content is STRUCTURALLY PRESENT " +
+      "in the checkout (survives reformatting); anything not present is discarded. Writes only derived " +
+      "attribution, locally — the log/content never leave the machine. It cannot claim a higher tier " +
+      "or attribute work to anyone else.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "path to the repo (default: the server's working directory)" },
+        log: { type: "string", description: "session transcript path (default: auto-discover the Claude Code transcript)" },
+        ref: { type: "string", description: "commit the spans anchor to (default: HEAD)" },
+      },
+    },
+    handler: (args) => proveRepo(rootFor(args.path as string | undefined), { transcriptPath: args.log as string | undefined, ref: args.ref as string | undefined }),
   },
   {
     name: "list_host_adapters",
@@ -176,5 +195,5 @@ export function startMcpServer(): void {
     }
     handle(msg);
   });
-  process.stderr.write("madeby mcp: ready (stdio, MCP tools: recognize, check, list_host_adapters, resolve_identity)\n");
+  process.stderr.write("madeby mcp: ready (stdio, MCP tools: recognize, check, prove, list_host_adapters, resolve_identity)\n");
 }

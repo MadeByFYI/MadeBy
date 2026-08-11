@@ -8,6 +8,8 @@ export type { AnalysisResult } from "./analyze";
 // server, and importable by any third party's own runtime (ARCHITECTURE §12).
 export { recognizeCommits, evaluateRepoDisclosure } from "./recognize";
 export type { RecognizedCommit, RepoDisclosure } from "./recognize";
+export { proveRepo } from "./prove";
+export type { ProveOptions, ProveResult } from "./prove";
 export { badgeSnippet } from "./badge";
 export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
 export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";
