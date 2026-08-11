@@ -10,6 +10,32 @@ so most contributions need *nothing new*.
 > effectively ban — that's your call, set in a file in your repo. Nothing is hosted; nothing leaves
 > your CI.
 
+## See it work
+
+A contributor opens a PR with two commits — one discloses its origin, one doesn't. With the policy
+set to `required`, the check fails and names the gap (this is real `madeby check` output):
+
+```text
+madeby check — 1/2 commits disclose origin (required; accepts: any recognized disclosure). 1 undisclosed.
+
+Undisclosed commits (1):
+  ✗ cdf9baca  feat: add subtract helper
+
+To disclose: add a Co-Authored-By / Generated-by trailer, a DCO Signed-off-by, sign the commit,
+or attest with 'madeby prove'. (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)
+```
+
+The fix is **one trailer line, not a rewrite** — the contributor adds a `Signed-off-by:` (or a
+`Co-Authored-By:` naming the tool) and re-pushes:
+
+```text
+madeby check — 2/2 commits disclose origin (required; accepts: any recognized disclosure).
+```
+
+Exit 0 — the gate passes. Run against MadeBy's own history it reports **87/90** disclosed: coverage
+is a gradient you raise, not a purity test. Start in `advisory` (reports, never fails) and switch to
+`required` when you're ready.
+
 ## What counts as "disclosed"
 
 A commit discloses its origin if it carries any of:
