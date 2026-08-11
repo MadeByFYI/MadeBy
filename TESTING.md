@@ -113,6 +113,28 @@ reproduction (`STRATEGY.md` §4, invariant #7).
 
 ---
 
+## 5b. Social/economic abuse model — the free-tier red-team (#72)
+
+The crypto red-team covers *forgery*. The larger surface of an open "assert anything" free tier is
+**social/economic** abuse, where the win condition isn't breaking a signature but exploiting volume
+and cost asymmetry. The model + status:
+
+| Vector | Control | Status |
+|---|---|---|
+| **Mass-squatting** — one actor asserts authorship over many subjects to poison the index | `detectCorpusPoisoning` flags actors whose *cheap (unsigned)* claims span ≥ threshold distinct subjects → T&S review | **code-enforced** (`@madeby/core`, `abuse.ts`) |
+| **Adjudication by display** — flood a contested page with cheap claims so volume reads as consensus | `boundClaimStandings` renders every evidence-backed claim + a bounded head of asserted, collapses the rest behind "N other asserted claims" | **code-enforced** (`abuse.ts`) |
+| **Zero-cost claiming** — no identity price on an asserted claim | Identity-cost: claiming requires GitHub OAuth (raises squatting cost) | **app-layer** (needs the live app) |
+| **API scraping / flooding** | Abuse controls and API metering are the *same mechanism* (one budget) | **app-layer** |
+
+Two invariants govern the code-enforced half: (a) **flag and bound, never adjudicate or delete** —
+competing claims are ranked + labeled, never suppressed (invariant #9); a poison flag is a prompt to
+*review*, not a verdict. (b) **Cost, not identity, is the signal** — signed (identity-cost-paid)
+claims never count toward the poison signal, so the detector rewards exactly the behavior we want.
+These live as red-team vectors in `abuse.test.ts` (the harness extended beyond crypto). The two
+app-layer controls land with the live app and fold into the formation privacy/abuse review.
+
+---
+
 ## 6. Dogfood canary + reproducibility
 
 - **Our own repo is the first subject** (dogfood epic #1). **Reproducibility/regression only, not

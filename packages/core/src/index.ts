@@ -70,6 +70,9 @@ export type { ResolvedClaim, Resolution } from "./resolution";
 
 export { resolveContention } from "./contention";
 export type { Contention, ClaimStanding, OriginationEvidence, OriginationInput } from "./contention";
+// Free-tier social/economic abuse controls (#72): bound adjudication-by-display, flag corpus-poisoning.
+export { boundClaimStandings, detectCorpusPoisoning } from "./abuse";
+export type { BoundedClaims, PoisonFlag } from "./abuse";
 
 export { runConformance, CONFORMANCE_VERSION } from "./conformance";
 export type { ConformanceResult } from "./conformance";
