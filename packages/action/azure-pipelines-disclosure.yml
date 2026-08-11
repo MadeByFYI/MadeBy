@@ -1,0 +1,35 @@
+# MadeBy disclosure check — Azure DevOps Pipelines steps template.
+#
+# The same `madeby check` gate as the GitHub Action, on Azure DevOps. There is NO range logic here:
+# on a PR-triggered pipeline `madeby check` auto-scopes to the PR's own commits from the Azure env
+# (the azure-devops host adapter reads BUILD_REASON + SYSTEM_PULLREQUEST_*). Disclosure, never
+# detection — the maintainer owns the policy in `.madeby/policy.json`.
+#
+# Use it from your pipeline:
+#
+#   steps:
+#     - template: azure-pipelines-disclosure.yml@MadeBy   # or a local/relative path
+#       parameters:
+#         version: latest       # npm version/tag of the `madeby` CLI (optional)
+#         range: ""             # override the auto-detected range (optional)
+#
+# Wire it as a PR build validation branch policy on your protected branch to gate merges.
+
+parameters:
+  - name: version
+    type: string
+    default: latest
+  - name: range
+    type: string
+    default: ""
+
+steps:
+  - checkout: self
+    fetchDepth: 0 # so the PR history + the target branch (origin/<target>) are present for the range
+    displayName: "Checkout (full history)"
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "20.x"
+    displayName: "Use Node 20"
+  - script: npx --yes "madeby@${{ parameters.version }}" check ${{ parameters.range }}
+    displayName: "MadeBy disclosure check"

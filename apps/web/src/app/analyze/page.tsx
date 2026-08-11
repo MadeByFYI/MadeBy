@@ -180,15 +180,24 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
       ) : null}
 
       <ul style={{ listStyle: "none", padding: 0, marginTop: "1rem", opacity: 0.9, fontSize: ".9rem" }}>
-        {contributors.map((c) => (
-          <li key={`${c.kind}:${c.handle ?? c.name}`} style={{ padding: "0.12rem 0" }}>
-            {c.kind === "ai" ? "🤖" : c.kind === "bot" ? "⚙️" : "🧑"} <strong>{c.name}</strong>
-            {c.handle ? (
-              <a href={githubAdapter.profileUrl(c.handle)} style={{ opacity: 0.75, marginLeft: ".35rem" }}>@{c.handle}</a>
-            ) : null}
-            <span style={{ opacity: 0.6 }}> — {c.commits} commit{c.commits === 1 ? "" : "s"}</span>
-          </li>
-        ))}
+        {contributors.map((c) => {
+          // The mirror is GitHub-sourced today; a link-out exists only if the host has public
+          // profile pages (github does, e.g. azure doesn't → shown as plain text). Point, don't host.
+          const profileUrl = c.handle ? githubAdapter.profileUrl?.(c.handle) : undefined;
+          return (
+            <li key={`${c.kind}:${c.handle ?? c.name}`} style={{ padding: "0.12rem 0" }}>
+              {c.kind === "ai" ? "🤖" : c.kind === "bot" ? "⚙️" : "🧑"} <strong>{c.name}</strong>
+              {c.handle ? (
+                profileUrl ? (
+                  <a href={profileUrl} style={{ opacity: 0.75, marginLeft: ".35rem" }}>@{c.handle}</a>
+                ) : (
+                  <span style={{ opacity: 0.75, marginLeft: ".35rem" }}>@{c.handle}</span>
+                )
+              ) : null}
+              <span style={{ opacity: 0.6 }}> — {c.commits} commit{c.commits === 1 ? "" : "s"}</span>
+            </li>
+          );
+        })}
       </ul>
 
       <details style={{ marginTop: "1.5rem", fontSize: ".88rem", opacity: 0.85 }}>
