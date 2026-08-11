@@ -4,6 +4,10 @@
 export { readGitLog } from "./git";
 export { analyzeCommits } from "./analyze";
 export type { AnalysisResult } from "./analyze";
+// Disclosure primitives as library functions — shared by the CLI (check/recognize) and the MCP
+// server, and importable by any third party's own runtime (ARCHITECTURE §12).
+export { recognizeCommits, evaluateRepoDisclosure } from "./recognize";
+export type { RecognizedCommit, RepoDisclosure } from "./recognize";
 export { badgeSnippet } from "./badge";
 export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
 export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";
