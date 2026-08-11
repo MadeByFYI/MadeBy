@@ -173,6 +173,9 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
         {r.contributors.map((c) => (
           <li key={`${c.kind}:${c.name}`} style={{ padding: "0.12rem 0" }}>
             {c.kind === "ai" ? "🤖" : c.kind === "bot" ? "⚙️" : "🧑"} <strong>{c.name}</strong>
+            {c.handle ? (
+              <a href={`https://github.com/${c.handle}`} style={{ opacity: 0.75, marginLeft: ".35rem" }}>@{c.handle}</a>
+            ) : null}
             {c.detail ? <span style={{ opacity: 0.6 }}> · {c.detail}</span> : null}
             <span style={{ opacity: 0.6 }}> — {c.commits} commit{c.commits === 1 ? "" : "s"}</span>
           </li>
