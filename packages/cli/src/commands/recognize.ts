@@ -1,12 +1,11 @@
 // `madeby recognize [<range>] [--json]` — the raw disclosure-recognition PRIMITIVE. For each commit
 // it reports the disclosure kinds present (AI trailer / DCO sign-off / signature), with NO policy
 // applied. This is the unopinionated atom others compose in their OWN runtime — a custom gate, a
-// dashboard, an index — without shipping code to us (ARCHITECTURE §12, "primitives you run, not code
-// you ship"). It never gates (always exit 0 unless not a git repo); the opinion lives in `check`, or
-// in whatever you build on top.
+// dashboard, an index — without shipping code to us (ARCHITECTURE §12, "primitives you run"). It
+// never gates (always exit 0 unless not a git repo). This command is a thin renderer over the shared
+// `recognizeCommits` library primitive.
 
-import { readGitLog } from "@madeby/analyzer";
-import { commitDisclosureKinds } from "@madeby/core";
+import { recognizeCommits } from "@madeby/analyzer";
 import { repoRoot, resolveRange } from "../scope";
 
 export function recognizeCommand(args: string[]): void {
@@ -21,16 +20,12 @@ export function recognizeCommand(args: string[]): void {
   }
 
   const { range, autoHost } = resolveRange(explicit);
-  const commits = readGitLog(root, range ? undefined : 200, range);
-  const rows = commits.map((c) => {
-    const disclosures = commitDisclosureKinds({ message: c.message, signed: c.signed });
-    return {
-      sha: (c.sha ?? "").slice(0, 8) || "(unknown)",
-      subject: (c.message.split("\n")[0] ?? "").slice(0, 72),
-      disclosed: disclosures.length > 0,
-      disclosures,
-    };
-  });
+  const rows = recognizeCommits(root, { range }).map((r) => ({
+    sha: r.sha.slice(0, 8) || "(unknown)",
+    subject: r.subject.slice(0, 72),
+    disclosed: r.disclosures.length > 0,
+    disclosures: r.disclosures,
+  }));
 
   if (json) {
     console.log(JSON.stringify({ range: range ?? null, autoHost: autoHost ?? null, commits: rows }, null, 2));

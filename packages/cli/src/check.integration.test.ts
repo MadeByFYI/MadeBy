@@ -8,7 +8,7 @@
 // repo. The gate is the product's whole promise to a maintainer — if it can't fail a required PR,
 // nothing else matters.
 
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -163,4 +163,75 @@ describe("madeby recognize — the raw disclosure primitive (no policy)", () => 
     expect(code).toBe(0);
     expect(out).toMatch(/disclose origin/);
   });
+});
+
+// Drive the stdio MCP server: write JSON-RPC requests, collect responses by id, resolve once all are
+// in. Kills the (long-lived) server on completion/timeout.
+function mcpCall(cwd: string, requests: Array<Record<string, unknown>>): Promise<Map<number, Record<string, unknown>>> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [BIN, "mcp"], { cwd, env: cleanEnv() });
+    const byId = new Map<number, Record<string, unknown>>();
+    const wanted = requests.filter((r) => r.id !== undefined).length;
+    let buf = "";
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`mcp timeout; got ids ${JSON.stringify([...byId.keys()])}`));
+    }, 20000);
+    child.stdout.on("data", (d: Buffer) => {
+      buf += d.toString();
+      let nl: number;
+      while ((nl = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, nl);
+        buf = buf.slice(nl + 1);
+        if (!line.trim()) continue;
+        let msg: Record<string, unknown>;
+        try {
+          msg = JSON.parse(line) as Record<string, unknown>;
+        } catch {
+          continue;
+        }
+        if (msg.id !== undefined) byId.set(msg.id as number, msg);
+        if (byId.size >= wanted) {
+          clearTimeout(timer);
+          child.kill();
+          resolve(byId);
+        }
+      }
+    });
+    child.on("error", reject);
+    for (const r of requests) child.stdin.write(JSON.stringify(r) + "\n");
+  });
+}
+
+describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
+  it("initialize, tools/list, and tool calls return the primitives as agent-callable tools", async () => {
+    writePolicy(repo, "required");
+    const res = await mcpCall(repo, [
+      { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2024-11-05", capabilities: {} } },
+      { jsonrpc: "2.0", id: 2, method: "tools/list" },
+      { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "recognize", arguments: {} } },
+      { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "check", arguments: {} } },
+      { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "list_host_adapters", arguments: {} } },
+      { jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "resolve_identity", arguments: { email: "1+octocat@users.noreply.github.com" } } },
+    ]);
+
+    // initialize
+    expect((res.get(1)!.result as { serverInfo: { name: string } }).serverInfo.name).toBe("madeby");
+    // tools/list
+    const names = (res.get(2)!.result as { tools: { name: string }[] }).tools.map((t) => t.name);
+    expect(names).toEqual(expect.arrayContaining(["recognize", "check", "list_host_adapters", "resolve_identity"]));
+    // recognize tool → the AI-trailer commit is surfaced
+    const rec = JSON.parse((res.get(3)!.result as { content: { text: string }[] }).content[0]!.text) as { commits: { disclosures: string[] }[] };
+    expect(rec.commits.some((c) => c.disclosures.includes("ai-trailer"))).toBe(true);
+    // check tool → the gate fires
+    const chk = JSON.parse((res.get(4)!.result as { content: { text: string }[] }).content[0]!.text) as { mode: string; pass: boolean };
+    expect(chk.mode).toBe("required");
+    expect(chk.pass).toBe(false);
+    // list_host_adapters → both forges discoverable
+    const adapters = (JSON.parse((res.get(5)!.result as { content: { text: string }[] }).content[0]!.text) as { adapters: { id: string }[] }).adapters.map((a) => a.id);
+    expect(adapters).toEqual(expect.arrayContaining(["github", "azure-devops"]));
+    // resolve_identity → the noreply handle
+    const idn = JSON.parse((res.get(6)!.result as { content: { text: string }[] }).content[0]!.text) as { handle: string | null };
+    expect(idn.handle).toBe("octocat");
+  }, 30000);
 });
