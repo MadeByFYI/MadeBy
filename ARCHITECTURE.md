@@ -790,6 +790,30 @@ by priority alone** (fail-safe applies to *who*, exactly as it does to tier). Th
 > cannot hold hostage content you didn't make or own**; an asserted claim grants no exclusivity and
 > locks nothing.
 
+### No home, no claim — claiming requires a controllable home (decision, 2026-08-11)
+
+The hardest contested case is a **context-free bare artifact** (a mystery binary, a pasted snippet, a
+naked hash): no forge, no registry, no lineage — authorship of raw bytes is *fundamentally
+unknowable*, and offering to "claim" it is pure attack surface (squatting) for zero real benefit. So
+we **scope it out**: a provenance **claim** may only attach to an artifact with a **controllable
+distribution home** — a repo (forge), a package (registry), a build output (a `DERIVED_FROM` edge to
+controllable source — SLSA/in-toto), a model hub, or a domain the claimant controls. **Every claim
+therefore rides an existing control authority; homeless bytes get no claim, ever.** This makes the
+bare-artifact edge case and the squatter attack *disappear by construction* — there is nothing to
+squat and nothing unverifiable to adjudicate — and it is just the two-hash invariant (§2, the subject
+*references* native content) made honest: native content lives *somewhere*.
+
+**Claiming requires a home; asking never does — keep the read side open.** This restricts the *write*
+side (claim/register), not the *read* side. A consumer may still **query by hash** (or a blinded
+fingerprint, §5/#70, for private lookups); a homeless artifact simply resolves to **"unknown / no
+record"** — the honest answer. The consumer investigation and its demand-pull are unaffected (they
+target artifacts with a maker who *has* a home anyway).
+
+**What this drops** is only *notarizing homeless bytes* — a niche "I possessed these bytes at time T"
+use that was both low-value and the exact attack surface; if ever wanted it is an explicitly
+`asserted` timestamp, never verified authorship. The **priority / copyright-evidence** value (§2)
+stays intact, because it is for *homed* artifacts (your repo/package, timestamped) — which we keep.
+
 **The challenge / counter-claim model (specced now, built later).** A challenge is **not an appeal to
 a judge** — it is just another claim/edge on the same ladder, so it cannot be weaponized: an unbacked
 challenge against a `bound` claim is itself only `asserted` and renders as visibly weak; we never
