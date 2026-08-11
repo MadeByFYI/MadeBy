@@ -300,12 +300,13 @@ Several are product-critical, not just ops — two are the public product pointe
 
 ## 10. Agentic ops: Claude as a first-class ops team member
 
-> **Stage descope (review 2026-06-29).** The full design below — WIF, tiered capability brokers,
-> kill switches, two-person rules — is right for a product with prod to operate, and wrong as an
-> *attention allocation* for a pre-deploy company. **v0 floor: read-only metrics + propose-PR
-> only.** The WIF / broker / tiered-capability / kill-switch machinery is **parked as a
-> post-traction epic** (design captured here, not built now). Attention goes to the unblocked
-> funnel (the in-memory mirror, the classifier) instead.
+> **Stage descope (review 2026-06-29; re-affirmed 2026-08-11).** The full design below — WIF, tiered
+> capability brokers, kill switches, two-person rules — is right for a product with prod to operate,
+> and wrong as an *attention allocation* for a pre-deploy company. **v0 floor: read-only metrics +
+> propose-PR only.** The WIF / broker / tiered-capability / kill-switch machinery is **parked as a
+> post-traction epic** (design captured here, not built now); it turns on in **Phase C** of the
+> one-person operating model (§12), not before. This section is the *infra-ops* slice; **§12 is the
+> full-surface plan** (dev, ops, support, marketing, admin) through the solo-founder + Claude lens.
 
 We want Claude on the ops team — reading every metric, triaging incidents, and making
 changes — without compromising the trust posture the product exists to sell.
@@ -385,3 +386,81 @@ operations dictates several product specs:
 - **Enterprise isolation is a security spec** (§6), designed in, not retrofitted.
 - **Metered API + analyzer queueing** = the abuse controls and the monetization metering are
   the same mechanism.
+
+---
+
+## 12. The one-person + Claude operating model (plan, 2026-08-11)
+
+The premise: **one founder, with Claude doing as much of dev / ops / support / marketing / admin as
+possible.** We did an ops pass once (§10), but the product has evolved — the reframe to a client-side
+disclosure gate (§4a) means **the thing that drives adoption runs in the user's CI and costs us ≈ $0
+to operate.** That moves the operating model's center of gravity: for a solo founder the binding
+constraint is **not infra — it is attention, and the short list of things only a human can do.** This
+plan makes that list explicit and routes everything else to Claude.
+
+### The governing reality (why this is tractable solo)
+
+- **The current product is ops-trivial by design.** Before the hosted layer there are no servers, no
+  prod, no customer data, no PII held. The existential ops risk (corpus cost, §3) and the §10 heavy
+  machinery **do not exist yet.** Today's entire ops surface is *a git repo + CI + (soon) an npm
+  package.*
+- **We already dogfood agentic dev-ops.** Not aspirational: the loop — Claude branches, builds, tests,
+  opens a PR, waits for CI, merges; the human directs and approves the risky/outward parts — is how
+  every change this cycle shipped. The plan generalizes that loop to the other functions.
+- **The constraint is the irreducible-human list** (below). Everything not on it is Claude's.
+
+### The function map (who does what, and the mechanism)
+
+| Function | Claude does | Irreducible human | Mechanism |
+|---|---|---|---|
+| **Dev** | design, code, tests, docs, PRs, CI, merges | direction/prioritization; sign-off on risky changes | the dogfooded branch→build→test→PR→CI→merge loop (working today) |
+| **Ops / infra** | Phase A/B: maintain repo + package + CI. Phase C: first-responder — read metrics, diagnose, fix-by-PR / escalate | credential + 2FA custody; approve prod-changing / spend / key actions | §10 (deferred to Phase C): read-MCP over observability, GitOps PRs, tiered broker, WIF, kill-switch |
+| **Support** | triage GitHub issues, reproduce, draft replies, fix-by-PR, keep docs + MCP resources current | approve/send replies that commit us; relationship-sensitive threads | issue-triage loop (`gh`); the MCP self-teaching resources let agent-users self-serve |
+| **Marketing / GTM** | draft all content (thesis, posts, quickstart, demo, outreach note), find targets, prep launches | the outbound *send*; the conversation; brand voice | draft-for-approval; the founder is the sender + the face |
+| **Community** | review external PRs (contributors disclose — we dogfood our own gate), respond, maintain CONTRIBUTING | merge authority + maintainer judgment on external work | our own disclosure gate, on our own repo |
+| **Security / supply-chain** | minimal/audited deps, publish-with-provenance, maintain the compromised-package runbook, watch advisories | 2FA-locked publish; incident command on a compromise | §4a supply-chain note as a standing release checklist |
+| **Compliance / legal** | draft ToS / privacy / DPA / DPIA scaffolds for counsel, maintain COMPLIANCE.md, track the PII posture | Atlas; engage counsel; sign; the legal decisions | draft-for-counsel (blocked-on-atlas) |
+| **Finance / admin** | draft budgets, watch cost (Phase C), prep bookkeeping inputs | banking, Stripe/Atlas, taxes, money movement, budget approval | Claude-prep + human-executes (money is irreducibly human) |
+
+### The irreducible-human list (the founder's actual job)
+
+Everything **not** here is Claude's to draft, build, or run:
+
+1. **Secrets** — credentials, 2FA, key custody (npm, GitHub, cloud, domain).
+2. **Money** — bank, Stripe/Atlas, taxes, any spend.
+3. **Legal** — formation, counsel, signatures.
+4. **Relationships** — maintainer outreach, design-partner sales, any human conversation.
+5. **Outward sends** — approving/sending anything that publishes or commits the company externally.
+6. **Judgment + accountability** — what to build/ship, incident command, the calls.
+
+The design goal of everything else in this doc is to **keep this list from growing.**
+
+### Sequencing (the ops surface turns on in phases)
+
+- **Phase A — pre-publish (now).** Ops surface = a repo + CI. Claude: dev + docs + GTM-prep. Human:
+  the publish decision + first outreach. §10 machinery **off.** *Attention: publish, then validate
+  with one maintainer.*
+- **Phase B — published wedge.** Adds npm supply-chain ops, support (issues), light marketing. Still
+  **no servers, no customer data, no PII.** Claude: support-triage + content + maintenance. Human:
+  outreach relationships + supply-chain 2FA/incident. §10 still mostly **off** (no prod). *Attention:
+  adoption + feedback → what to build next.*
+- **Phase C — hosted layer (post-Atlas).** Adds real ops (resolver / index / dashboard), customer
+  data, PII/compliance, revenue. **Now §10 turns on** — read-MCP, GitOps, tiered broker, WIF,
+  kill-switch, ops-actions attested through our own ledger (the dogfood). Claude: first-responder ops
+  + support at scale. Human: counsel, security review, sales, incident command. *Attention:
+  reliability + revenue.*
+
+The trap to avoid (generalizing the §10 descope): **do not build Phase-C ops machinery in Phase
+A/B.** It is the right design and the wrong attention — a solo operator's scarcest resource is
+attention; spend it on the phase you're in.
+
+### Guardrails (hold these across all phases)
+
+- **Outward actions are human-gated.** Claude drafts; the founder sends/publishes anything external.
+  This is what makes "Claude does marketing/support" safe.
+- **Dogfood ops.** From Phase C, our own ops changes are signed + attested through MadeBy — a
+  provenance company whose AI makes unaudited changes is self-refuting (§10), and a live proof point.
+- **The CLI is a trust artifact.** Publish with provenance, 2FA-locked, minimal deps; a compromised
+  package is a fatal incident (§4a, §1.5).
+- **Let Claude earn the tier.** Start every new capability at read + propose-PR; widen the Auto set as
+  track record accrues (the trust ladder, applied inward).
