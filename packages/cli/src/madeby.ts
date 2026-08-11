@@ -3,11 +3,13 @@
 // type-stripping import constraints the scripts/*.mjs dev entries have to work around), so
 // `npx madeby …` runs on plain Node with no monorepo layout and no flags.
 //
-// Two commands today, both honest-by-construction:
-//   madeby check  — evaluate commits against .madeby/policy.json (the maintainer disclosure gate)
-//   madeby prove  — capture your own AI session log's witnessed spans into .madeby/spans
+// The commands, all honest-by-construction:
+//   madeby check      — evaluate commits against .madeby/policy.json (the maintainer disclosure gate)
+//   madeby recognize  — the raw disclosure primitive (per-commit kinds, no policy) to compose on
+//   madeby prove      — capture your own AI session log's witnessed spans into .madeby/spans
 
 import { checkCommand } from "./commands/check";
+import { recognizeCommand } from "./commands/recognize";
 import { proveCommand } from "./commands/prove";
 
 function help(): void {
@@ -16,6 +18,9 @@ function help(): void {
 Usage:
   madeby check [<range>]         Evaluate commits against .madeby/policy.json (disclosure gate).
                                  <range> e.g. origin/main..HEAD; in CI the PR range is auto-detected.
+                                 --json for a machine-readable result (exit code still gates).
+  madeby recognize [<range>]     The raw disclosure primitive: per-commit disclosure kinds, no policy.
+                                 Compose it into your own gate/dashboard/index. --json for structured output.
   madeby prove [<log>] [<ref>]   Capture your AI session log's witnessed spans into .madeby/spans.
                                  <log> defaults to the auto-discovered Claude Code transcript.
   madeby help                    Show this help.
@@ -29,6 +34,9 @@ const [cmd, ...rest] = process.argv.slice(2);
 switch (cmd) {
   case "check":
     checkCommand(rest);
+    break;
+  case "recognize":
+    recognizeCommand(rest);
     break;
   case "prove":
   case "capture":

@@ -1035,10 +1035,36 @@ liability", §3). An open, symmetric, agent-authorable ecosystem grows coverage 
 build it, and still concentrates the derived data at the hosted resolution/grant layer (the moat,
 `STRATEGY.md §6`) regardless of who wrote the adapter.
 
-**Open questions (don't block the shape):** the executable-plugin sandbox (WASM vs. process
-isolation vs. vetted-signed-only); whether plugin *distribution* rides npm (discovered via a MadeBy
-registry index) or a native registry; the conformance-vector format. Fix the *shape* now (symmetry +
-safety cage + agent-native) so we never build a closed hook we later have to unwind.
+### Primitives you run, not code you ship (decision, 2026-08-11)
+
+We resolve the plugin-loading question by **inverting it**. Rather than a runtime that loads
+third-party code — with the sandbox, distribution, and conformance burden that implies — MadeBy
+exposes its trust operations as **composable primitives** that a third party runs **in their own
+environment**:
+
+- a **stable library** — `@madeby/core` (recognizers/evaluators: `commitDisclosureKinds`,
+  `evaluateDisclosurePolicy`), `@madeby/analyzer` (git read, identity, the host-adapter registry);
+- **CLI primitives with structured I/O** — `madeby recognize --json` (the raw recognizer, no policy)
+  and `madeby check --json` (the gate's result), composable from any language or agent.
+
+Supporting a new host, gate, or view is **composing our primitives on their compute** — never
+registering a bundle with us. A new CI host needs *no adapter from us*: compute the range however
+that host exposes it and pass `madeby check <range>` (GitLab: `npx madeby check
+"$CI_MERGE_REQUEST_DIFF_BASE_SHA..$CI_COMMIT_SHA"`). The built-in HostAdapter registry (above) stays —
+for the hosts we make turnkey — but it's a convenience, **not** the extension path.
+
+Why this is the right inversion:
+
+- **No sandbox** — their code runs on their infra, not ours; we execute nothing untrusted.
+- **No plugin distribution / registry-of-code** — they ship and run it themselves.
+- **The trust boundary is the primitive.** Whatever they compose can only produce what the primitives
+  permit (invariant-capped, §10), so open composition still can't forge trust. Conformance collapses
+  to "does your output validate against our published primitive schemas," which they self-check.
+
+This retires the parked open questions (executable-plugin sandbox, code distribution, conformance
+vectors) for the common case. The one thing that still merits a hosted, loaded surface is where the
+work *must* run on our data (the corpus index, the resolver) — a narrow, first-party set, not the
+open extension path.
 
 ---
 
