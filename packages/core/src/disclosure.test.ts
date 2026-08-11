@@ -3,8 +3,10 @@ import {
   DISCLOSURE_KINDS,
   recognizeDcoSignoffs,
   hasDcoSignoff,
+  hasAiTrailer,
   recognizeSpdxIdentifiers,
   disclosureKindsPresent,
+  commitDisclosureKinds,
 } from "./disclosure";
 
 describe("disclosure vocabulary", () => {
@@ -42,6 +44,22 @@ describe("recognizeSpdxIdentifiers", () => {
 
   it("finds nothing in plain source", () => {
     expect(recognizeSpdxIdentifiers("const x = 1;")).toEqual([]);
+  });
+});
+
+describe("hasAiTrailer + commitDisclosureKinds", () => {
+  it("recognizes an AI-authorship trailer that names a known tool", () => {
+    expect(hasAiTrailer("feat\n\nCo-Authored-By: Claude <noreply@anthropic.com>")).toBe(true);
+    expect(hasAiTrailer("feat\n\nCo-Authored-By: Jane Human <jane@x.org>")).toBe(false); // a human co-author is not AI disclosure
+  });
+
+  it("maps a commit's message + signature to its disclosure kinds", () => {
+    expect(commitDisclosureKinds({ message: "x\n\nSigned-off-by: A <a@b.c>", signed: true }).sort()).toEqual([
+      "commit-signature",
+      "dco-signoff",
+    ]);
+    expect(commitDisclosureKinds({ message: "x\n\nGenerated-by: Cursor", signed: false })).toEqual(["ai-trailer"]);
+    expect(commitDisclosureKinds({ message: "plain commit", signed: false })).toEqual([]); // undisclosed
   });
 });
 
