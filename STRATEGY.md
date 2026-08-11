@@ -75,6 +75,36 @@ useful in a dispute even when the bytes later drift. The registry quietly become
 > We **order evidence; we do not assert truth.** When two parties claim the same content,
 > we rank by tier, timestamp, and lineage — we do not adjudicate.
 
+### What MadeBy *is*: the substrate-agnostic non-repudiation layer (positioning, 2026-08-10)
+
+Sharpening what the protocol reframe (`§3`) makes us. **We do not own the substrates — identity,
+cryptography, the ledger, or storage — and we should never try.** Those are being won by others
+(Sigstore/Fulcio for identity, Rekor and RFC-3161 TSAs for signature transparency, GitHub for the
+PR surface). Competing there is a losing bet; *consuming* them is the winning one.
+
+**What we own is the layer above: non-repudiation of the provenance *claim*.** MadeBy defines the
+canonical, carrier-independent claim (invariant #2), binds it non-repudiably to *whatever* identity
+signed it and anchors it to *whatever* ledger(s) witnessed it, and — at the sworn tier — gives it
+**legal** consequence. The claim standard, the anchoring/verification protocol, and the legal layer
+are ours; the identity, the crypto, and the ledger are borrowed. This is why *"bring your own
+identity, bring your own ledger"* is not a limitation but the whole posture: it is the technical
+expression of the **independent honest broker** — a role only a party that sells *neither the AI,
+nor the identity, nor the ledger* can credibly hold.
+
+**Non-repudiation is an orthogonal axis** (like the legal axis above): *authentication* (who + bytes,
+asserted→bound) is one dimension; *non-repudiation* (durably, timestamped, on the record and hard to
+deny — unanchored → multi-anchored → legally-recognized) is the second. MadeBy owns the second.
+
+**The moat is therefore trust, not lock-in** — and we should say so plainly. It is **not**
+verification-gatekeeping (verification is open and offline — "don't trust us, verify" is a feature,
+never a wall). It is three un-forkable things: (1) **recognition** of the standard/verifier (CA-root
+/ DocuSign-admissibility shaped); (2) the **legal non-repudiation** layer (substrate-independent,
+uniquely ours — Sigstore does crypto non-repudiation of software; nobody does legally-consequential
+non-repudiation of authorship); (3) the **resolution network** (the trusted place askers resolve
+"who made this" across all anchored claims — the piece with real network effects, and the one still
+under scrutiny). Thinner than a platform, slower to build (trust and legal recognition only
+compound), but defensible in a way code and hosted data are not.
+
 > **Defer the sworn tier (review 2026-06-29, Finding 4).** Sworn has the *least* operational design
 > and the "powerful actor files a false sworn claim" case, so **we do not launch sworn until counsel
 > signs off.** The wedge runs on **asserted + verified** at a fraction of the liability.
