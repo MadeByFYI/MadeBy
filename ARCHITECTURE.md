@@ -305,6 +305,23 @@ the OCSP-shaped responder over the anchor/grant record). Static claim + offline 
 traffic to the moat surface. Default-profile requirement: ensure `.madeby` is **published with the
 package** (the `files`/ignore defaults) so provenance actually travels.
 
+**Travel and the registry are complementary halves of one content-addressed system, joined by the
+hash.** Travel is local and artifact-scoped — it can't help with an artifact you hold whose `.madeby`
+*didn't* travel (a package that omitted it, a bare binary, a pasted snippet). The complement is the
+**hash-addressable registry** — the asker-pull spine (§2, *hash = the join key*): producers and the
+CI collector **push `.madeby` records keyed by the artifact's content hash** to an authority (public
+→ public madeby.fyi; private → the org's workspace), so anyone holding the artifact can **hash it and
+resolve provenance even when the file didn't travel.** The *same record* is thus reachable two ways —
+**locally if it traveled, by hash-query if it was registered** — and the traveled file's authority
+pointer names the registry to query for the live view. Guardrails keep it consistent: **we host
+provenance records/pointers, never source** (the record references content by hash); a pushed record
+is **asserted-until-verified** (the registry coordinates *discovery*, it does not confer trust —
+consumers still verify offline + resolve the tier, fail-safe); matching is **multi-resolution**
+(exact hash + the fuzzy/structural fingerprint, §2, so reformatted/edited copies still resolve where
+travel only carries the exact file); and density is **participation-scoped, not a crawl** (the
+registry holds what is pushed, same honesty caution as travel). This is the deferred **Tier-2 store**
+(`OPERATIONS §4a`) and the default-gravity moat surface, now concretely motivated.
+
 **The file carries an optional authority pointer, so renderers enrich from our API.** The `.madeby`
 file includes a **resolver/authority pointer** (default: madeby.fyi; swappable) so a renderer reading
 the local file knows *where* to fetch live context the static snapshot can't hold — current validity /
