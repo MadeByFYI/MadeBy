@@ -7,7 +7,9 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./structural": "./src/structural.ts"
+    "./structural": "./src/structural.ts",
+    "./disclosure": "./src/disclosure.ts",
+    "./policy": "./src/policy.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

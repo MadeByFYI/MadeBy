@@ -86,8 +86,11 @@ export {
   DISCLOSURE_KINDS,
   recognizeDcoSignoffs,
   hasDcoSignoff,
+  recognizeAiTrailers,
+  hasAiTrailer,
   recognizeSpdxIdentifiers,
   disclosureKindsPresent,
+  commitDisclosureKinds,
 } from "./disclosure";
 export type {
   DisclosureKind,
@@ -96,6 +99,19 @@ export type {
   ParserStatus,
   DisclosureSignal,
 } from "./disclosure";
+
+export {
+  DEFAULT_POLICY,
+  parseDisclosurePolicy,
+  evaluateDisclosurePolicy,
+} from "./policy";
+export type {
+  DisclosurePolicy,
+  PolicyMode,
+  CommitDisclosure,
+  CommitVerdict,
+  PolicyEvaluation,
+} from "./policy";
 
 export type {
   Identity,

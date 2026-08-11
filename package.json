@@ -14,7 +14,8 @@
     "provenance:verify-trailers": "node scripts/verify-trailers.mjs",
     "provenance:capture": "node scripts/capture-spans.mjs",
     "provenance:capture-session": "node scripts/capture-session-spans.mjs",
-    "provenance:capture-local": "node --experimental-strip-types scripts/capture-local.mjs"
+    "provenance:capture-local": "node --experimental-strip-types scripts/capture-local.mjs",
+    "provenance:check": "node --experimental-strip-types scripts/madeby-check.mjs"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

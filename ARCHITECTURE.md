@@ -278,6 +278,32 @@ is a code fact:** the v1 template ships with `status: 'draft'`, so a perfectly-f
 declaration is *detected and pointed to* but still resolves to `asserted`; finalizing the wording
 flips status → the sworn tier unlocks with no other change.
 
+### The disclosure policy carrier + `madeby check` (the maintainer gate, the light way)
+
+The OSS-maintainer wedge (`STRATEGY.md §3`) needs **no GitHub App and no hosted backend** — the
+heavy thing we explicitly don't build. The carrier is a file: **`.madeby/policy.json`**, in which a
+maintainer declares their disclosure policy:
+
+```json
+{ "version": 0, "mode": "required" | "advisory" | "off", "accept": ["dco-signoff", "ai-trailer", ...] }
+```
+
+`mode: required` fails the gate on any commit that discloses nothing the policy accepts; `advisory`
+reports only; `off` (and the fail-safe default for a missing/malformed file) never gates. `accept`
+omitted ⇒ any recognized disclosure counts. The evaluator is pure, node-free core
+(`packages/core/src/policy.ts` — `parseDisclosurePolicy` + `evaluateDisclosurePolicy` over each
+commit's `commitDisclosureKinds`), so the same logic runs on the mirror, in the index, and in the
+gate. **`madeby check [<range>]`** (`scripts/madeby-check.mjs`, run under Node type-stripping — no
+bundling) reads the policy, recognizes each commit's disclosure (AI trailer / DCO sign-off /
+signature), evaluates, prints a summary, and exits non-zero only under `required`. It runs anywhere:
+a contributor's laptop, one `run:` line in any CI, or a thin `uses:` Action later.
+
+Two invariants hold the line: **disclosure, never detection** (the check asks contributors to *state*
+origin; it never asserts whether code is AI), and **the maintainer owns the policy** — if a project
+turns a `required` gate into a de-facto AI ban, that is its call; we ship the neutral instrument and
+neither advise nor obstruct. Fail-safe throughout: a parse error or our own bug degrades to `off`
+(never block a PR on our error, never invent a stricter gate than the maintainer wrote).
+
 ---
 
 ## 4. AI span-demarcation convention

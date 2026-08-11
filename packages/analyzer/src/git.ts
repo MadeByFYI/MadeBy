@@ -14,7 +14,7 @@ const RECORD = "\x1e"; // record separator between commits
  * Read commit metadata via `git log`. Returns `[]` (never throws) if git or the repo is
  * unavailable, so callers degrade gracefully (the resolver/analyzer "not available" state).
  */
-export function readGitLog(repoPath: string, limit?: number): CommitMeta[] {
+export function readGitLog(repoPath: string, limit?: number, range?: string): CommitMeta[] {
   try {
     const args = [
       "-C",
@@ -27,6 +27,8 @@ export function readGitLog(repoPath: string, limit?: number): CommitMeta[] {
       // read presence, never validity (that's the verified tier). If gpg is absent git returns 'N',
       // which under-counts disclosure — the fail-safe direction (never a false "disclosed").
       `--format=%H${FIELD}%an${FIELD}%ae${FIELD}%G?${FIELD}%B${RECORD}`,
+      // optional revision range, e.g. "origin/main..HEAD" — the PR's own commits for the gate
+      ...(range ? [range] : []),
     ];
     const out = execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
     return out
