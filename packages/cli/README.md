@@ -115,6 +115,12 @@ The server is also **self-teaching** via MCP resources, so an agent can discover
 repo, not just which verbs exist:
 
 - **`madeby://guide/align`** — the step-by-step alignment workflow.
+- **`madeby://guide/enforce`** — the exact commands to make the check *required* on a protected branch
+  (GitHub / Azure) — the host's control plane, so MadeBy doesn't do it for you, but it's not left to
+  the reader either.
+- **`madeby://guide/backfill`** — how to account for pre-adoption history *honestly*: recognize
+  what's already disclosed, attach recoverable evidence, set an adoption boundary; unknown stays
+  unknown, never fabricated.
 - **`madeby://schema/policy`** — the `.madeby/policy.json` schema.
 
 So "align my repo with MadeBy" is fully agent-serviceable: the agent reads the guide, calls **`init`**
