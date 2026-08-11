@@ -59,6 +59,7 @@ export function readSpanManifestsFromGit(repoDir: string): SpanManifest[] {
   try {
     listing = execFileSync("git", ["-C", repoDir, "ls-tree", "-r", "--name-only", "HEAD", ".madeby/spans"], {
       encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"], // absent .madeby/spans → git writes to stderr; we catch + return []
     });
   } catch {
     return [];
@@ -67,7 +68,7 @@ export function readSpanManifestsFromGit(repoDir: string): SpanManifest[] {
   return parseAll(
     paths.map((p) => {
       try {
-        return execFileSync("git", ["-C", repoDir, "cat-file", "-p", `HEAD:${p}`], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+        return execFileSync("git", ["-C", repoDir, "cat-file", "-p", `HEAD:${p}`], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });
       } catch {
         return "";
       }
