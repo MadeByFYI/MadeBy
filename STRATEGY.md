@@ -740,10 +740,11 @@ ensure `.madeby` is **published with the package** so provenance actually travel
 
 The file also carries an **optional authority pointer** (default madeby.fyi, swappable) so renderers
 *enrich* the offline-verifiable base with live API data (current validity, reputation, grant state) —
-enrichment is optional (offline verify never depends on it), and private inspection never phones home
-to the public authority. The default pointer is where **default gravity lives in the carrier**: the
-ubiquitous `.madeby` files reference our authority by default, routing every enrichment/validity call
-to us (`ARCHITECTURE §3`).
+enrichment is optional (offline verify never depends on it). The pointer resolves against wherever
+*that artifact's* records live (data-locality, from the `#105` reporting model): public artifacts →
+public madeby.fyi; an org's own private artifacts → the org's workspace. The default pointer is where
+**default gravity lives in the carrier**: the ubiquitous `.madeby` files reference our authority by
+default, routing every enrichment/validity call to us (`ARCHITECTURE §3`).
 
 **Decisive variable = the forcing functions** (regulation, IP/license liability, supply-chain
 security). Where one makes provenance a *must-check-every-build*, reliance is continuous and
