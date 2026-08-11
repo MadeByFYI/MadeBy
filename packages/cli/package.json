@@ -1,18 +1,41 @@
 {
   "name": "madeby",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby prove) and gate PRs on disclosure (madeby check).",
   "license": "MIT",
   "type": "module",
+  "author": "Mac Dougherty",
+  "homepage": "https://github.com/MacDougherty/MadeBy/tree/main/packages/cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MacDougherty/MadeBy.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "provenance",
+    "ai",
+    "disclosure",
+    "dco",
+    "pull-request",
+    "ci",
+    "attestation",
+    "code-provenance"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "madeby": "./dist/madeby.mjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "esbuild src/madeby.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/madeby.mjs --banner:js='#!/usr/bin/env node' && chmod +x dist/madeby.mjs",
     "typecheck": "tsc --noEmit",
+    "pretest": "pnpm build",
+    "test": "vitest run",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
@@ -20,6 +43,7 @@
     "@madeby/core": "workspace:*",
     "@types/node": "^22.10.0",
     "esbuild": "^0.25.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.9"
   }
 }
