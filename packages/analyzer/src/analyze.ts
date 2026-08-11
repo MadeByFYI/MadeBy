@@ -18,6 +18,17 @@ import { resolveIdentity } from "./identity";
 
 export type ContributorKind = "human" | "ai" | "bot";
 
+/** On-demand GitHub-API enrichment of a resolved handle (enrich.ts) — real name + reach. */
+export interface IdentityProfile {
+  handle: string;
+  name?: string;
+  company?: string;
+  followers?: number;
+  topRepos: { name: string; stars: number }[];
+  /** one-line reach summary, e.g. "81k followers · awesome (495k★)" */
+  reach?: string;
+}
+
 export interface Contributor {
   kind: ContributorKind;
   /** display name: the author's name (human/bot) or the AI provider (ai) */
@@ -26,6 +37,8 @@ export interface Contributor {
   detail?: string;
   /** the committer's public GitHub handle, when they linked it via a noreply email (identity.ts) */
   handle?: string;
+  /** on-demand GitHub-API enrichment (real name + reach), when available (enrich.ts) */
+  profile?: IdentityProfile;
   /** number of commits this contributor appears in */
   commits: number;
 }

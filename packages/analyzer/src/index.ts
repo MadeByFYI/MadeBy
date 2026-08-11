@@ -15,6 +15,9 @@ export { detectTooling, readToolingFromGit, readToolingFromDir, AI_TOOL_CONFIGS 
 export type { ToolingEvidence, DetectedTool, AiToolConfig } from "./tooling";
 export { resolveGitHubHandle, resolveIdentity } from "./identity";
 export type { ResolvedIdentity } from "./identity";
+export { enrichIdentity, enrichContributors } from "./enrich";
+export type { EnrichOptions } from "./enrich";
+export type { IdentityProfile } from "./analyze";
 export { captureLocalSpans } from "./capture-local";
 export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
 export { claudeCodeParser, TOOL_PARSERS, detectParser } from "./tool-parsers";
