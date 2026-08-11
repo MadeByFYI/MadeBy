@@ -177,6 +177,55 @@ scale-to-zero, all Tier-1/2.
 
 ---
 
+## 4b. Tier 3 spec — the metadata corpus (the delivery vehicle for the viral hook)
+
+The cross-repo richness + the index + producer-discovery-at-scale (`STRATEGY §3`, "the how" — tiers 1
+& 2 shipped in #120/#121). **Spec, not built** — it needs provisioning + the PII/counsel gate below.
+
+**Boundary (keeps it cheap AND honest).** **Metadata-only** — commit identity, message-derived signals
+(trailers/DCO), signature presence, sha/repo/date, and file *paths* (for tooling/config detection);
+**never file content.** It answers **identity-graph** and **disclosure-aggregate** queries. It is
+explicitly **not** the content-fingerprint corpus (code-similarity) — that stays deferred (§5), because
+content is the cost-existential part (§3).
+
+**Sources (no cloning, no crawling):** **GH Archive** (hourly events → incremental freshness) +
+**BigQuery public GitHub dataset** (bounded bulk backfill, metadata columns only). **Bound the corpus:**
+top-N repos by stars, sampled, date-windowed — the cost knob (§3's "bounded sample, not all of git").
+
+**Store:** Neon (§4a). Rough schema: `repos` · `commits(metadata + disclosed{trailer,signature,dco,bot}
+flags, no content)` · `identities(github_login, name)` (from tier-1/2 resolution) ·
+`contributions(identity↔repo↔kind↔count)` (the cross-repo graph) · aggregate materialized views.
+
+**Unlocks:** (1) **cross-repo reach** ("@X's code is in N of your deps," "made Y% of ecosystem E") — the
+"surprising humans" read *at scale*; (2) the **human/machine index** (citable authority, aggregate);
+(3) **demand-generated, SEO-indexed pages** → producer discovery via search; (4) feeds the reliance
+products (transitive gate / supply-chain).
+
+**Cost discipline (§3):** metadata-only, bounded/sampled, batch + scale-to-zero, hard BigQuery cost
+caps + budget alerts. Content-fingerprint corpus stays out.
+
+**Privacy discipline (§8 / ARCH §1 #117) — the exposure concentrates here:**
+- **Aggregate stats = fine** (no individual targeting) → the index is the low-risk first surface.
+- **Per-subject pages = demand-generated, neutral, correctable, opt-out** — never proactive dossiers;
+  we ingest metadata for cross-reference + aggregates, we do not pre-publish a page per person.
+- **PII / GDPR:** committer name/email is personal data; holding it at corpus scale is a real
+  compliance surface (lawful basis, right-to-object, deletion) — **counsel-gated, like the sworn tier.**
+  Honest tension to name: "we hold metadata on every public committer" is a little dossier-ish even
+  with on-demand pages; mitigations are public-data-only + factual + correctable + opt-out + the
+  name-attached consent-gate (ARCH §8).
+
+**Phasing (lowest-risk first):** **P0** provisioning (Neon + a bounded ingestion job + schema); **P1**
+the **aggregate index** (human/machine + disclosure % — aggregate-only, sidesteps the PII/dossier
+concern, the citable authority number); **P2** the **identity/contribution graph** → cross-repo reach as
+demand-generated neutral pages (§8-gated); **P3** SEO pages / at-scale discovery.
+
+**Open decisions (not decided):** source mix (GH Archive / BigQuery / both); the corpus bound
+(top-N / sampling / window); the **PII/GDPR posture** (counsel); ingestion runtime (Modal / scheduled
+job / BigQuery scheduled queries); and **when** — this *is* the "bring ingestion forward" re-sequencing
+(§4a), gated on provisioning + the strategic call that the viral hook needs it.
+
+---
+
 ## 5. The similarity index (pgvector-first)
 
 The fuzzy/structural fingerprint nearest-neighbor lookup is the one specialized, expensive

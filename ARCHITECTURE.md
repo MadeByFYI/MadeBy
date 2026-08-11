@@ -658,6 +658,12 @@ The world's public git history is already a **content-keyed, authorship-annotate
 (every public commit has an author, timestamp, content-addressed snapshot). A **continuous
 ingestion pipeline** mines it, producing both per-subject claims and aggregate indices.
 
+> **The concrete spec is `OPERATIONS.md §4b` (the metadata corpus, "tier 3").** Metadata-only
+> (identity/trailers/signatures/paths — *no content*), GH Archive + BigQuery, bounded/sampled,
+> Neon-backed; it powers cross-repo reach reads, the human/machine index, and demand-generated
+> discovery pages. Ingest for aggregates + cross-reference; keep per-subject pages demand-generated
+> and neutral (§1 #117); PII/GDPR is counsel-gated. The content-fingerprint corpus stays deferred.
+
 - **Auto-populate the asserted tier** by ingesting public repos → the resolver returns
   *something* (unverified, "git blame + heuristics say X") from day one, before anyone opts in.
 - **Verified / sworn / bound tiers are opt-in upgrades** layered onto entries that already
