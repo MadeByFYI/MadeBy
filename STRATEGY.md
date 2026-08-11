@@ -326,6 +326,30 @@ by identity (the maker didn't hide it; the audience merely assumed), so it reads
 number, but **surfacing where a widespread presumption is wrong** — the surprise comes free from the
 prior, and *grows* as the prior gets more wrong.
 
+### We point to identity, we don't host it — person-naming is consensual or relationship-gated (decision, 2026-08-11)
+
+Extends the human/machine headline and **detect-don't-host** to the person axis. **In the general
+public case, MadeBy asserts the *determination* — "a person" or "a machine" — and *points* to where
+the specific identity is disclosed (the repo / the GitHub handle as a link-out); it does not *host* a
+public profile of the author.** The maker's identity is already disclosed in their own repo/GitHub —
+we reference it, we don't re-host it, exactly as we reference a content hash (not the content) and
+point to a self-hosted declaration (not host it).
+
+**Specific-person naming is reserved for the contexts where it has both value AND a lawful basis:**
+- **Consensual** — the person *claims/attests* their attribution → naming is opt-in (the credit
+  flywheel, §1: public credit is *accepted*, never a dossier imposed).
+- **Relationship** — the **enterprise** (controller of its own people's data) and the **repo owner**
+  (their own repo/contributors).
+
+**Why:** hosting a stranger's identity on our site buys little general-case value and most of the
+risk (GDPR profiling, the dossier problem, defamation). Pointing keeps the mission (person-or-machine),
+keeps the honest-broker posture, and **collapses the public-corpus PII exposure** (`COMPLIANCE.md`).
+The "surprising humans" hook survives — *"this critical library is essentially one person → @handle"* —
+just **opt-in-shaped** (they claim to be credited), which is honestly better than profiling. Mission,
+crisper: **MadeBy says whether a thing was made by a person or a machine, and points to who — it is
+not a public directory of who-made-what.** (Public resolver page shows the determination + the
+@handle as a link-out; the full profile/reach card is relationship/consent-gated — `ARCHITECTURE §1`.)
+
 ### The adoption wedge: the OSS maintainer PR-disclosure gate (decision, 2026-08-10)
 
 **Not the enterprise buyer.** Security/compliance are where the *pain and budget* eventually sit, but

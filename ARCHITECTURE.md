@@ -114,6 +114,17 @@ build dossiers.* (The aggregate "State of AI Disclosure" index, §8, is separate
 the **consent-gate for name-attached** negatives (§8), this keeps the conversion surface honest
 transparency rather than reputation extortion.
 
+#### Public page: assert the determination, point to the identity — don't host it (decision, 2026-08-11)
+
+Detect-don't-host, extended to the *person* axis (`STRATEGY §3`). The **public** resolver page shows
+the **human/machine determination** and the committer's **@handle as a link-out** (to their GitHub /
+the repo, where the identity is already disclosed) — it does **not** host a public profile/reach card
+of the author. The full **profile + reach card is relationship/consent-gated**: shown to the **repo
+owner** (their own repo), inside the **enterprise** product (the org is controller of its people's
+data), or when the person has **claimed** their attribution (opt-in credit). This is the single
+biggest PII risk-reducer (`COMPLIANCE.md`): the public corpus becomes aggregate stats + human/machine
+determinations + pointers — never hosted dossiers on strangers.
+
 ---
 
 ## 2. Hashing: the hash is the *join key*, not the *trust*
