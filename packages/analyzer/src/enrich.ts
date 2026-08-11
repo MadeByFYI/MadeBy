@@ -89,39 +89,51 @@ async function resolveHandleViaCommits(
 }
 
 export interface EnrichOptions {
-  /** a GitHub token; absent ⇒ enrichment is skipped and contributors are returned unchanged */
+  /** a GitHub token; absent ⇒ resolution/enrichment is skipped and contributors returned unchanged */
   token?: string;
   /** the repo, so we can resolve personal-email committers to their login via the commits API */
   repo?: { owner: string; name: string };
-  /** enrich at most the top-N human contributors (bounds API calls + latency) */
+  /** operate on at most the top-N human contributors (bounds API calls + latency) */
   top?: number;
   timeoutMs?: number;
 }
 
 /**
- * Overlay GitHub profile/reach onto the top human contributors. A handle comes from the noreply
- * email (identity.ts) or, failing that, is resolved from the personal email via the commits API
- * (when `repo` is given). Bounded to the top-N; degrades gracefully on any failure.
+ * Resolve @handles for the top-N human contributors — noreply-derived (already on the contributor,
+ * identity.ts) or resolved from the personal email via the commits API. Attaches ONLY the handle (a
+ * pointer / link-out), fetching no profile. This is the PUBLIC path: we point to the identity where
+ * it's disclosed, we don't host a profile (STRATEGY §3, ARCH §1). Bounded; gracefully degrading.
  */
-export async function enrichContributors(contributors: Contributor[], opts: EnrichOptions = {}): Promise<Contributor[]> {
-  const token = opts.token;
-  if (!token) return contributors; // no token → offline-equivalent, gracefully un-enriched
-  const targets = contributors.filter((c) => c.kind === "human").slice(0, opts.top ?? 5);
+export async function resolveHandles(contributors: Contributor[], opts: EnrichOptions = {}): Promise<Contributor[]> {
+  const { token, repo } = opts;
+  if (!token || !repo) return contributors; // noreply handles are already set; the rest needs token+repo
+  const targets = contributors.filter((c) => c.kind === "human" && !c.handle && c.detail).slice(0, opts.top ?? 5);
   const resolved = await Promise.all(
     targets.map(async (c) => {
-      let handle = c.handle ?? null;
-      if (!handle && opts.repo && c.detail) {
-        handle = await resolveHandleViaCommits(opts.repo.owner, opts.repo.name, c.detail, { token, timeoutMs: opts.timeoutMs });
-      }
-      if (!handle) return null;
-      const profile = await enrichIdentity(handle, { token, timeoutMs: opts.timeoutMs });
-      return profile ? { c, handle, profile } : null;
+      const handle = await resolveHandleViaCommits(repo.owner, repo.name, c.detail!, { token, timeoutMs: opts.timeoutMs });
+      return handle ? ([c, handle] as const) : null;
     }),
   );
-  const overlay = new Map<Contributor, { handle: string; profile: IdentityProfile }>();
-  for (const r of resolved) if (r) overlay.set(r.c, { handle: r.handle, profile: r.profile });
-  return contributors.map((c) => {
-    const e = overlay.get(c);
-    return e ? { ...c, handle: e.handle, profile: e.profile } : c;
+  const byC = new Map<Contributor, string>();
+  for (const r of resolved) if (r) byC.set(r[0], r[1]);
+  return byC.size ? contributors.map((c) => (byC.has(c) ? { ...c, handle: byC.get(c)! } : c)) : contributors;
+}
+
+/**
+ * Resolve handles AND overlay the full GitHub profile/reach card. This is the RELATIONSHIP/CONSENT
+ * path (repo owner, enterprise, or a claimed identity) — never the public mirror, which hosts no
+ * profile of a stranger (STRATEGY §3). Bounded to the top-N; degrades gracefully on any failure.
+ */
+export async function enrichContributors(contributors: Contributor[], opts: EnrichOptions = {}): Promise<Contributor[]> {
+  const withHandles = await resolveHandles(contributors, opts);
+  const token = opts.token;
+  if (!token) return withHandles;
+  const targets = withHandles.filter((c) => c.kind === "human" && c.handle).slice(0, opts.top ?? 5);
+  const profiles = await Promise.all(targets.map((c) => enrichIdentity(c.handle!, { token, timeoutMs: opts.timeoutMs })));
+  const byC = new Map<Contributor, IdentityProfile>();
+  targets.forEach((c, i) => {
+    const p = profiles[i];
+    if (p) byC.set(c, p);
   });
+  return byC.size ? withHandles.map((c) => (byC.has(c) ? { ...c, profile: byC.get(c) } : c)) : withHandles;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { enrichContributors } from "./enrich";
+import { enrichContributors, resolveHandles } from "./enrich";
 import type { Contributor } from "./analyze";
 
 const c = (over: Partial<Contributor>): Contributor => ({ kind: "human", name: "x", commits: 1, ...over });
@@ -7,6 +7,19 @@ const c = (over: Partial<Contributor>): Contributor => ({ kind: "human", name: "
 const origFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = origFetch;
+});
+
+describe("resolveHandles — the PUBLIC path: pointer (handle) only, never a hosted profile", () => {
+  it("resolves a personal-email committer's handle via the commits API, sets NO profile", async () => {
+    globalThis.fetch = (async () => ({ ok: true, json: async () => [{ author: { login: "janedev" } }] }) as unknown as Response) as typeof fetch;
+    const out = await resolveHandles([c({ name: "Jane", detail: "jane@work.com", commits: 5 })], { token: "x", repo: { owner: "o", name: "r" } });
+    expect(out[0]!.handle).toBe("janedev");
+    expect(out[0]!.profile).toBeUndefined(); // link-out only, no hosted profile of a stranger
+  });
+  it("returns unchanged with no token/repo (noreply handles are already set upstream)", async () => {
+    const cs = [c({ handle: "jane" })];
+    expect(await resolveHandles(cs)).toBe(cs);
+  });
 });
 
 describe("enrichContributors — bounded, graceful GitHub-API overlay", () => {
