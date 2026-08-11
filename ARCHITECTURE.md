@@ -814,6 +814,32 @@ use that was both low-value and the exact attack surface; if ever wanted it is a
 `asserted` timestamp, never verified authorship. The **priority / copyright-evidence** value (§2)
 stays intact, because it is for *homed* artifacts (your repo/package, timestamped) — which we keep.
 
+### Claiming a page: proven-control gates authority (decision, 2026-08-11)
+
+You can't stop anyone from *asserting* (assertion is the honor-system floor). What must hold is that
+a claim confers **authority — the `verified` mark, narrative control of the page, the right to attest
+on its behalf — only when control of the subject is *proven*.** An unprovable claim caps at
+`asserted` and is inert; **there is no path to the verified page without proving control** (invariant
+#3/#5, fail-safe). So "prevent non-maintainers from claiming" reduces to "never grant authority
+without proof of control."
+
+**Control is proven by riding the home's existing authority (BYO, agnostic across homes):**
+- **Forge-hosted repo:** OAuth to the forge + verify admin/write via its API (GitHub/GitLab/Gitea is
+  the authority on who controls the repo — the Vercel/Netlify pattern), **or** the self-proving
+  alternative: commit a signed `.madeby` / challenge token to the repo (only a controller can write
+  to it — the Search-Console / DNS-TXT pattern, and the same act as the gate/`prove`).
+- **Published package:** the registry's publisher identity (npm/PyPI "who can publish this").
+- **Build artifact:** the `DERIVED_FROM` edge back to controllable source (SLSA/in-toto) — reduces
+  to the forge/registry case.
+- **Domain-homed artifact / model hub:** domain-verification / hub publisher identity.
+
+**Page-control ≠ authorship credit (the separation that stops credit theft).** Claiming the page
+controls the *narrative/record* — legitimately the maintainer's right. But the **per-contribution
+authorship attestations are signed by each contributor and non-repudiable** — a page-claimer
+**cannot overwrite them** to steal a contributor's credit. Page-control and authorship are different
+layers; the maintainer controls the page, not who-wrote-what. Contested control resolves through the
+contention engine above (`resolveContention`), which crowns no one in a genuine tie.
+
 **The challenge / counter-claim model (specced now, built later).** A challenge is **not an appeal to
 a judge** — it is just another claim/edge on the same ladder, so it cannot be weaponized: an unbacked
 challenge against a `bound` claim is itself only `asserted` and renders as visibly weak; we never
