@@ -98,6 +98,24 @@ importers:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@22.20.0)(vite@8.1.0(@types/node@22.20.0)(esbuild@0.28.1)(tsx@4.22.4))
 
+  packages/cli:
+    devDependencies:
+      '@madeby/analyzer':
+        specifier: workspace:*
+        version: link:../analyzer
+      '@madeby/core':
+        specifier: workspace:*
+        version: link:../core
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.0
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/core:
     devDependencies:
       '@stryker-mutator/core':

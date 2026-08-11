@@ -1,0 +1,25 @@
+{
+  "name": "madeby",
+  "version": "0.0.0",
+  "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby prove) and gate PRs on disclosure (madeby check).",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "madeby": "./dist/madeby.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/madeby.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/madeby.mjs --banner:js='#!/usr/bin/env node' && chmod +x dist/madeby.mjs",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@madeby/analyzer": "workspace:*",
+    "@madeby/core": "workspace:*",
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  }
+}
