@@ -627,6 +627,44 @@ now.
   Likely the largest TAM long-term; monetizes the asker-pull spine. Kept in architecture, not scope.
 - **[optionality] Supply-chain / compliance (CI gating, SBOM, coverage gates):** enterprises pay
   to gate releases and satisfy disclosure rules. The downstream product the same ledger enables.
+  **(Re-weighted to the primary *defensible* target — see the decision below.)**
+
+### The defensible business: intra-org AI-provenance governance (decision, 2026-08-10)
+
+A full moat pass (this session) re-weights the lines above. The **public maintainer gate + mirror
+are the funnel and the authority play — free, and no moat by design** (open protocol, public/portable
+data: anyone can re-index it). The **defensible business is the compliance line, promoted from
+optionality to the primary target: intra-organization AI-provenance governance** — the same engine
+(mirror + recognizer + gate + non-repudiable record) pointed *inward* at a company's private repos.
+
+**Why intra-org, not cross-party:** the value is a *standing, recurring* need (govern our AI-code
+IP/license/compliance continuously), a *single buyer* (no multi-party coordination), and the blind
+spot that cripples the public mirror *closes by policy* (the org mandates disclosure/capture on its
+own tooling). The moat is **per-customer data gravity + workflow lock-in + compliance stickiness** —
+reliable and immediate, not network-effect-gated. Cross-party resolution is the *emergent* network
+on top once intra-org density exists, not the entry moat.
+
+**The buyer:** the *why* sits with **Legal/IP + Compliance/AI-governance** (the risk owners; the
+sworn/legal non-repudiation layer, §2, speaks their language), with **CISO/supply-chain** a
+co-champion; the *operation* falls on **Platform Engineering** (who run the gate in CI). The budget
+owner is the **AI-governance / compliance / risk function** — explicit mandate, recurring budget,
+able to compel engineering. Motion: **top-down mandate + bottom-up-trivial implementation** — the
+lightness of the gate (a file + a workflow) is precisely what lets a compliance mandate land without
+an engineering revolt.
+
+**The moat mechanism is default gravity, not lock-in.** The protocol stays agnostic (BYO
+identity/ledger, §2), but the product ships **one zero-choice default profile** whose reporting
+points at **madeby.fyi** (`ARCHITECTURE §3`). Most teams never change a default → derived provenance
++ the grant graph + the dashboard-habit concentrate at our hosted layer, *without* our holding
+identity, ledger, or source. Agnosticism is what makes the default *trustworthy* (you accept it
+because you can leave); the default is what builds the moat. Contestable by GitHub only via a
+*cross-vendor, Copilot-neutral* default — which, selling Copilot, they structurally cannot ship.
+
+**Build discipline unchanged:** this re-weights the *target*, not the near-term plan. Governance is
+Tier-2 (`OPERATIONS.md §4a`), **validated with a design partner before it is built** — cheaply, by
+having one org run the free `madeby check`/`prove` across its private repos and asking the compliance
+owner *what dashboard, record, and report they would pay for on top.* The act of attribution stays
+free forever; we charge for governance, trust, and asking at scale.
 
 ### Ruled out (corrosive to a trust instrument)
 

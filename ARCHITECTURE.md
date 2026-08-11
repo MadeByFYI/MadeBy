@@ -247,6 +247,31 @@ backends first — the **RFC-3161 TSA** (legal-friendly) and the **signed-git-co
 already hold; add Rekor/chains later through the registry. Backends are post-Tier-2 (`OPERATIONS.md
 §4a`); this section fixes the *shape* so we never build ourselves into a single-ledger corner.
 
+### The default profile + derived-records reporting (design commitment, 2026-08-10)
+
+The agnostic layers (identity, carrier, anchor) are a *capability to reach for*, never a
+*configuration to force*. So the product ships one opinionated **default profile** that gives the
+easy-button path zero choices: identity = the git/SSO identity already present; anchor = a public
+default (the signed-git-commit + a public RFC-3161 TSA — *never* a MadeBy-proprietary ledger);
+carrier = `.madeby`; reporting = madeby.fyi. `madeby init` / the zero-config Action apply it. **Rule:
+offer every choice, default to none** — never ship a default that makes an engineering team pick a
+ledger or stand up an identity (engineering is the implementer, rarely the buyer — `STRATEGY.md §6`).
+
+**Derived-records reporting — the data path to the hosted dashboard.** Dashboards are hosted
+(madeby.fyi); no one installs on-prem software to view a chart. But source must never leave the org.
+Resolution: the CLI/Action runs **inside their CI/perimeter** and emits only **derived provenance
+records** (Disclosure Scores, attestation commitments, anchor references, grant/policy state — never
+source) — the same "only derived attribution leaves the machine" principle as `capture-local` and
+the §8 enterprise-isolation posture. Egress is the customer's (push, not pull) and tiered:
+**aggregate-only → blinded records** (the HMAC-blinded private fingerprint, keeping hashes
+non-cross-referenceable) **→ full**. Air-gapped orgs run local-only (no hosted dashboard — their
+tradeoff). Store = the Tier-2 registry (`OPERATIONS.md §4a`); render = madeby.fyi.
+
+**One mechanism, three jobs.** The zero-choice default *is* the data pump: running the gate in CI
+(which they do anyway) frictionlessly adopts the protocol, ships derived provenance to the dashboard,
+and — because it is the default — concentrates data at the hosted resolution/grant layer (the moat,
+`STRATEGY.md §6`), all without our holding identity, ledger, or source.
+
 ### The sworn carrier: self-hosted declarations, we detect and point (decision, 2026-07-06)
 
 The `sworn` tier is *"no crypto binding, but legally consequential"* (`packages/core/src/tiers.ts`).

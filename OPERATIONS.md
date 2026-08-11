@@ -161,6 +161,20 @@ provenance** (npm provenance / Sigstore attestations — dogfood our own thesis 
 **2FA-locked publish**, **minimal/audited deps**, and a compromised-package runbook (treat as a
 fatal incident, same tier as a credential leak, §1.5). This did not exist before we shipped a CLI.
 
+**The data path — CI-as-collector → madeby.fyi (decision, 2026-08-10).** Dashboards and reporting
+live on **madeby.fyi** (hosted — no one installs on-prem software to view a chart), which makes the
+deferred **Neon-backed store (Tier 2)** concrete: it holds CI-pushed org records + the grant graph
+and backs the hosted dashboard. Data reaches it via the **CI-as-collector** pattern — the `madeby`
+gate/CLI runs **inside the customer's CI/perimeter** and **pushes only derived provenance records**
+(scores, attestation commitments, anchor references, grant/policy state — *never source*; the §6
+"code never leaves the perimeter" + `capture-local` "only derived attribution leaves" principle) to
+a madeby.fyi **ingestion endpoint**, tiered by the customer (aggregate → HMAC-blinded records →
+full). Push-based (the customer controls egress); no standing agent; no source leaves. Because the
+**zero-choice default profile** (`ARCHITECTURE §3`) is the pump, this same path is the moat surface
+(default gravity → the hosted resolution/grant layer, `STRATEGY §6`), not just plumbing. The ops
+footprint it adds is thin: an ingestion function + the Neon store + the Vercel dashboard — all
+scale-to-zero, all Tier-1/2.
+
 ---
 
 ## 5. The similarity index (pgvector-first)
