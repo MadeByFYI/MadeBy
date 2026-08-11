@@ -21,9 +21,11 @@ npm i -g madeby
 ## Usage
 
 ```
-madeby check [<range>]         Evaluate commits against .madeby/policy.json (the disclosure gate).
-                               <range> e.g. origin/main..HEAD — a PR's own commits.
-madeby prove  [<log>] [<ref>]  Capture your AI session log's witnessed spans into .madeby/spans.
+madeby check     [<range>]     Evaluate commits against .madeby/policy.json (the disclosure gate).
+                               <range> e.g. origin/main..HEAD — a PR's own commits. --json for output.
+madeby recognize [<range>]     The raw disclosure primitive: per-commit disclosure kinds, no policy.
+                               --json for structured output. Compose it into your own gate/view.
+madeby prove     [<log>] [<ref>]  Capture your AI session log's witnessed spans into .madeby/spans.
 madeby help
 ```
 
@@ -62,8 +64,37 @@ its own error, and never invents a stricter gate than the maintainer wrote.
 
 ## Use it as a PR check
 
-A ready-made GitHub Action wraps `madeby check` — two committed files, nothing hosted. See
+A ready-made GitHub Action and an Azure DevOps Pipelines template wrap `madeby check` — nothing
+hosted, nothing leaves your CI. See
 [`packages/action`](https://github.com/MacDougherty/MadeBy/tree/main/packages/action#readme).
+
+## Extend it anywhere — primitives you run, not code you ship
+
+MadeBy is composable primitives, not a plugin host. To support a **new CI host, a custom gate, or
+your own dashboard**, you don't register code with us — you run the primitives **in your own
+environment**:
+
+- **`madeby recognize --json`** — the raw recognizer: per-commit disclosure kinds, no policy. Build
+  any view or gate on top.
+- **`madeby check --json`** — the gate's structured result (`pass`, `mode`, `undisclosed[]`); the
+  exit code still gates, so CI can use either.
+- The same logic as a library: [`@madeby/core`](https://www.npmjs.com/package/@madeby/core)
+  (`commitDisclosureKinds`, `evaluateDisclosurePolicy`).
+
+**A new host needs no adapter from us** — compute the range however that host exposes it and pass it.
+GitLab CI, for example, ships nothing to MadeBy:
+
+```yaml
+disclosure:
+  image: node:20
+  rules: [{ if: '$CI_PIPELINE_SOURCE == "merge_request_event"' }]
+  script:
+    - npx --yes madeby check "$CI_MERGE_REQUEST_DIFF_BASE_SHA..$CI_COMMIT_SHA"
+```
+
+We ship built-in adapters (GitHub, Azure DevOps) so those hosts are turnkey — but they're a
+convenience, not the extension path. Whatever you compose can only report what the primitives permit,
+so the trust guarantees hold no matter who runs them.
 
 ## Honest scope
 
