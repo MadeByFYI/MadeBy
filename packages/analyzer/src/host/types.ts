@@ -39,8 +39,13 @@ export interface HostAdapter {
   /** The stable identity merge key for a handle on this host. e.g. "gh:jane". */
   handleKey(handle: string): string;
 
-  /** The public web URL for a handle — a link-out pointer, never a hosted profile (point-don't-host). */
-  profileUrl(handle: string): string;
+  /**
+   * The public web URL for a handle — a link-out pointer, never a hosted profile (point-don't-host).
+   * OPTIONAL: not every forge has public per-user pages (Azure DevOps identities are org-private), in
+   * which case the handle is shown as plain text. Building the second adapter surfaced this — a host
+   * implements only the capabilities it actually has (ARCHITECTURE §12).
+   */
+  profileUrl?(handle: string): string;
 
   /**
    * Network (optional): resolve a commit email to a handle via the host API — catching the personal

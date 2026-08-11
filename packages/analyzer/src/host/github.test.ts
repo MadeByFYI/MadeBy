@@ -24,7 +24,7 @@ describe("githubAdapter — pure identity ops (zero-network)", () => {
   });
   it("keys and links by handle, lowercased", () => {
     expect(githubAdapter.handleKey("OctoCat")).toBe("gh:octocat");
-    expect(githubAdapter.profileUrl("octocat")).toBe("https://github.com/octocat");
+    expect(githubAdapter.profileUrl!("octocat")).toBe("https://github.com/octocat");
   });
 });
 
