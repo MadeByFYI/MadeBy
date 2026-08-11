@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    // We consume @madeby/core as source; it uses Web platform globals (TextEncoder/crypto),
+    // so tsc deep-checks those files and needs the DOM lib too.
+    "lib": ["ES2023", "DOM"]
+  },
+  "include": ["src"]
+}

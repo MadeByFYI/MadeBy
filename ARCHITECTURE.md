@@ -304,6 +304,14 @@ turns a `required` gate into a de-facto AI ban, that is its call; we ship the ne
 neither advise nor obstruct. Fail-safe throughout: a parse error or our own bug degrades to `off`
 (never block a PR on our error, never invent a stricter gate than the maintainer wrote).
 
+**Packaging (landed).** `scripts/*.mjs` are the no-build dev entries; the installable form is
+`packages/cli` — the `madeby` package, esbuild-bundled into a single standalone `dist/madeby.mjs`
+(bundling sidesteps the type-stripping import constraints), exposing `madeby check` and
+`madeby prove`. `packages/action/` is the thin composite Action that runs `npx madeby check` on a
+PR — so a maintainer adopts the whole wedge by committing two files (`.madeby/policy.json` + a
+workflow). The one remaining outward step is `npm publish` of the `madeby` package (owner's call);
+until then the CLI runs locally and the Action manifest is inert.
+
 ---
 
 ## 4. AI span-demarcation convention

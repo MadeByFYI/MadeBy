@@ -1,0 +1,47 @@
+// The `madeby` CLI — the installable form of the same engine the mirror, index, and dev scripts
+// use. Bundled with esbuild into a single standalone dist/madeby.mjs (which also sidesteps the
+// type-stripping import constraints the scripts/*.mjs dev entries have to work around), so
+// `npx madeby …` runs on plain Node with no monorepo layout and no flags.
+//
+// Two commands today, both honest-by-construction:
+//   madeby check  — evaluate commits against .madeby/policy.json (the maintainer disclosure gate)
+//   madeby prove  — capture your own AI session log's witnessed spans into .madeby/spans
+
+import { checkCommand } from "./commands/check";
+import { proveCommand } from "./commands/prove";
+
+function help(): void {
+  console.log(`madeby — verifiable content provenance
+
+Usage:
+  madeby check [<range>]         Evaluate commits against .madeby/policy.json (disclosure gate).
+                                 <range> e.g. origin/main..HEAD for a PR's own commits.
+  madeby prove [<log>] [<ref>]   Capture your AI session log's witnessed spans into .madeby/spans.
+                                 <log> defaults to the auto-discovered Claude Code transcript.
+  madeby help                    Show this help.
+
+Disclosure, never detection: madeby states what origin was disclosed; it never asserts whether
+code is AI. What a project requires is set in its .madeby/policy.json — the maintainer's call.`);
+}
+
+const [cmd, ...rest] = process.argv.slice(2);
+
+switch (cmd) {
+  case "check":
+    checkCommand(rest);
+    break;
+  case "prove":
+  case "capture":
+    proveCommand(rest);
+    break;
+  case undefined:
+  case "help":
+  case "--help":
+  case "-h":
+    help();
+    break;
+  default:
+    console.error(`madeby: unknown command '${cmd}'\n`);
+    help();
+    process.exit(2);
+}
