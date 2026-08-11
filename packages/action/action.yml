@@ -1,0 +1,29 @@
+name: "MadeBy disclosure check"
+description: "Gate PRs on your .madeby/policy.json disclosure policy. Disclosure, never detection — the maintainer owns the policy."
+branding:
+  icon: "check-circle"
+  color: "purple"
+inputs:
+  range:
+    description: "Commit range to check. Defaults to the PR's own commits (base..head) on pull_request events."
+    required: false
+    default: ""
+  version:
+    description: "npm version/tag of the `madeby` CLI to run."
+    required: false
+    default: "latest"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - shell: bash
+      run: |
+        set -euo pipefail
+        RANGE="${{ inputs.range }}"
+        if [ -z "$RANGE" ] && [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+          RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+        fi
+        echo "madeby check ${RANGE:-(recent history)}"
+        npx --yes "madeby@${{ inputs.version }}" check $RANGE
