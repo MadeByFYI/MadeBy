@@ -272,6 +272,17 @@ tradeoff). Store = the Tier-2 registry (`OPERATIONS.md §4a`); render = madeby.f
 and — because it is the default — concentrates data at the hosted resolution/grant layer (the moat,
 `STRATEGY.md §6`), all without our holding identity, ledger, or source.
 
+**Local reader vs hosted resolver — there is no local daemon or DNS.** Two distinct things must not
+be conflated (both were loosely called "resolver" and shouldn't be). The **local reader** (the CLI,
+the Action, an IDE extension) is *plain file I/O*: after a `git clone` / `npm install`, a `.madeby`
+is on disk (in-tree or `node_modules/<pkg>/`) and is read like `package.json` or `LICENSE` — nothing
+listens, nothing is contacted. The **hosted resolver** (madeby.fyi) is a *separate* network API for
+the asker-pull, **query-by-hash** case — used only when you hold a *hash but not the artifact* (or as
+a fallback when a package didn't ship its `.madeby`). So: **have the tree → local file read + offline
+verify (no network); have only a hash → hosted resolver (network); want current-validity/reputation →
+optional call to the authority the file's pointer names.** The base read-and-verify never needs a
+server; the network is only for hash-only lookups and optional enrichment.
+
 **The `.madeby` carrier is also the read/verify surface (not just a store).** Because a package ships
 its `.madeby` and a repo carries it in-tree, the provenance **travels with the code** to every
 consumer — so a consumer reads a dependency's provenance from files it *already has*, with no hosted
