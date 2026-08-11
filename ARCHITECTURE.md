@@ -1018,9 +1018,13 @@ writing today's code are the ones that should disclose it and can adopt the tool
   capability discovery, structured JSON I/O, agent-held token auth, idempotent ops, and *actionable
   structured errors* (never a human-only stack trace). The CLI already gives agents a scriptable
   surface (stable exit codes); MCP is the same core, made discoverable + typed. **Shipped** as
-  `madeby mcp` (stdio, dependency-free) — today `recognize`, `check`, `prove` (the write primitive:
-  an agent records its own witnessed spans, asserted-tier, tier-capped), `list_host_adapters`,
-  `resolve_identity`; `grant`, `explain-tier`, `scaffold-adapter` land as those primitives do.
+  `madeby mcp` (stdio, dependency-free) — today `init` (align a repo: policy + CI check), `recognize`,
+  `check`, `prove` (the write primitive: an agent records its own witnessed spans, asserted-tier,
+  tier-capped), `list_host_adapters`, `resolve_identity`; `grant`, `explain-tier`, `scaffold-adapter`
+  land as those primitives do. The server is **self-teaching** via MCP resources (`madeby://guide/align`,
+  `madeby://schema/policy`) so an agent discovers *how* to align a repo, not just which verbs exist —
+  "align my repo with MadeBy" is fully agent-serviceable (branch protection is the host's setting, and
+  history is never backfilled — disclosure is going-forward).
 - **Zero-choice by default** (§3 default profile) *is* the agent-native ethos applied to config:
   "offer every choice, default to none" means an agent operates without a single human decision.
   Every operation must keep a no-human-intervention path (auth, adapter selection, plugin publish).
