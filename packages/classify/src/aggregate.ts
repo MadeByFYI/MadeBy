@@ -17,7 +17,7 @@ export function summarize(
   classifications: readonly CommitClassification[],
   methodology = "commit-level Co-Authored-By + author heuristic (estimate)",
 ): ClassificationSummary {
-  const byClass: Record<AuthorClass, number> = { human: 0, ai: 0, with_ai: 0 };
+  const byClass: Record<AuthorClass, number> = { human: 0, ai: 0, with_ai: 0, bot: 0 };
   let confSum = 0;
   for (const c of classifications) {
     byClass[c.class] += 1;
