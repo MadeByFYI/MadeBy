@@ -20,6 +20,45 @@ the disclosure gate. This is the note to reach them — and the honest posture t
 
 Pick ~5. This is a conversation, not a campaign.
 
+## Finding targets (`scripts/find-targets.mjs`)
+
+You **can't count a repo's AI PRs directly** — the slop is *undisclosed*, which is the whole reason
+MadeBy exists. So the reliable signal that a repo is "dealing with a lot of AI PRs" is that a
+maintainer publicly **reacted**. `find-targets` surfaces three reactions via GitHub search (needs
+`gh` authenticated), warmest first:
+
+- **`[template]`** — they put an AI-disclosure question in their PR template. They already do our
+  thing *by hand*; we automate + enforce it. **The warmest possible pitch.**
+- **`[policy]`** — they wrote an AI-PR rule into `CONTRIBUTING.md`. They felt it and acted.
+- **`[complaint]`** — an open issue/proposal about AI-PR slop *right now*. Perfect timing.
+
+```
+node scripts/find-targets.mjs           # ranked, tagged list
+node scripts/find-targets.mjs --json    # machine-readable
+```
+
+It ranks by reach (an org-wide `owner/.github` template is scored by the org's flagship repo, shown
+as `org-wide → owner/flagship`). **Honest limits:** keyword-based (misses silent sufferers),
+rate-limited, and `[complaint]` titles need eyeballing (search matches the issue *body*, so some
+titles are unrelated) — a target finder, not a census. Re-run it before a fresh round; the list
+drifts.
+
+### Snapshot (2026-08-11) — where I'd start
+
+Warmest first, not merely highest-reach:
+
+- **`[template]`, high reach — they've already bought the premise:**
+  `sindresorhus/awesome` (495k★ — Sindre keeps surfacing), `nuxt` (61k★, via `nuxt/.github`),
+  `eslint` (27k★, via `eslint/.github`).
+- **`[complaint]`, loud and timely:** `yt-dlp/yt-dlp` (184k★, *"Why are AI-generated pull requests a
+  thing?"*), `microcks` (2k★, *"Proposal: Adopt Organization-wide AI Contribution Policy and PR
+  Templates"* — couldn't script that timing).
+- **`[policy]`, they wrote the rule:** `coollabsio/coolify` (60k★), `rclone/rclone` (59k★),
+  `photoprism/photoprism` (40k★), plus CNCF-adjacent `pipe-cd/pipecd`.
+
+Tailor the note's "[specific pain]" line to each maintainer's **own words** — for `[complaint]`
+rows, quote the issue title back to them.
+
 ## The note (short, honest, low-ask)
 
 > **Subject:** a disclosure check for AI PRs (disclosure, not detection)
