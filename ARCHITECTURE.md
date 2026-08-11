@@ -287,6 +287,21 @@ the OCSP-shaped responder over the anchor/grant record). Static claim + offline 
 traffic to the moat surface. Default-profile requirement: ensure `.madeby` is **published with the
 package** (the `files`/ignore defaults) so provenance actually travels.
 
+**The file carries an optional authority pointer, so renderers enrich from our API.** The `.madeby`
+file includes a **resolver/authority pointer** (default: madeby.fyi; swappable) so a renderer reading
+the local file knows *where* to fetch live context the static snapshot can't hold — current validity /
+revocation, aggregate reputation, cross-graph context, grant state. Three invariants: **(1)
+enrichment is optional, never required to verify** — the base claim still verifies fully offline
+(two-hash + signature), so a network-less renderer still works ("don't trust us, verify" preserved,
+graceful degradation); **(2) no phone-home on private inspection** — a renderer inspecting a *private*
+artifact enriches against the org's *own* workspace/authority, not the public one, so we never learn
+that someone is inspecting private code (the default profile sets the right pointer per context);
+**(3) agnostic + default-gravity** — the pointer is a swappable authority reference, but the *default*
+is madeby.fyi, so the ubiquitous `.madeby` files reference our authority by default and every
+enrichment/validity call routes to us. **This is where default gravity concretely lives in the
+carrier:** the default carrier points at the default authority — a continuous-traffic link to the
+moat surface, riding a file that already travels everywhere.
+
 ### The sworn carrier: self-hosted declarations, we detect and point (decision, 2026-07-06)
 
 The `sworn` tier is *"no crypto binding, but legally consequential"* (`packages/core/src/tiers.ts`).
