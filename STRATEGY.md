@@ -695,12 +695,54 @@ below). A verification rail is on-mission; a provenance data broker destroys the
 
 **The question that decides rail-vs-toll-road: is reliance continuous or episodic?** Revenue scales
 only if reliance is wired into **continuous decision points** (every build, PR, dependency update,
-procurement check, compliance stream) rather than firing only at discrete deal/audit events. The
-test is *what gets built on the dense graph* — the products that turn episodic lookups into a
-continuous dependency (transitive provenance-policy gates, supply-chain monitoring, a provenance
-score in the review/registry/IDE surface, continuous compliance evidence). To the degree those exist
-and are must-have (forced by regulation, IP risk, or supply-chain security), reliance is continuous
-and the rail is real; to the degree it stays "look it up at deal time," it's a toll road few drive.
+procurement check, compliance stream) rather than firing only at discrete deal/audit events. See the
+next subsection for the answer.
+
+### Reliance is continuous by construction, not by hope (decision, 2026-08-11)
+
+**Reframe:** provenance is relevant at the points where code-supply decisions are made *constantly*
+— every dependency added, PR merged, build shipped, vendor onboarded — not only at the *rare* events
+(diligence, audit, litigation). Reliance *looks* episodic only because the graph isn't yet dense
+enough to consult every time; **density moves provenance to the continuous decision points where it
+naturally belongs.** So continuity isn't a market property we wait to discover — it's a property of
+the products we put on the graph.
+
+**The reliance ladder** (move reliance up it deliberately):
+- **episodic** (diligence / audit / litigation) — real, high-value, but lumpy per-event;
+- **continuous-discretionary** (scores, monitoring — adopted because useful);
+- **continuous-mandatory** (transitive gates, compliance streams — forced by regulation / IP / supply-chain security).
+
+**What to build on the dense graph, lead first:**
+- **[LEAD] Transitive provenance-policy gate** — fail the build if *any dependency's* provenance
+  violates policy (undisclosed AI over threshold, license/IP-risky tool, unverified maintainer).
+  Runs on **every build**; **on a surface we already own** (the CI gate, now reading the cross-org
+  graph); forced by IP/security; a direct extension of what's shipped; and it **only works if the
+  graph is dense**, so it is the graph's first paying reliance customer. It converts
+  episodic→continuous single-handedly.
+- Supply-chain provenance **monitoring** (Dependabot-for-AI-provenance); **continuous compliance
+  evidence** (always-current attestation for EU AI Act / ISO 42001 — the strongest forcing function);
+  **M&A / litigation / certified-package** products (episodic, high-value, the legal-non-repudiation moat).
+- **Platform/API** — expose the graph so third parties build vertical tools → the graph becomes
+  load-bearing infrastructure others depend on (the deepest continuous reliance and moat).
+
+**`.madeby` is the display surface — so the "score in review/registry/IDE" is NOT distribution-gated.**
+The signal travels *with the code* (a package ships its `.madeby`; a repo carries it in-tree), so
+the provenance is already present at the decision point — no placement in GitHub/npm/IDE UIs needed.
+It's an **open format**, **offline-verifiable** (the two-hash invariant binds its claims to the bytes
+actually received — a dependency can't ship a lying `.madeby` that survives verification). `.madeby`
+is the *data* surface; we own the **renderers** that read the local files — the **PR check/comment we
+already ship** (highest-traffic decision point, no partnership), `madeby inspect <package>`, an IDE
+extension. This **unifies the gate and the score onto one in-tree read** (one gates, one displays).
+The one thing the traveled file *can't* carry — **current validity / revocation** (it's a publish-time
+snapshot) — is deferred to the **authority** (madeby.fyi, the OCSP-shaped responder), and that
+freshness check *is* the continuous query traffic to the moat surface. The default profile must
+ensure `.madeby` is **published with the package** so provenance actually travels.
+
+**Decisive variable = the forcing functions** (regulation, IP/license liability, supply-chain
+security). Where one makes provenance a *must-check-every-build*, reliance is continuous and
+non-optional; two of the three are strengthening through 2026, which makes the continuous case
+bet-able rather than wishful. **Honest gates:** all of this is downstream of producer-side *density*
+(a transitive gate is useless if deps aren't covered), and format *recognition* is the slow part.
 
 ### Ruled out (corrosive to a trust instrument)
 

@@ -272,6 +272,21 @@ tradeoff). Store = the Tier-2 registry (`OPERATIONS.md §4a`); render = madeby.f
 and — because it is the default — concentrates data at the hosted resolution/grant layer (the moat,
 `STRATEGY.md §6`), all without our holding identity, ledger, or source.
 
+**The `.madeby` carrier is also the read/verify surface (not just a store).** Because a package ships
+its `.madeby` and a repo carries it in-tree, the provenance **travels with the code** to every
+consumer — so a consumer reads a dependency's provenance from files it *already has*, with no hosted
+UI or API placement (this is what un-gates the "provenance score in review/registry/IDE" — it's an
+in-tree local read; `STRATEGY.md §6`). Two properties make the traveled file trustworthy without a
+network: it's an **open format**, and it's **offline-verifiable** — the two-hash invariant binds each
+claim to the *bytes actually received*, so a dependency cannot ship a `.madeby` that over-claims and
+still verifies. The gate (fail-the-build) and the score (display) are then the **same in-tree read**,
+different rendering. **What the traveled file cannot carry is *current validity*** — it is a
+publish-time snapshot, so **revocation / current-state is deferred to the authority** (madeby.fyi,
+the OCSP-shaped responder over the anchor/grant record). Static claim + offline signature = local;
+"is it still valid now" = a live authority check — and that freshness check is the continuous query
+traffic to the moat surface. Default-profile requirement: ensure `.madeby` is **published with the
+package** (the `files`/ignore defaults) so provenance actually travels.
+
 ### The sworn carrier: self-hosted declarations, we detect and point (decision, 2026-07-06)
 
 The `sworn` tier is *"no crypto binding, but legally consequential"* (`packages/core/src/tiers.ts`).
