@@ -20,3 +20,17 @@ export function getHostAdapter(id: string): HostAdapter | undefined {
 export function listHostAdapters(): HostAdapter[] {
   return [...registry.values()];
 }
+
+/**
+ * Auto-detect the PR commit range from the ambient CI environment by asking each registered adapter
+ * (the first whose `ciRange` fires wins — null means "not my CI"). Lets `madeby check` scope to the
+ * PR with zero host-specific glue in the CI wrapper. Returns `{ range, host }` or null (→ the caller
+ * degrades to recent history). Env is injectable for testing; defaults to the process environment.
+ */
+export function detectCiRange(env: Record<string, string | undefined> = process.env): { range: string; host: string } | null {
+  for (const adapter of registry.values()) {
+    const range = adapter.ciRange?.(env);
+    if (range) return { range, host: adapter.id };
+  }
+  return null;
+}

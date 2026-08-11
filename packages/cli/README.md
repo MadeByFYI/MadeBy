@@ -42,6 +42,10 @@ Exit codes: **0** = pass · **1** = a `required` policy failed on an undisclosed
 a git repository. Under `advisory`/`off` it only reports (always exit 0) — so it's safe to add to CI
 before you decide to enforce anything.
 
+In CI, omit `<range>` — on a pull-request build `madeby check` **auto-scopes to the PR's own
+commits** from the CI environment (GitHub today; other hosts via their adapter). Pass an explicit
+`<range>` to override.
+
 ```json
 // .madeby/policy.json
 { "version": 0, "mode": "advisory" }

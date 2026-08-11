@@ -15,7 +15,7 @@ function help(): void {
 
 Usage:
   madeby check [<range>]         Evaluate commits against .madeby/policy.json (disclosure gate).
-                                 <range> e.g. origin/main..HEAD for a PR's own commits.
+                                 <range> e.g. origin/main..HEAD; in CI the PR range is auto-detected.
   madeby prove [<log>] [<ref>]   Capture your AI session log's witnessed spans into .madeby/spans.
                                  <log> defaults to the auto-discovered Claude Code transcript.
   madeby help                    Show this help.

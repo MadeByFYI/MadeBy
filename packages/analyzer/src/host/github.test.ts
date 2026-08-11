@@ -1,6 +1,9 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
 import { githubAdapter } from "./github";
-import { getHostAdapter, listHostAdapters } from "./registry";
+import { getHostAdapter, listHostAdapters, detectCiRange } from "./registry";
 
 const origFetch = globalThis.fetch;
 afterEach(() => {
@@ -29,6 +32,37 @@ describe("host registry — the reference adapter registers through the open doo
   it("is discoverable by id and appears in the list", () => {
     expect(getHostAdapter("github")).toBe(githubAdapter);
     expect(listHostAdapters().map((a) => a.id)).toContain("github");
+  });
+});
+
+describe("githubAdapter.ciRange — the PR range from the CI env", () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
+  });
+  function eventFile(payload: unknown): string {
+    const dir = mkdtempSync(join(tmpdir(), "madeby-ci-"));
+    dirs.push(dir);
+    const p = join(dir, "event.json");
+    writeFileSync(p, JSON.stringify(payload));
+    return p;
+  }
+
+  it("reads base..head from a pull_request event payload", () => {
+    const path = eventFile({ pull_request: { base: { sha: "aaa" }, head: { sha: "bbb" } } });
+    expect(githubAdapter.ciRange!({ GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: path })).toBe("aaa..bbb");
+  });
+  it("returns null when it isn't a pull_request event (\"not my CI\")", () => {
+    expect(githubAdapter.ciRange!({ GITHUB_EVENT_NAME: "push" })).toBeNull();
+    expect(githubAdapter.ciRange!({})).toBeNull();
+  });
+  it("degrades to null on a missing/unreadable event file (never throws)", () => {
+    expect(githubAdapter.ciRange!({ GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: "/no/such/event.json" })).toBeNull();
+  });
+  it("detectCiRange finds the GitHub adapter and reports the host", () => {
+    const path = eventFile({ pull_request: { base: { sha: "aaa" }, head: { sha: "bbb" } } });
+    expect(detectCiRange({ GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: path })).toEqual({ range: "aaa..bbb", host: "github" });
+    expect(detectCiRange({})).toBeNull();
   });
 });
 

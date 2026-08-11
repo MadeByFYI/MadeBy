@@ -6,7 +6,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readGitLog } from "@madeby/analyzer";
+import { readGitLog, detectCiRange } from "@madeby/analyzer";
 import {
   commitDisclosureKinds,
   parseDisclosurePolicy,
@@ -15,7 +15,17 @@ import {
 } from "@madeby/core";
 
 export function checkCommand(args: string[]): void {
-  const range = args[0];
+  // An explicit range wins; otherwise ask the host adapters to auto-scope to the PR from the CI env
+  // (GitHub, Azure DevOps, …). No CI / no match ⇒ undefined ⇒ recent history. The range logic lives
+  // in the adapter, not in the CI wrapper's YAML (ARCHITECTURE §12).
+  let range = args[0];
+  if (!range) {
+    const ci = detectCiRange();
+    if (ci) {
+      range = ci.range;
+      console.log(`madeby check: auto-scoped to the ${ci.host} PR range.`);
+    }
+  }
   const git = (...a: string[]) =>
     execFileSync("git", ["-c", "core.quotePath=false", ...a], { encoding: "utf8" }).trim();
 

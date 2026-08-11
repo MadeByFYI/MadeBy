@@ -18,12 +18,10 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: "20"
+    # No range computation here: on a pull_request event `madeby check` auto-scopes to the PR's own
+    # commits from the CI env (the GitHub host adapter reads GITHUB_EVENT_PATH). Pass `range` only to
+    # override. The range logic lives once, in the adapter (ARCHITECTURE §12) — not in this YAML.
     - shell: bash
       run: |
         set -euo pipefail
-        RANGE="${{ inputs.range }}"
-        if [ -z "$RANGE" ] && [ -n "${{ github.event.pull_request.base.sha }}" ]; then
-          RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
-        fi
-        echo "madeby check ${RANGE:-(recent history)}"
-        npx --yes "madeby@${{ inputs.version }}" check $RANGE
+        npx --yes "madeby@${{ inputs.version }}" check ${{ inputs.range }}
