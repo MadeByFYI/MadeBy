@@ -30,7 +30,10 @@ export function readGitLog(repoPath: string, limit?: number, range?: string): Co
       // optional revision range, e.g. "origin/main..HEAD" — the PR's own commits for the gate
       ...(range ? [range] : []),
     ];
-    const out = execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+    // Ignore git's stderr: `%G?` triggers signature verification, which floods stderr on SSH-signed
+    // repos ("gpg.ssh.allowedSignersFile needs to be configured"). We only read presence from stdout;
+    // a real failure still throws (non-zero exit) and is caught below.
+    const out = execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });
     return out
       .split(RECORD)
       .map((r) => r.replace(/^\s+/, ""))

@@ -86,6 +86,7 @@ export function readToolingFromGit(repoDir: string): ToolingEvidence {
     listing = execFileSync("git", ["-C", repoDir, "ls-tree", "-r", "--name-only", "HEAD"], {
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "ignore"],
     });
   } catch {
     return EMPTY;

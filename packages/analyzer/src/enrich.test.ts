@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { enrichContributors, resolveHandles } from "./enrich";
+import { enrichContributors, resolveHandles, enrichIdentity } from "./enrich";
 import type { Contributor } from "./analyze";
 
 const c = (over: Partial<Contributor>): Contributor => ({ kind: "human", name: "x", commits: 1, ...over });
@@ -16,16 +16,40 @@ describe("resolveHandles — the PUBLIC path: pointer (handle) only, never a hos
     expect(out[0]!.handle).toBe("janedev");
     expect(out[0]!.profile).toBeUndefined(); // link-out only, no hosted profile of a stranger
   });
-  it("returns unchanged with no token/repo (noreply handles are already set upstream)", async () => {
-    const cs = [c({ handle: "jane" })];
-    expect(await resolveHandles(cs)).toBe(cs);
+  it("merges git-identities that share a handle (no token needed for noreply-derived handles)", async () => {
+    const out = await resolveHandles([
+      c({ name: "Jane", handle: "jane", commits: 8 }),
+      c({ name: "jane", handle: "jane", commits: 5 }), // same person, different email/name
+      c({ kind: "bot", name: "dependabot[bot]", commits: 3 }),
+    ]);
+    const jane = out.find((x) => x.handle === "jane");
+    expect(jane?.commits).toBe(13); // merged, not split
+    expect(jane?.name).toBe("Jane"); // top-commit name kept
+    expect(out.filter((x) => x.kind === "human")).toHaveLength(1);
+  });
+});
+
+describe("enrichIdentity — cached", () => {
+  it("does not re-fetch a repeated handle within the TTL", async () => {
+    let calls = 0;
+    globalThis.fetch = (async () => {
+      calls++;
+      return {
+        ok: true,
+        json: async () => ({ data: { user: { name: "Z", company: null, followers: { totalCount: 1000 }, repositories: { nodes: [] } } } }),
+      } as unknown as Response;
+    }) as typeof fetch;
+    await enrichIdentity("cache-probe-unique-handle", { token: "x" });
+    await enrichIdentity("cache-probe-unique-handle", { token: "x" });
+    expect(calls).toBe(1);
   });
 });
 
 describe("enrichContributors — bounded, graceful GitHub-API overlay", () => {
-  it("returns contributors unchanged (same ref) when no token is given", async () => {
-    const cs = [c({ handle: "jane" })];
-    expect(await enrichContributors(cs)).toBe(cs);
+  it("attaches no profile when no token is given", async () => {
+    const out = await enrichContributors([c({ handle: "jane", commits: 3 })]);
+    expect(out[0]!.profile).toBeUndefined();
+    expect(out[0]!.handle).toBe("jane");
   });
 
   it("overlays name + reach onto handle'd contributors, leaves others alone", async () => {
@@ -44,7 +68,7 @@ describe("enrichContributors — bounded, graceful GitHub-API overlay", () => {
         }),
       }) as unknown as Response) as typeof fetch;
 
-    const cs = [c({ name: "Jane", handle: "jane", commits: 5 }), c({ name: "Bob", commits: 2 })];
+    const cs = [c({ name: "Jane", handle: "jane-overlay", commits: 5 }), c({ name: "Bob", commits: 2 })];
     const out = await enrichContributors(cs, { token: "x" });
     expect(out[0]!.profile?.name).toBe("Jane Dev");
     expect(out[0]!.profile?.reach).toBe("12k followers · cool (21k★)");
@@ -55,7 +79,7 @@ describe("enrichContributors — bounded, graceful GitHub-API overlay", () => {
     globalThis.fetch = (async () => {
       throw new Error("rate limited");
     }) as typeof fetch;
-    const cs = [c({ handle: "jane" })];
+    const cs = [c({ handle: "jane-fail-unique" })];
     const out = await enrichContributors(cs, { token: "x" });
     expect(out[0]!.profile).toBeUndefined();
   });
