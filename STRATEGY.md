@@ -380,6 +380,28 @@ trust, or network:
 4. **The upgrade** (claim page, verify, badge) → *now* the registry fills with real
    identities and producer-push begins — **only here does the provenance flywheel turn.**
 
+> **Updated ignition — the maintainer forcing-function flywheel (decision, 2026-08-11).** The changes
+> this session shifted value toward *density/reliance* (the registry, supply-chain gates, governance),
+> which are network-dependent — so they *weakened* the curiosity-mirror first-user hook (an honest
+> Disclosure Score spreads less than the shock "60% AI" number). **Honest consequence: the first-user
+> flywheel got harder, and the igniter is no longer the mirror — it's the maintainer.** An
+> AI-PR-slop-weary **maintainer** adopts the gate for a *selfish, zero-network* payoff (automated
+> disclosure/accountability control over their own repo's incoming PRs, via two committed files, day
+> one). Because it is **disclosure not detection**, it is *retainable* (no false-accusation fights to
+> make them uninstall it). The multiplier: **the gate is a forcing function** — every contributor
+> must disclose/sign/`prove` to pass, so one maintainer's single action **manufactures N producers**
+> who never chose to adopt. The loop: *maintainer control → conscripted contributor-producers →
+> maintainer↔contributor spread → `.madeby` travels + registers → dependency-graph density → (past a
+> threshold) consumer/reliance value switches on → consumers demand-pull provenance from producers →
+> reinforces and monetizes.* **GTM:** ignite at a few **high-dependency-centrality** maintainers
+> (popular libs) — one adoption seeds *both* contributor-production *and* consumer-side travel-density.
+> **Honest weaknesses:** the first-user payoff is *moderate not viral* (a disclosure gate is a partial
+> slop fix, competing with a written CONTRIBUTING.md; the two-file lightness is what makes it
+> plausible); the monetizable reliance value is *density-gated* (a J-curve — modest early, switches on
+> only after density); and discovery got quieter. The flywheel is real but slower-igniting — a
+> forcing-function loop bought with honesty, relying on a few high-leverage maintainers each
+> conscripting many, not on virality.
+
 ### The live index: "State of AI in Open Source"
 
 Not a one-off study — a **constantly-updated page**, powered by continuous public-git
