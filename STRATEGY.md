@@ -282,6 +282,50 @@ trade the coverage-not-AI% decision (§5) began: MadeBy is the **disclosure / ve
 not an AI detector — the correct identity for a trust company, a narrower curiosity pull, but every
 answer is true.
 
+### Presentation: the headline is human/machine, details underneath (decision, 2026-08-11)
+
+The read's *headline* answers the one question people actually ask — **"a person or a machine?"** —
+as a **confidence gradient, not a taxonomy.** People collapse bots, codegen, and AI into "not a
+person," so the bot-vs-AI and deterministic-vs-generative distinctions live in the **details
+underneath** (progressive disclosure, `ARCHITECTURE §1`), never the headline. Three honest positions:
+
+- **Machine** — a bot committer *or* disclosed AI: a **provable floor** on machine involvement,
+  labeled *"machine / automation (incl. disclosed AI)."*
+- **Unverified** — a person *committed* it, but machine-assistance isn't disclosed. The honest middle.
+- **Attested human** — a verified person who signed + swore human authorship (the sworn declaration,
+  `ARCH §3`). Note: **"human" is *attested*, never *proven*** — absence of AI is unprovable (0%
+  untrailered recall), so the honest human end is a legally-consequential *attestation*, not a claim
+  we verified no machine was involved.
+
+**Two layers map onto it** (the free floor + the adoption upgrade, validated on real repos, #118):
+- **Ambient (free):** hands you the **machine floor** (bots by committer identity + disclosed AI) and
+  marks the rest **unverified** — it can prove *some* machine and *presume* the rest human; it cannot
+  *verify* human.
+- **`.madeby` / disclosure (adoption):** moves work out of the unverified middle — you either
+  *attest* the human part (sign + sworn declaration) or *disclose* the machine/AI part
+  (capture / trailer). Adoption = earning the confidence you can't get for free.
+
+**Two hard honesty guards (so the floor never becomes a fake ratio):**
+1. **Machine ≠ AI.** The machine bucket includes dependency bots and codegen; label it
+   *machine/automation*, never claim the whole bucket is AI.
+2. **Involvement ≠ code-share.** It is a **floor on machine involvement across *commits*** (stated as
+   "≥"), never a percentage of the *code* — that is the diff-size over-claim we refuse (`TESTING §2`).
+
+**Why this is the honest engine — the latent "human by default" presumption.** Most people *presume
+unverified code is human-made.* There is no good *reason* for the presumption (and it gets more wrong
+as AI floods everything), but it is out there — and that latent expectation is the whole point.
+Reaction is **expectations − results**: showing someone what they already assume is boring; showing
+them their assumption is *wrong* is what surprises and spreads. **We** honestly label the middle
+*"unverified"*; the **audience** reads it *"human."* So MadeBy's value is **making that unwarranted,
+universal presumption checkable**, and the engagement energy is the audience's own prior being
+violated when a *provable machine* floor turns up under something they assumed a person made (e.g. a
+frontier lab's SDK that is 76% machine-authored, #118). This stays honest — we surface only the
+**provable** floor, never an inferred gap — and **neutral** — the machine authorship was *disclosed*
+by identity (the maker didn't hide it; the audience merely assumed), so it reads as *surprise*, not
+*gotcha*. It is the first honest answer to the viral-hook OPEN PROBLEM (§3): not a fabricated shock
+number, but **surfacing where a widespread presumption is wrong** — the surprise comes free from the
+prior, and *grows* as the prior gets more wrong.
+
 ### The adoption wedge: the OSS maintainer PR-disclosure gate (decision, 2026-08-10)
 
 **Not the enterprise buyer.** Security/compliance are where the *pain and budget* eventually sit, but
@@ -417,6 +461,15 @@ trust, or network:
 > test later (NOT decisions): an honest "year-in-code / wrapped"-style personal artifact (a truthful,
 > shareable ego-object), and the **credit/receipt** angle (a proud builder's verifiable *"I made
 > this"* they *want* to display) — each stands or falls on whether it clears (2)'s stranger test.
+>
+> **Direction found (2026-08-11): the honest energy source is *expectation-violation*.** Not a
+> fabricated shock number, but the gap between the audience's latent *"unverified = human"* prior and
+> the **provable machine floor** (§3, "the headline is human/machine"). The surprise — *"you assumed
+> a person made this; a machine made ≥N% of it"* — is honest (provable floor only), neutral (the
+> machine authorship was disclosed by identity, not caught), grabs a stranger via a subject they
+> already care about, and *grows as the prior gets more wrong*. Still to work: the *artifact* and the
+> *reach* (the ambient read's richness + producer discovery, both gated on the cheap metadata corpus
+> + identity resolution). Energy source clear; delivery vehicle still open.
 
 ### The live index: "State of AI in Open Source"
 
