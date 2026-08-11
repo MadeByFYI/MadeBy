@@ -661,6 +661,10 @@ metadata). The **resolver is the fallback** that makes provenance survive stripp
 the content fingerprint — a core reason the asker-pull/registry exists alongside embedded
 provenance.
 
+Every "we add" capability above is a **symmetric plugin** a third party (or their AI) can author —
+and the host is itself an adapter, with nothing host-specific in `core`. See §12 for the extension
+model this posture implies.
+
 ---
 
 ## 8. Cold-start: continuous public-git ingestion, and the index
@@ -792,6 +796,11 @@ enums where values churn (models, providers, carriers, algorithms).
 10. **Tier authenticates the statement and signer, not authorship;** origination rests on
     lineage + priority + native provenance — a valid signature over copied bytes does not
     establish origin. (§11)
+11. **Extensions are capped by these invariants, not trusted to honor them.** Any plugin
+    (adapter / carrier / anchor / recognizer / identity provider / lens / edge) emits evidence at an
+    `asserted` ceiling; only the core escalates tier. Executable plugins are capability-scoped and
+    cap the tier until vetted; declarative plugins are open. No plugin may infer origin from style,
+    host person-PII, or emit a per-person score. (§12)
 
 ---
 
@@ -941,6 +950,95 @@ asserted claims" expander so a contested page never renders unboundedly), and
 **corpus-poisoning detection** (one actor claiming many unrelated repos → flag), wired to the
 trust-&-safety dashboard and sharing one mechanism with API metering. Court-order takedowns remain
 operational, but consent/opt-out/abuse are **product**, designed now.
+
+---
+
+## 12. The open extension model — symmetric plugins + an agent-native client (decision, 2026-08-11)
+
+The architecture is already registry-native (carriers §3, anchors §3, edge types §6, plus open
+fields for algorithms/models/providers §10). This section makes that posture a **first-class,
+symmetric plugin model**, names its safety envelope, and commits to an **agent-first client** —
+because the primary operator of MadeBy is increasingly an AI, not a human.
+
+### Symmetry: our built-ins are just the reference plugins
+
+> **Rule: every capability MadeBy ships as a built-in must be expressible — through the identical,
+> published contract — by a third party.** No privileged built-ins, no private hooks.
+
+Our GitHub adapter, our in-toto carrier, our TSA anchor are *reference implementations registered
+through the same door* anyone else uses. Today the registries are open in *shape* but compiled-in in
+*practice* (`CARRIER_REGISTRY`, `DISCLOSURE_KINDS`, `AI_TOOL_CONFIGS`, `KNOWN_BOTS` are structures in
+our packages); the commitment is a **runtime contract + discovery** so a plugin ships and loads
+independently of our release cadence.
+
+### The extension-point taxonomy (the plugin kinds)
+
+Each is a typed contract; our built-in is the reference impl:
+
+- **Host adapter** — `{compute the CI range, resolve identity, enrich profile}` for a forge (GitHub
+  first; Azure DevOps, GitLab, Bitbucket, Gitea, bare-git next). **The git substrate is universal;
+  nothing host-specific may enter `core` — the host is an adapter surface, never a spine assumption.**
+  (This is the host-agnostic boundary that triggered this section: git-native core, host-adapted.)
+- **Carrier** — parse/serialize/canonicalize a claim binding (§3).
+- **Anchor backend** — produce/verify a non-repudiation proof (§3).
+- **Disclosure recognizer** — commit/tree → `DisclosureKind` evidence (the DCO / SPDX / trailer /
+  tool-config family).
+- **Identity provider** — commit identity → linkable handle/profile (GitHub noreply, Sigstore, SSO).
+- **Fingerprint algorithm** — content → `{algorithm, target, value}` (§2, open field).
+- **Lens / view** — DAG → a computed view (the "many lenses", §6): a renderer, an org report, an
+  index cut.
+- **Edge inferrer** — subjects → a **tiered** `ClaimEdge` (§6). The highest-risk kind — see the cage.
+
+### The safety cage — why open extension can't forge trust
+
+Open third-party extension is safe **only because the core, not the plugin, enforces the invariants
+(§10).** A plugin emits *evidence with an `asserted` ceiling*; the core decides the tier.
+
+- **No plugin can escalate tier.** Invariant #3 generalized: unrecognized/unverified plugin output
+  caps at `asserted`; reaching `verified`/`bound` requires canonicalization/verification the *core*
+  performs. A hostile carrier cannot mint a `bound` claim.
+- **Declarative-open vs. executable-scoped.** A plugin that is pure *data* (markers, regexes, URL
+  shapes, id maps) is open to everyone — it can only *describe*. A plugin that *executes* (a parser,
+  a canonicalization, a proof verifier) is arbitrary code: it runs capability-scoped/sandboxed, and
+  until vetted it **caps the tier** (§3 already forbids executing an unknown canonicalization).
+  Prefer declarative; gate executable.
+- **The cardinal sins are hard contract limits, not plugin goodwill.** No plugin may infer AI from
+  *style* (disclosure, never detection — a recognizer surfaces *declared* evidence only), emit a
+  per-person surveillance/productivity score (§6 guardrail), or host person-PII on our surface
+  (point-don't-host, §1/§11). Validated at the contract boundary.
+- **Identifier governance** (media-type-registry style, §3) covers every kind: who may claim an
+  adapter / carrier / anchor / edge id.
+
+### Agent-native: the primary operator is an AI
+
+MadeBy should be operable end-to-end **by an AI agent with no human in the loop** — the same agents
+writing today's code are the ones that should disclose it and can adopt the tooling at machine speed.
+
+- **A first-class MCP server** is the agent client: tools with published schemas (`check`, `prove`,
+  `resolve`, `explain-tier`, `attest`, `grant`, `list-adapters`, `scaffold-adapter`), self-describing
+  capability discovery, structured JSON I/O, agent-held token auth, idempotent ops, and *actionable
+  structured errors* (never a human-only stack trace). The CLI already gives agents a scriptable
+  surface (stable exit codes); MCP is the same core, made discoverable + typed.
+- **Zero-choice by default** (§3 default profile) *is* the agent-native ethos applied to config:
+  "offer every choice, default to none" means an agent operates without a single human decision.
+  Every operation must keep a no-human-intervention path (auth, adapter selection, plugin publish).
+- **Agent-authored plugins close the loop.** Because a plugin is a declarative manifest + typed
+  functions against a *published contract with conformance vectors*, an agent can scaffold, validate,
+  and publish a new adapter against the same vectors we hold our built-ins to. `scaffold-adapter`
+  emits the skeleton; the conformance harness is the gate. Symmetry × agent-native compounding.
+
+### The strategic reading (this is the moat, not a giveaway)
+
+We own the **standard + registry + default gravity + identity / resolver / legal** — never the
+adapters (exactly the carrier posture: "an adopted open spec is a moat; a proprietary one is a
+liability", §3). An open, symmetric, agent-authorable ecosystem grows coverage faster than we could
+build it, and still concentrates the derived data at the hosted resolution/grant layer (the moat,
+`STRATEGY.md §6`) regardless of who wrote the adapter.
+
+**Open questions (don't block the shape):** the executable-plugin sandbox (WASM vs. process
+isolation vs. vetted-signed-only); whether plugin *distribution* rides npm (discovered via a MadeBy
+registry index) or a native registry; the conformance-vector format. Fix the *shape* now (symmetry +
+safety cage + agent-native) so we never build a closed hook we later have to unwind.
 
 ---
 
