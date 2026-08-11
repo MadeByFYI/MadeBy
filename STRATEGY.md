@@ -666,6 +666,42 @@ having one org run the free `madeby check`/`prove` across its private repos and 
 owner *what dashboard, record, and report they would pay for on top.* The act of attribution stays
 free forever; we charge for governance, trust, and asking at scale.
 
+### Monetization shape: free to produce, paid to rely (decision, 2026-08-10)
+
+Take the governance product as ~free to the legal/compliance *producer* (to maximize graph density).
+Then revenue moves to the **reliance** side — the correct shape for a record utility (credit bureau,
+Carfax, Plaid, a CT log: producing is free/cheap; *relying* is paid). The producer creates records;
+the **relier** pays — an auditor, an acquirer, a platform, an insurer, or the org's own
+*prove-to-a-third-party* event. Default gravity means **only MadeBy can authoritatively answer
+cross-graph reliance queries**, so the paid side carries the moat, not the free side.
+
+Paid vectors (promoted from the optionality list above):
+- **Asker-side verification at scale (the rail):** pay to verify/query provenance, especially across
+  the **supply chain** ("is my vendor's / dependency's / target's code AI/license-clean and
+  attested?"). Largest TAM; the emergent cross-org network monetized; per-verification or subscription.
+- **Prove-to-a-third-party events:** the producing org pays at a reliance *event* (RFP, audit,
+  acquisition, regulator) for a **certified, legally-recognized, selectively-disclosable attestation
+  package**. Free to record; pay to prove-to-others under assurance.
+- **Enterprise operational envelope (open-core):** SSO/RBAC, data residency, certified-record
+  retention, SLA, audit support — paid by **platform/procurement**, not the legal dept.
+- **Risk-transfer / insurance (later, heavy):** an attested provenance-clean codebase is lower
+  IP-litigation risk → warranty / lower premium; MadeBy as the **risk-scoring layer insurers price
+  against**. On-mission (accountability, not surveillance) but regulated/capital-heavy — a partnership
+  play, not near-term.
+
+**Hard guardrail:** reliance = **consented, permissioned VERIFICATION** (a specific question about a
+specific subject, with consent) — **never bulk provenance-data sale** (the ruled-out corruption
+below). A verification rail is on-mission; a provenance data broker destroys the trust it sells.
+
+**The question that decides rail-vs-toll-road: is reliance continuous or episodic?** Revenue scales
+only if reliance is wired into **continuous decision points** (every build, PR, dependency update,
+procurement check, compliance stream) rather than firing only at discrete deal/audit events. The
+test is *what gets built on the dense graph* — the products that turn episodic lookups into a
+continuous dependency (transitive provenance-policy gates, supply-chain monitoring, a provenance
+score in the review/registry/IDE surface, continuous compliance evidence). To the degree those exist
+and are must-have (forced by regulation, IP risk, or supply-chain security), reliance is continuous
+and the rail is real; to the degree it stays "look it up at deal time," it's a toll road few drive.
+
 ### Ruled out (corrosive to a trust instrument)
 
 - **Compensation/payment rail** — regulatory weight + speculation optics; we are not the bank.
