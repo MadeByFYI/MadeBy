@@ -14,6 +14,7 @@ import {
   type AuthorClass,
 } from "@madeby/classify";
 import { hasDcoSignoff } from "@madeby/core";
+import { resolveIdentity } from "./identity";
 
 export type ContributorKind = "human" | "ai" | "bot";
 
@@ -23,6 +24,8 @@ export interface Contributor {
   name: string;
   /** email (human/bot) or model (ai), when known */
   detail?: string;
+  /** the committer's public GitHub handle, when they linked it via a noreply email (identity.ts) */
+  handle?: string;
   /** number of commits this contributor appears in */
   commits: number;
 }
@@ -103,11 +106,19 @@ export function analyzeCommits(commits: readonly CommitMeta[]): AnalysisResult {
         ({ kind: "bot", name: commit.authorName || commit.authorEmail || "bot", detail: commit.authorEmail, commits: 0 } as Contributor);
       bots.set(key, { ...cur, commits: cur.commits + 1 });
     } else if (!authorIsAi && (commit.authorName || commit.authorEmail)) {
-      const key = commit.authorEmail || commit.authorName!;
+      // Resolve to a stable identity — merges a person's commits across their noreply-email variants
+      // and attaches their public GitHub handle where they linked it (identity.ts).
+      const id = resolveIdentity(commit.authorName, commit.authorEmail);
       const cur =
-        humans.get(key) ??
-        ({ kind: "human", name: commit.authorName || commit.authorEmail!, detail: commit.authorEmail, commits: 0 } as Contributor);
-      humans.set(key, { ...cur, commits: cur.commits + 1 });
+        humans.get(id.key) ??
+        ({
+          kind: "human",
+          name: commit.authorName || commit.authorEmail!,
+          detail: commit.authorEmail,
+          ...(id.handle ? { handle: id.handle } : {}),
+          commits: 0,
+        } as Contributor);
+      humans.set(id.key, { ...cur, commits: cur.commits + 1 });
     }
 
     // AI contributors (distinct per commit); bot commits carry none.

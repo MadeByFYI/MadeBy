@@ -13,6 +13,8 @@ export { readDeclarationFromDir, readDeclarationFromGit, summarizeDeclaration } 
 export type { DeclarationEvidence } from "./declaration";
 export { detectTooling, readToolingFromGit, readToolingFromDir, AI_TOOL_CONFIGS } from "./tooling";
 export type { ToolingEvidence, DetectedTool, AiToolConfig } from "./tooling";
+export { resolveGitHubHandle, resolveIdentity } from "./identity";
+export type { ResolvedIdentity } from "./identity";
 export { captureLocalSpans } from "./capture-local";
 export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
 export { claudeCodeParser, TOOL_PARSERS, detectParser } from "./tool-parsers";
