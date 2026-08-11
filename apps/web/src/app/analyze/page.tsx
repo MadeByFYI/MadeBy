@@ -1,4 +1,4 @@
-import { analyzeRepo, badgeSnippet, enrichContributors, isAnalyzeError } from "@madeby/analyzer";
+import { analyzeRepo, badgeSnippet, resolveHandles, isAnalyzeError } from "@madeby/analyzer";
 import { track, FUNNEL } from "@/lib/analytics";
 import { mirrorCoverage } from "@/lib/coverage";
 
@@ -89,12 +89,15 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
   // no GITHUB_TOKEN it's a no-op; on API failure it degrades to the un-enriched read (never throws).
   const cov = mirrorCoverage(r.aiInvolvedPercent, r.unattributedPercent);
   const [owner, name] = r.repo.split("/").slice(1, 3);
-  const contributors = await enrichContributors(r.contributors, {
+  // Public path: resolve @handles (a link-out to where the identity is disclosed) — we point, we do
+  // NOT host a profile/reach card of a stranger (STRATEGY §3, ARCH §1). The full profile is
+  // relationship/consent-gated (repo owner / enterprise / claimed).
+  const contributors = await resolveHandles(r.contributors, {
     token: process.env.GITHUB_TOKEN,
     repo: owner && name ? { owner, name } : undefined,
     top: 5,
   });
-  const who = contributors.map((c) => `${c.profile?.name ?? c.name}${c.kind === "ai" ? " (AI)" : ""}`).join(" · ");
+  const who = contributors.map((c) => `${c.name}${c.kind === "ai" ? " (AI)" : ""}`).join(" · ");
 
   return (
     <main style={wrap}>
@@ -179,11 +182,10 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
       <ul style={{ listStyle: "none", padding: 0, marginTop: "1rem", opacity: 0.9, fontSize: ".9rem" }}>
         {contributors.map((c) => (
           <li key={`${c.kind}:${c.handle ?? c.name}`} style={{ padding: "0.12rem 0" }}>
-            {c.kind === "ai" ? "🤖" : c.kind === "bot" ? "⚙️" : "🧑"} <strong>{c.profile?.name ?? c.name}</strong>
+            {c.kind === "ai" ? "🤖" : c.kind === "bot" ? "⚙️" : "🧑"} <strong>{c.name}</strong>
             {c.handle ? (
               <a href={`https://github.com/${c.handle}`} style={{ opacity: 0.75, marginLeft: ".35rem" }}>@{c.handle}</a>
             ) : null}
-            {c.profile?.reach ? <span style={{ opacity: 0.6 }}> · {c.profile.reach}</span> : c.detail ? <span style={{ opacity: 0.6 }}> · {c.detail}</span> : null}
             <span style={{ opacity: 0.6 }}> — {c.commits} commit{c.commits === 1 ? "" : "s"}</span>
           </li>
         ))}
