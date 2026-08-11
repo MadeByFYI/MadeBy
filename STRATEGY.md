@@ -44,6 +44,26 @@ there is something to resolve against.
 > not in tension. This is the answer to "the better technology loses in the market": the
 > better technology wins *only* when wrapped in the lower-friction thing.
 
+### Agent-native and plugin-symmetric: the platform others' AIs extend (positioning, 2026-08-11)
+
+Two commitments that reframe *what MadeBy is* (full mechanics in `ARCHITECTURE.md §12`):
+
+- **The primary operator is an AI.** The agents writing today's code are the ones that should
+  disclose it and the ones that can adopt provenance tooling at machine speed. So every surface is
+  built for **no-human-in-the-loop** use — an MCP client, machine-readable contracts, zero-choice
+  defaults. Human UIs remain, as the *secondary* surface.
+- **Symmetric plugins: anything we'd build first-party, a third party (or their AI) can build.** Host
+  adapters (so we ride *any* forge — GitHub, Azure DevOps, GitLab, …, not just GitHub), carriers,
+  anchors, recognizers, lenses — all through one published contract; our built-ins are just the
+  reference impls.
+
+We own the **standard, registry, default gravity, identity/resolver, and legal layer — not the
+adapters.** The moat compounds: an open, agent-authorable ecosystem grows coverage faster than we
+could, while the derived data still concentrates at the hosted resolution/grant layer (§6).
+**Guardrail:** the extension contract enforces the cardinal sins as hard limits
+(disclosure-not-detection, no per-person score, point-don't-host) — openness never buys an escape
+from the doctrine.
+
 ---
 
 ## 2. The trust model: an honest, labeled spectrum
