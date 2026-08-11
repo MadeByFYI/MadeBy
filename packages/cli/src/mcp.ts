@@ -46,8 +46,9 @@ const TOOLS: Tool[] = [
       "Align a repository with MadeBy in one call: create .madeby/policy.json (advisory by default — " +
       "reports, never fails) and the CI disclosure check for the host (github default; azure-devops " +
       "guided). Idempotent — never clobbers an existing policy or workflow. Returns the files " +
-      "created/skipped and the recommended next steps (including that history is NOT backfilled — " +
-      "disclosure is going-forward). Read the madeby://guide/align resource for the full workflow.",
+      "created/skipped and the recommended next steps. Read the resources: madeby://guide/align (full " +
+      "workflow), madeby://guide/enforce (make the check required — the host's control plane, exact " +
+      "commands), madeby://guide/backfill (account for existing history honestly — never fabricate).",
     inputSchema: {
       type: "object",
       properties: {
@@ -162,14 +163,78 @@ guesses whether code is AI. To align a repo:
 3. **Disclose going forward** — contributors disclose origin with a Co-Authored-By / Generated-by
    trailer, a DCO Signed-off-by, a signed commit, or \`prove\` (record your own AI session's witnessed
    spans, structurally verified and local).
-4. **Enforce when ready** — set the policy mode to \`required\` and add the check to the branch
-   protection / build-validation rule (this last step is the host's setting, not a MadeBy tool).
-5. **Verify** — call \`check\` again.
+4. **Account for existing history honestly** — do NOT fabricate disclosure for past commits. Read the
+   \`madeby://guide/backfill\` resource: recognize what's already disclosed, attach recoverable
+   evidence, and set an adoption boundary — pre-boundary history is labeled *unknown*, never invented.
+5. **Enforce when ready** — set the policy mode to \`required\`, then make the check required on the
+   protected branch. That last step is the host's control plane (your credentials), so MadeBy doesn't
+   do it for you — the exact commands are in the \`madeby://guide/enforce\` resource.
+6. **Verify** — call \`check\` again.
 
-Notes:
-- **Historical commits are not backfilled** — disclosure applies going forward. Do not fabricate
-  disclosure for past work.
-- Nothing is hosted; nothing leaves the CI. The maintainer owns the policy.
+Nothing is hosted; nothing leaves the CI. The maintainer owns the policy.
+`;
+
+const ENFORCE_GUIDE = `# Enforcing the MadeBy disclosure check
+
+MadeBy sets the policy (mode: required) but does NOT change your repository's protection settings —
+that needs your credentials and is the host's control plane, so you (or an agent acting as you) make
+the check required. MadeBy deliberately keeps this an explicit, reviewable action.
+
+## GitHub (needs repo admin + the gh CLI, authenticated)
+
+1. Set the policy to required (or run: madeby init --required):
+   in .madeby/policy.json set "mode": "required".
+2. Find the check's name: open any pull request and read the Checks tab. For the generated workflow
+   the job name is "madeby".
+3. Add it as a required status check on the protected branch (e.g. main). If protection already
+   exists, add the context:
+
+       echo '["madeby"]' | gh api -X POST \\
+         repos/OWNER/REPO/branches/main/protection/required_status_checks/contexts --input -
+
+   If the branch has no protection yet, create it with a required_status_checks block that lists
+   "madeby" (PUT repos/OWNER/REPO/branches/main/protection --input protection.json).
+
+Confirm against the GitHub REST docs for "branch protection" and verify with the actual check name
+from a PR.
+
+## Azure DevOps (build validation branch policy)
+
+Project Settings -> Repositories -> (repo) -> Policies -> Branch (main) -> Build Validation -> Add:
+point it at the pipeline that includes azure-pipelines-disclosure.yml; set trigger automatic and
+required. CLI equivalent: az repos policy build create ... --branch main --blocking true.
+`;
+
+const BACKFILL_GUIDE = `# Honest backfill for an existing repo
+
+You cannot retroactively disclose past commits by inventing origin — that is fabrication, and MadeBy
+refuses it. But you CAN make an honest, verifiable statement about history. Backfill in layers, and
+never raise a commit's origin above its evidence — unknown stays unknown, just explicitly so.
+
+1. **Recognize what's already there** (free, pure evidence). Run recognize / check over FULL history:
+   existing Co-Authored-By AI trailers, DCO Signed-off-by, signed commits, and bot authorship are
+   recognized now even though they predate adoption. Much of your history may already be disclosed.
+
+2. **Attach recoverable evidence** (opt-in, evidence-grade):
+   - Old AI-tool session logs -> \`prove\` attaches structurally-verified spans to their commits (it
+     only matches content actually present, so it cannot over-claim). Pass the transcript + the ref.
+   - Committed AI-tool configs (.cursor/, CLAUDE.md, ...) are repo-level evidence the repo used AI.
+
+3. **Set the adoption boundary** (the watermark). The commit that introduced .madeby/policy.json is
+   your dated adoption boundary:
+
+       git log --diff-filter=A --format=%H -- .madeby/policy.json | tail -1
+
+   Report coverage RELATIVE to it: commits after the boundary are in-regime and measured; commits
+   before are UNKNOWN-origin (never "human", never "AI") unless independently disclosed by step 1/2.
+   This makes the gap explicit and dated instead of hidden.
+
+4. **Optionally self-attest** what you can stand behind (asserted tier). The author may assert
+   specific pre-boundary facts they honestly know ("I solo-authored the initial import"; "vendor/ is
+   third-party"). It is labeled self-reported (asserted) — never proof — and is contestable.
+
+The invariant: backfill adds only evidence you can point to, or an explicitly-labeled assertion; it
+never fabricates disclosure or upgrades origin beyond its evidence.
 `;
 
 const POLICY_SCHEMA = {
@@ -186,6 +251,8 @@ const POLICY_SCHEMA = {
 
 const RESOURCES = [
   { uri: "madeby://guide/align", name: "Aligning a repo with MadeBy", description: "The step-by-step workflow to align a repository (for humans and agents).", mimeType: "text/markdown", text: ALIGN_GUIDE },
+  { uri: "madeby://guide/enforce", name: "Enforcing the disclosure check", description: "How to make the check required on a protected branch (GitHub / Azure DevOps) — the host's control plane, exact commands.", mimeType: "text/markdown", text: ENFORCE_GUIDE },
+  { uri: "madeby://guide/backfill", name: "Honest backfill for existing repos", description: "How to account for pre-adoption history honestly — recognize, attach evidence, set a boundary; never fabricate.", mimeType: "text/markdown", text: BACKFILL_GUIDE },
   { uri: "madeby://schema/policy", name: ".madeby/policy.json schema", description: "JSON Schema for the disclosure policy file.", mimeType: "application/json", text: JSON.stringify(POLICY_SCHEMA, null, 2) },
 ];
 

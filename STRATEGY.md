@@ -370,6 +370,34 @@ crisper: **MadeBy says whether a thing was made by a person or a machine, and po
 not a public directory of who-made-what.** (Public resolver page shows the determination + the
 @handle as a link-out; the full profile/reach card is relationship/consent-gated — `ARCHITECTURE §1`.)
 
+### Honest backfill for existing repos (decision, 2026-08-11)
+
+Adopting MadeBy on a repo with years of undisclosed history must not force a dishonest choice —
+neither stamping the past as disclosed/human (fabrication) nor showing a scary bare 0%. There **is**
+an honest way, in layers, governed by one invariant: **backfill adds only evidence you can point to,
+or an explicitly-labeled assertion — it never raises a commit's origin above its evidence. Unknown
+stays unknown; it just becomes explicitly, verifiably unknown-as-of-a-date instead of silently
+unknown.**
+
+1. **Recognize what's already there** (free, pure evidence). The recognizer runs over *full* history:
+   existing `Co-Authored-By` AI trailers, DCO sign-offs, signatures, and bot authorship are
+   recognized now even though they predate adoption. Much of a repo's history is already partly
+   disclosed — zero fabrication.
+2. **Attach recoverable evidence** (opt-in, evidence-grade): old AI-tool session logs via `prove`
+   (structurally verified — only matches content actually present), committed AI-tool configs
+   (repo-level signal).
+3. **Set the adoption boundary** (the watermark). The commit that introduced `.madeby/policy.json`
+   *is* the dated, signed boundary (derivable: `git log --diff-filter=A -- .madeby/policy.json`).
+   Coverage is reported **relative to it**: post-boundary commits are in-regime and measured;
+   pre-boundary commits are **`unknown`** (never "human", never "AI" — the default-to-unknown
+   principle) unless independently disclosed by (1)/(2). The gap is explicit and dated, not hidden.
+4. **Optional author self-attestation** (asserted tier) — the author asserts specific pre-boundary
+   facts they honestly stand behind ("I solo-authored the initial import"; "vendor/ is third-party").
+   Labeled self-reported, capped, contestable (§11) — never presented as proof.
+
+This is discoverable to agents as the `madeby://guide/backfill` MCP resource; enforcement (making the
+check required — the host's control plane, not a MadeBy tool) as `madeby://guide/enforce`.
+
 ### The adoption wedge: the OSS maintainer PR-disclosure gate (decision, 2026-08-10)
 
 **Not the enterprise buyer.** Security/compliance are where the *pain and budget* eventually sit, but
