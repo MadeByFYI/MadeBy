@@ -11,6 +11,7 @@
 import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { recognizeCommits, evaluateRepoDisclosure, proveRepo, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
+import { initRepo } from "./init-repo";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
 const SERVER_INFO = { name: "madeby", version: "0.1.0" };
@@ -29,6 +30,8 @@ const repoInput = {
   },
 } as const;
 
+type InitMode = "off" | "advisory" | "required";
+
 interface Tool {
   name: string;
   description: string;
@@ -37,6 +40,24 @@ interface Tool {
 }
 
 const TOOLS: Tool[] = [
+  {
+    name: "init",
+    description:
+      "Align a repository with MadeBy in one call: create .madeby/policy.json (advisory by default — " +
+      "reports, never fails) and the CI disclosure check for the host (github default; azure-devops " +
+      "guided). Idempotent — never clobbers an existing policy or workflow. Returns the files " +
+      "created/skipped and the recommended next steps (including that history is NOT backfilled — " +
+      "disclosure is going-forward). Read the madeby://guide/align resource for the full workflow.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "path to the repo (default: the server's working directory)" },
+        mode: { enum: ["off", "advisory", "required"], description: "policy mode to seed (default: advisory)" },
+        host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
+      },
+    },
+    handler: (args) => initRepo(rootFor(args.path as string | undefined), { mode: args.mode as InitMode | undefined, host: args.host as string | undefined }),
+  },
   {
     name: "recognize",
     description:
@@ -128,6 +149,46 @@ const TOOLS: Tool[] = [
   },
 ];
 
+// Resources make the server self-teaching: an agent can read the workflow + the policy schema, so it
+// discovers HOW to align a repo, not just which verbs exist (ARCHITECTURE §12, agent-native).
+const ALIGN_GUIDE = `# Aligning a repository with MadeBy
+
+MadeBy is **disclosure, not detection** — it records what a commit *states* about its origin, never
+guesses whether code is AI. To align a repo:
+
+1. **Assess** — call \`check\` (or \`recognize\`) to see the current disclosure coverage.
+2. **Set up** — call \`init\`: it writes \`.madeby/policy.json\` (advisory) and the CI disclosure check.
+   Idempotent; it never clobbers an existing policy or workflow. Then commit the created files.
+3. **Disclose going forward** — contributors disclose origin with a Co-Authored-By / Generated-by
+   trailer, a DCO Signed-off-by, a signed commit, or \`prove\` (record your own AI session's witnessed
+   spans, structurally verified and local).
+4. **Enforce when ready** — set the policy mode to \`required\` and add the check to the branch
+   protection / build-validation rule (this last step is the host's setting, not a MadeBy tool).
+5. **Verify** — call \`check\` again.
+
+Notes:
+- **Historical commits are not backfilled** — disclosure applies going forward. Do not fabricate
+  disclosure for past work.
+- Nothing is hosted; nothing leaves the CI. The maintainer owns the policy.
+`;
+
+const POLICY_SCHEMA = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  title: ".madeby/policy.json",
+  type: "object",
+  required: ["version", "mode"],
+  properties: {
+    version: { const: 0 },
+    mode: { enum: ["off", "advisory", "required"], description: "off: no gate; advisory: report only; required: fail on any undisclosed commit" },
+    accept: { type: "array", items: { type: "string" }, description: "restrict what satisfies the policy (e.g. dco-signoff, ai-trailer, commit-signature); omit ⇒ any recognized disclosure counts" },
+  },
+};
+
+const RESOURCES = [
+  { uri: "madeby://guide/align", name: "Aligning a repo with MadeBy", description: "The step-by-step workflow to align a repository (for humans and agents).", mimeType: "text/markdown", text: ALIGN_GUIDE },
+  { uri: "madeby://schema/policy", name: ".madeby/policy.json schema", description: "JSON Schema for the disclosure policy file.", mimeType: "application/json", text: JSON.stringify(POLICY_SCHEMA, null, 2) },
+];
+
 interface RpcMessage {
   id?: number | string;
   method?: string;
@@ -147,7 +208,7 @@ function handle(msg: RpcMessage): void {
         id,
         result: {
           protocolVersion: (params?.protocolVersion as string | undefined) ?? DEFAULT_PROTOCOL,
-          capabilities: { tools: {} },
+          capabilities: { tools: {}, resources: {} },
           serverInfo: SERVER_INFO,
         },
       });
@@ -161,6 +222,18 @@ function handle(msg: RpcMessage): void {
     case "tools/list":
       send({ jsonrpc: "2.0", id, result: { tools: TOOLS.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })) } });
       return;
+    case "resources/list":
+      send({ jsonrpc: "2.0", id, result: { resources: RESOURCES.map(({ uri, name, description, mimeType }) => ({ uri, name, description, mimeType })) } });
+      return;
+    case "resources/read": {
+      const found = RESOURCES.find((r) => r.uri === params?.uri);
+      if (!found) {
+        send({ jsonrpc: "2.0", id, error: { code: -32602, message: `unknown resource: ${String(params?.uri)}` } });
+        return;
+      }
+      send({ jsonrpc: "2.0", id, result: { contents: [{ uri: found.uri, mimeType: found.mimeType, text: found.text }] } });
+      return;
+    }
     case "tools/call": {
       const tool = TOOLS.find((t) => t.name === params?.name);
       if (!tool) {
@@ -195,5 +268,5 @@ export function startMcpServer(): void {
     }
     handle(msg);
   });
-  process.stderr.write("madeby mcp: ready (stdio, MCP tools: recognize, check, prove, list_host_adapters, resolve_identity)\n");
+  process.stderr.write("madeby mcp: ready (stdio; tools: init, recognize, check, prove, list_host_adapters, resolve_identity; resources: align guide, policy schema)\n");
 }
