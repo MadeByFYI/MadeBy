@@ -738,6 +738,13 @@ snapshot) — is deferred to the **authority** (madeby.fyi, the OCSP-shaped resp
 freshness check *is* the continuous query traffic to the moat surface. The default profile must
 ensure `.madeby` is **published with the package** so provenance actually travels.
 
+The file also carries an **optional authority pointer** (default madeby.fyi, swappable) so renderers
+*enrich* the offline-verifiable base with live API data (current validity, reputation, grant state) —
+enrichment is optional (offline verify never depends on it), and private inspection never phones home
+to the public authority. The default pointer is where **default gravity lives in the carrier**: the
+ubiquitous `.madeby` files reference our authority by default, routing every enrichment/validity call
+to us (`ARCHITECTURE §3`).
+
 **Decisive variable = the forcing functions** (regulation, IP/license liability, supply-chain
 security). Where one makes provenance a *must-check-every-build*, reliance is continuous and
 non-optional; two of the three are strengthening through 2026, which makes the continuous case
