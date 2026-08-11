@@ -68,6 +68,44 @@ counsel **at formation** for:
   launch until this clears (`STRATEGY.md` §2).
 - **`security@` + `privacy@` contacts** live before launch.
 
+## Data protection / PII — the metadata corpus + person-attribution (counsel-gated)
+
+Git commit **author name + email is personal data** (and inferences about identified people are too),
+even though it is public — **GDPR has no blanket public-data exemption.** Holding it at corpus scale
+(`OPERATIONS §4b`, tier 3) and attributing/profiling identified people is the highest-PII surface,
+alongside the sworn tier.
+
+**The big risk-reducer (decision, 2026-08-11): the public site does NOT host person-identity.** It
+asserts the **human/machine determination** and **points** to where the identity is disclosed (the
+repo / @handle link-out); it does not host public profiles of strangers (`STRATEGY §3`, `ARCH §1`).
+Consequence: the **public corpus is aggregate stats + human/machine determinations + pointers**, not
+person-profiling — which collapses most of the profiling/dossier exposure. **Person-attribution
+concentrates where there is a lawful basis:** the **enterprise** (org is *controller* of its
+employees' data; we are a *processor* under a DPA) and the **repo owner / consensual claim** (the
+person opts in). Value and lawful basis co-locate.
+
+**Posture to confirm with counsel (for the parts that remain — ingestion + the relationship
+products):**
+- **Lawful basis** = legitimate interests (not consent — impossible at scale), with a **Legitimate
+  Interests Assessment** and honoring the **right to object** (Art. 21 → the opt-out).
+- **A DPIA is likely required** (large-scale + profiling) — a named deliverable.
+- **Pseudonymize the identity key** (HMAC, cf. #70) in the corpus; resolve to a real person only
+  on-demand / in-relationship.
+- **Rights machinery for launch:** object / erasure / rectification / access + a privacy notice.
+- **Aggregate index:** confirm the aggregation threshold at which it is *anonymous* (outside GDPR) →
+  the low-PII first surface (build P1 before person-attached P2).
+- **Defamation / false-light:** keep inferences **artifact-scoped, provable, neutral, correctable**,
+  never a person-accusation ("this human's code is secretly AI") — the over-claim we already refuse.
+- **Never a per-person harm-capable score** (surveillance scoring is ruled out, `STRATEGY §6`; also
+  the Art. 22 guard — stay *informational, not decisional*).
+- **Terms:** GitHub API + BigQuery public-dataset + GH Archive — permitted to build/store a derived
+  corpus, commercially?
+- **CCPA/CPRA** "publicly available" exemption applicability; controller/processor + DPA for
+  intra-org.
+
+**Sequencing:** the aggregate index (low-PII) can move earlier; **person-attached surfaces do not
+launch until the DPIA + rights machinery + counsel clear** — same gate as the sworn tier.
+
 ## Deferred until they apply
 
 - **Quarterly estimated taxes** — only once profitable (pre-revenue at a loss: none due).
