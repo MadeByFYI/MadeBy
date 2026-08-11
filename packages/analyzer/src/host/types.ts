@@ -50,4 +50,13 @@ export interface HostAdapter {
 
   /** Network (optional): fetch a profile + reach card for a handle. Returns null on any failure. */
   fetchProfile?(handle: string, opts: HostApiOptions): Promise<IdentityProfile | null>;
+
+  /**
+   * Optional: compute the PR's commit range (`base..head`) from THIS host's CI environment, else null
+   * when not in that host's PR CI. This is the CI-wrapper slice of the host adapter (ARCHITECTURE
+   * §12): it lets `madeby check` auto-scope to the PR with no range argument and no host-specific glue
+   * in the CI YAML — the range logic lives here, once per host. Returning null doubles as "not my CI",
+   * so a detector can try each adapter and take the first hit.
+   */
+  ciRange?(env: Record<string, string | undefined>): string | null;
 }

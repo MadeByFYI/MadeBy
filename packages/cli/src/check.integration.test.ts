@@ -46,9 +46,14 @@ function writePolicy(dir: string, mode: string): void {
 }
 
 // Run `madeby check [range]` on the built bin exactly as a user/CI would. spawnSync doesn't throw
-// on non-zero exit, so we read the status directly.
+// on non-zero exit, so we read the status directly. We neutralize any ambient host-CI env (our own
+// CI sets GITHUB_EVENT_*) so the no-range cases test "recent history" deterministically; the
+// auto-detect path has its own test that sets the env explicitly.
 function run(dir: string, ...args: string[]): { code: number; out: string } {
-  const r = spawnSync(process.execPath, [BIN, "check", ...args], { cwd: dir, encoding: "utf8" });
+  const env = { ...process.env };
+  delete env.GITHUB_EVENT_NAME;
+  delete env.GITHUB_EVENT_PATH;
+  const r = spawnSync(process.execPath, [BIN, "check", ...args], { cwd: dir, encoding: "utf8", env });
   return { code: r.status ?? -1, out: (r.stdout ?? "") + (r.stderr ?? "") };
 }
 
@@ -56,12 +61,13 @@ function run(dir: string, ...args: string[]): { code: number; out: string } {
 // Returns the root sha so a range can exclude the undisclosed root (an all-disclosed slice).
 let repo = "";
 let rootSha = "";
+let headSha = "";
 beforeAll(() => {
   repo = tmpRepo();
   git(repo, "init", "-q", "-b", "main");
   rootSha = commit(repo, "a.txt", "one\n", "chore: initial commit"); // undisclosed
   commit(repo, "b.txt", "two\n", "feat: add b\n\nCo-Authored-By: Claude <noreply@anthropic.com>"); // ai-trailer
-  commit(repo, "c.txt", "three\n", "fix: tweak c\n\nSigned-off-by: Dev <dev@example.com>"); // dco-signoff
+  headSha = commit(repo, "c.txt", "three\n", "fix: tweak c\n\nSigned-off-by: Dev <dev@example.com>"); // dco-signoff
 });
 
 afterAll(() => {
@@ -94,6 +100,23 @@ describe("madeby check — the disclosure gate fires per policy", () => {
     writePolicy(repo, "off");
     const { code } = run(repo);
     expect(code).toBe(0);
+  });
+
+  it("auto-scopes to the PR range from the GitHub CI env — no range arg", () => {
+    writePolicy(repo, "required");
+    // Full history fails: the undisclosed root is in scope.
+    expect(run(repo).code).toBe(1);
+    // A pull_request event whose base is the root excludes it → scope is b + c (both disclosed) →
+    // passes. That the result flips proves the range came from the adapter (the CI env), not an arg.
+    const eventPath = join(tmpRepo(), "event.json");
+    writeFileSync(eventPath, JSON.stringify({ pull_request: { base: { sha: rootSha }, head: { sha: headSha } } }));
+    const r = spawnSync(process.execPath, [BIN, "check"], {
+      cwd: repo,
+      encoding: "utf8",
+      env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: eventPath },
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout ?? "").toMatch(/auto-scoped to the github/i);
   });
 
   it("fails safe: a malformed policy degrades to off, never blocks (exit 0)", () => {
