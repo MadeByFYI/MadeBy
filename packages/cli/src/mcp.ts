@@ -10,7 +10,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { recognizeCommits, evaluateRepoDisclosure, proveRepo, provenanceOf, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
+import { recognizeCommits, evaluateRepoDisclosure, proveRepo, provenanceOf, provenanceMap, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
@@ -130,6 +130,24 @@ const TOOLS: Tool[] = [
         startLine: args.startLine as number | undefined,
         endLine: args.endLine as number | undefined,
       }),
+  },
+  {
+    name: "provenance_map",
+    description:
+      "Provenance-as-context, repo-wide — the orientation an agent reads BEFORE it works. Returns the " +
+      "witnessed AI surface (files/regions with .madeby/spans, model-named — precise) plus commit-level " +
+      "disclosure coverage. Files without a witnessed span have unknown origin (disclosure, not " +
+      "detection — never 'human'). Cheap (no per-file blame). Optionally scope to a path prefix; use " +
+      "the `provenance` tool to drill into one file.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        repo: { type: "string", description: "path to the repo (default: the server's working directory)" },
+        prefix: { type: "string", description: "limit the map to a path prefix, e.g. src/" },
+        commitLimit: { type: "number", description: "how many recent commits to include in the coverage figure (default 500)" },
+      },
+    },
+    handler: (args) => provenanceMap(rootFor(args.repo as string | undefined), { prefix: args.prefix as string | undefined, commitLimit: args.commitLimit as number | undefined }),
   },
   {
     name: "list_host_adapters",
@@ -360,5 +378,5 @@ export function startMcpServer(): void {
     }
     handle(msg);
   });
-  process.stderr.write("madeby mcp: ready (stdio; tools: init, recognize, check, prove, provenance, list_host_adapters, resolve_identity; resources: align/enforce/backfill guides, policy schema)\n");
+  process.stderr.write("madeby mcp: ready (stdio; tools: init, recognize, check, prove, provenance, provenance_map, list_host_adapters, resolve_identity; resources: align/enforce/backfill guides, policy schema)\n");
 }

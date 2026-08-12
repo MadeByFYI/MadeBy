@@ -232,7 +232,7 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     expect((res.get(1)!.result as { serverInfo: { name: string } }).serverInfo.name).toBe("madeby");
     // tools/list
     const names = (res.get(2)!.result as { tools: { name: string }[] }).tools.map((t) => t.name);
-    expect(names).toEqual(expect.arrayContaining(["recognize", "check", "prove", "provenance", "list_host_adapters", "resolve_identity"]));
+    expect(names).toEqual(expect.arrayContaining(["recognize", "check", "prove", "provenance", "provenance_map", "list_host_adapters", "resolve_identity"]));
     // recognize tool → the AI-trailer commit is surfaced
     const rec = JSON.parse((res.get(3)!.result as { content: { text: string }[] }).content[0]!.text) as { commits: { disclosures: string[] }[] };
     expect(rec.commits.some((c) => c.disclosures.includes("ai-trailer"))).toBe(true);
@@ -286,12 +286,18 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     const res = await mcpCall(proot, [
       { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "prove", arguments: { log } } },
       { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "provenance", arguments: { path: "math.ts" } } },
+      { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "provenance_map", arguments: {} } },
     ]);
     const prov = JSON.parse((res.get(2)!.result as { content: { text: string }[] }).content[0]!.text) as {
       records: { source: string; ai: boolean; model?: string }[];
     };
     expect(prov.records.some((r) => r.source === "span" && r.model === "claude-opus-4-8")).toBe(true);
     expect(prov.records.some((r) => r.source === "blame" && r.ai === true)).toBe(true);
+    // the repo-wide map surfaces the same witnessed file
+    const map = JSON.parse((res.get(3)!.result as { content: { text: string }[] }).content[0]!.text) as {
+      witnessed: { path: string; models: string[] }[];
+    };
+    expect(map.witnessed.some((w) => w.path === "math.ts" && w.models.includes("claude-opus-4-8"))).toBe(true);
   }, 30000);
 
   it("init tool + resources make aligning a repo self-serve AND discoverable", async () => {

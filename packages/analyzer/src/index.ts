@@ -10,8 +10,8 @@ export { recognizeCommits, evaluateRepoDisclosure } from "./recognize";
 export type { RecognizedCommit, RepoDisclosure } from "./recognize";
 // The agent-context read: provenance on the record for a path/line-range (ARCH §12 — line range is
 // the universal contract; we never parse code). Composes witnessed spans + last-touch blame.
-export { provenanceOf } from "./path-provenance";
-export type { PathProvenance, ProvenanceRecord } from "./path-provenance";
+export { provenanceOf, provenanceMap } from "./path-provenance";
+export type { PathProvenance, ProvenanceRecord, ProvenanceMap, WitnessedFile } from "./path-provenance";
 export { proveRepo } from "./prove";
 export type { ProveOptions, ProveResult } from "./prove";
 export { badgeSnippet } from "./badge";
