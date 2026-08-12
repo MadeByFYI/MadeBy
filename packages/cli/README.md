@@ -110,6 +110,9 @@ an AI agent can use MadeBy with no human in the loop. It exposes the same primit
   otherwise. The read for **provenance-as-context**. The line range is the contract — for
   function/symbol resolution, turn a symbol into a range with your own tooling (tree-sitter/LSP);
   MadeBy never parses code. *read*
+- **`provenance_map`** `{ prefix?, commitLimit? }` — the repo-wide orientation an agent reads *before*
+  it works: the witnessed AI surface (files/regions, model-named) + commit-level disclosure coverage.
+  Files without a witnessed span are unknown-origin. *read*
 - **`list_host_adapters`** — the known forges and each one's capabilities. *read*
 - **`resolve_identity`** `{ name?, email?, host? }` — a committer's stable key + public handle. *read*
 
