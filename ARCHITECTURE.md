@@ -450,12 +450,13 @@ heavy thing we explicitly don't build. The carrier is a file: **`.madeby/policy.
 maintainer declares their disclosure policy:
 
 ```json
-{ "version": 0, "mode": "required" | "advisory" | "off", "accept": ["dco-signoff", "ai-trailer", ...] }
+{ "version": 0, "mode": "required" | "advisory", "accept": ["dco-signoff", "ai-trailer", ...] }
 ```
 
 `mode: required` fails the gate on any commit that discloses nothing the policy accepts; `advisory`
-reports only; `off` (and the fail-safe default for a missing/malformed file) never gates. `accept`
-omitted ⇒ any recognized disclosure counts. The evaluator is pure, node-free core
+reports only and never gates. There are two modes, not three — "off" is just not running the check,
+so `advisory` is the floor: **the policy file is optional**, and a missing (or malformed) file
+degrades to `advisory`. `accept` omitted ⇒ any recognized disclosure counts. The evaluator is pure, node-free core
 (`packages/core/src/policy.ts` — `parseDisclosurePolicy` + `evaluateDisclosurePolicy` over each
 commit's `commitDisclosureKinds`), so the same logic runs on the mirror, in the index, and in the
 gate. **`madeby check [<range>]`** (`scripts/madeby-check.mjs`, run under Node type-stripping — no
@@ -466,7 +467,7 @@ a contributor's laptop, one `run:` line in any CI, or a thin `uses:` Action late
 Two invariants hold the line: **disclosure, never detection** (the check asks contributors to *state*
 origin; it never asserts whether code is AI), and **the maintainer owns the policy** — if a project
 turns a `required` gate into a de-facto AI ban, that is its call; we ship the neutral instrument and
-neither advise nor obstruct. Fail-safe throughout: a parse error or our own bug degrades to `off`
+neither advise nor obstruct. Fail-safe throughout: a parse error or our own bug degrades to `advisory`
 (never block a PR on our error, never invent a stricter gate than the maintainer wrote).
 
 **Packaging (landed).** `scripts/*.mjs` are the no-build dev entries; the installable form is

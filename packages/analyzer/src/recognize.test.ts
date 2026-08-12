@@ -38,8 +38,10 @@ describe("recognizeCommits — the raw library primitive (no policy)", () => {
 });
 
 describe("evaluateRepoDisclosure — the gate as data (fail-safe)", () => {
-  it("no policy file → default → passes", () => {
-    expect(evaluateRepoDisclosure(repo).pass).toBe(true);
+  it("no policy file → optional → defaults to advisory (reports, never blocks)", () => {
+    const r = evaluateRepoDisclosure(repo);
+    expect(r.mode).toBe("advisory");
+    expect(r.pass).toBe(true);
   });
   it("required policy → fails on the undisclosed base and names it", () => {
     mkdirSync(join(repo, ".madeby"), { recursive: true });
@@ -49,10 +51,11 @@ describe("evaluateRepoDisclosure — the gate as data (fail-safe)", () => {
     expect(r.pass).toBe(false);
     expect(r.undisclosed.some((u) => u.subject === "chore: base")).toBe(true);
   });
-  it("malformed policy → warning + degrades to off (never blocks)", () => {
+  it("malformed policy → warning + degrades to advisory (never blocks)", () => {
     writeFileSync(join(repo, ".madeby", "policy.json"), "{ bad json");
     const r = evaluateRepoDisclosure(repo);
     expect(r.warning).toBeDefined();
+    expect(r.mode).toBe("advisory");
     expect(r.pass).toBe(true);
   });
 });
