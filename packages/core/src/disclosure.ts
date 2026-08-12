@@ -15,6 +15,7 @@ import type { TrustTier } from "./tiers";
 /** The normalized disclosure vocabulary. Open — extend as new carriers/standards are recognized. */
 export type DisclosureKind =
   | "ai-trailer" // Co-Authored-By / Generated-by / Assisted-by naming an AI tool
+  | "human-attestation" // affirmative human-authorship claim (Authored-by-human); climbs the ladder like any disclosure
   | "dco-signoff" // Developer Certificate of Origin: `Signed-off-by:`
   | "commit-signature" // a cryptographic signature is present on the commit
   | "ai-tool-config" // a committed AI-tool config (.cursorrules, copilot-instructions, …)
@@ -43,6 +44,14 @@ export interface DisclosureKindMeta {
 // per standard as we build it (same discipline as the tool-parser harness).
 export const DISCLOSURE_KINDS: Record<DisclosureKind, DisclosureKindMeta> = {
   "ai-trailer": { label: "AI-authorship trailer", nativeness: "external", ceiling: "asserted", parser: "recognized" },
+  // The AFFIRMATIVE human-authorship claim — the symmetric counterpart of the AI trailer, NOT a
+  // separate mechanism: same recognizer, same ladder. A bare trailer is `asserted` (identical to the
+  // AI trailer); sign it → verified, swear it → sworn — the signature authenticates WHO is claiming
+  // (invariant #10), equally for human or AI disclosure. The one genuine asymmetry is EVIDENCE vs.
+  // tier: AI authorship can leave a re-checkable ARTIFACT (a session log matched to the code,
+  // `prove`); human authorship is the author's firsthand TESTIMONY — real, but not independently
+  // re-checkable, so to a third party it lands as an attestation (asserted → signed → sworn testimony).
+  "human-attestation": { label: "human-authorship attestation", nativeness: "madeby", ceiling: "asserted", parser: "recognized" },
   "dco-signoff": { label: "DCO Signed-off-by", nativeness: "external", ceiling: "asserted", parser: "recognized" },
   "commit-signature": { label: "commit signature", nativeness: "external", ceiling: "verified", parser: "recognized" },
   "ai-tool-config": { label: "committed AI-tool config", nativeness: "external", ceiling: "asserted", parser: "recognized" },
@@ -109,6 +118,20 @@ export function hasDcoSignoff(message: string): boolean {
   return DCO_RE.test(message);
 }
 
+// The affirmative human-authorship convention — the trailer counterpart of the AI trailer, so a
+// committer who wrote the code themselves puts it on the record and their work is DISCLOSED-human,
+// not lumped into `unknown`. The "tool" is git: add the trailer (an alias/template makes it a
+// keystroke). Default key `Authored-by-human` (also `Human-authored-by`); the value is the author,
+// for accountability. Climbs the ladder like any disclosure (sign → verified, swear → sworn). If AI
+// was used, disclose the AI instead — don't claim human.
+const HUMAN_ATTEST_RE = /^[ \t]*(?:Authored-by-human|Human-authored(?:-by)?)[ \t]*:[ \t]*(.+?)[ \t]*$/gim;
+
+/** Cheap boolean: does this commit affirmatively claim human authorship? */
+export function hasHumanAttestation(message: string): boolean {
+  HUMAN_ATTEST_RE.lastIndex = 0;
+  return HUMAN_ATTEST_RE.test(message);
+}
+
 /** Recognize SPDX license/copyright metadata in a blob of text (a file header, a manifest). */
 export function recognizeSpdxIdentifiers(text: string): DisclosureSignal[] {
   const out: DisclosureSignal[] = [];
@@ -134,6 +157,7 @@ export function disclosureKindsPresent(signals: readonly DisclosureSignal[]): Di
 export function commitDisclosureKinds(commit: { message: string; signed?: boolean }): DisclosureKind[] {
   const kinds: DisclosureKind[] = [];
   if (hasAiTrailer(commit.message)) kinds.push("ai-trailer");
+  if (hasHumanAttestation(commit.message)) kinds.push("human-attestation");
   if (hasDcoSignoff(commit.message)) kinds.push("dco-signoff");
   if (commit.signed === true) kinds.push("commit-signature");
   return kinds;

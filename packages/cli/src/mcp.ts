@@ -204,8 +204,9 @@ guesses whether code is AI. To align a repo:
 2. **Set up** — call \`init\`: it writes \`.madeby/policy.json\` (advisory) and the CI disclosure check.
    Idempotent; it never clobbers an existing policy or workflow. Then commit the created files.
 3. **Disclose going forward** — contributors disclose origin with a Co-Authored-By / Generated-by
-   trailer, a DCO Signed-off-by, a signed commit, or \`prove\` (record your own AI session's witnessed
-   spans, structurally verified and local).
+   trailer (AI), an \`Authored-by-human\` trailer (work they wrote themselves — the symmetric human
+   claim), a DCO Signed-off-by, a signed commit, or \`prove\` (record your own AI session's witnessed
+   spans, structurally verified and local). Human and AI disclosure ride the same ladder.
 4. **Account for existing history honestly** — do NOT fabricate disclosure for past commits. Read the
    \`madeby://guide/backfill\` resource: recognize what's already disclosed, attach recoverable
    evidence, and set an adoption boundary — pre-boundary history is labeled *unknown*, never invented.

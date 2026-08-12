@@ -4,6 +4,7 @@ import {
   recognizeDcoSignoffs,
   hasDcoSignoff,
   hasAiTrailer,
+  hasHumanAttestation,
   recognizeSpdxIdentifiers,
   disclosureKindsPresent,
   commitDisclosureKinds,
@@ -60,6 +61,18 @@ describe("hasAiTrailer + commitDisclosureKinds", () => {
     ]);
     expect(commitDisclosureKinds({ message: "x\n\nGenerated-by: Cursor", signed: false })).toEqual(["ai-trailer"]);
     expect(commitDisclosureKinds({ message: "plain commit", signed: false })).toEqual([]); // undisclosed
+  });
+
+  it("recognizes the affirmative human-authorship trailer (symmetric with the AI trailer)", () => {
+    expect(hasHumanAttestation("feat\n\nAuthored-by-human: Jane Dev <jane@x.org>")).toBe(true);
+    expect(hasHumanAttestation("feat\n\nHuman-authored-by: Jane Dev <jane@x.org>")).toBe(true);
+    expect(hasHumanAttestation("feat\n\nCo-Authored-By: Claude <noreply@anthropic.com>")).toBe(false);
+    // it's a disclosure kind; signing climbs the same ladder (the signature is a separate kind)
+    expect(commitDisclosureKinds({ message: "feat\n\nAuthored-by-human: Jane <j@x>", signed: false })).toEqual(["human-attestation"]);
+    expect(commitDisclosureKinds({ message: "feat\n\nAuthored-by-human: Jane <j@x>", signed: true }).sort()).toEqual([
+      "commit-signature",
+      "human-attestation",
+    ]);
   });
 });
 
