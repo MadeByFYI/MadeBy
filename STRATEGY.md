@@ -64,6 +64,32 @@ could, while the derived data still concentrates at the hosted resolution/grant 
 (disclosure-not-detection, no per-person score, point-don't-host) — openness never buys an escape
 from the doctrine.
 
+### Provenance as context: the record serves the agents, too (positioning, 2026-08-12)
+
+The agent-native block above is agents *operating* MadeBy. This is the other half: agents
+**consuming** its output. MadeBy's provenance record is not only a human-facing audit trail — it is
+**machine-readable context an agent reads**. When an AI returns to code it (or another model) wrote,
+the disclosed provenance tells it what it is touching: **human decisions made on purpose** (preserve,
+tread carefully) vs. **AI-scaffolded work and the tool/model behind it** (and, when captured via
+`prove`, the session). That reframes MadeBy from a disclosure/compliance gate into **infrastructure
+that makes human+AI collaboration legible over time** — a bigger, more defensible story than the gate
+alone.
+
+- **Real today, not aspirational.** The record is already machine-readable via the MCP tools
+  (`recognize`, `resolve_identity`) and committed `.madeby/spans` (tool + model + session). An agent
+  reads provenance the same way it reads the code. The human/AI distinction is *decision-relevant*
+  context (correct agent behavior differs), not decoration.
+- **Stays disclosure-not-detection.** The agent reads what was disclosed; it never guesses. We
+  provide the record + the read tools — what an agent does with the context is the agent's; never
+  over-claim we improve a model's output.
+- **It compounds.** The more of a codebase AI writes, the *more* valuable an honest trail becomes —
+  coordination between agents, trust/tier calibration, and provenance hygiene against AI unknowingly
+  building on unmarked AI. And it is a **single-player** benefit: a producer's own future agent
+  sessions are better-grounded on their own record, no network required — disclosure as leverage, not
+  a tax.
+- **The line:** *transparency isn't anti-AI — it's what lets people and agents build on each other's
+  work with confidence.* Pro-transparency, not anti-AI.
+
 ---
 
 ## 2. The trust model: an honest, labeled spectrum
