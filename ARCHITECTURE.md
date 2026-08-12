@@ -1082,6 +1082,25 @@ open extension path.
 
 ---
 
+### Provenance resolution is configured, not parsed by us (decision, 2026-08-12)
+
+The granularity at which provenance attaches to code — line, region, function, symbol — cannot be
+gotten right for every language and project, and mature infrastructure for it already exists
+(tree-sitter, LSP, ctags, git). So **MadeBy does not, and will not, ship its own AST/symbol parser.**
+The universal contract is the **line range**: everything resolves to `(path, startLine, endLine)`,
+which every existing resolver already emits. We ship a convention + default — line/region from what's
+already on the record: witnessed spans at their captured ranges (`.madeby/spans`), and last-touch
+commit disclosure from `git blame` elsewhere, `unknown` otherwise — and a **configuration seam**. A
+user who wants function- or symbol-level resolution wires in their *own existing tooling* to turn a
+symbol into a line range and queries at that range (primitives-you-run, §12; ride-what-exists, §7).
+
+Consequences: the `provenance` read composes whatever units are on the record and **labels each with
+its granularity + confidence** — witnessed span (precise) vs. last-touch commit from blame
+(approximate, never presented as fine authorship) vs. unknown; it never forces one resolution, and it
+never asserts "human" (disclosure, not detection). Resolution is a **configurable convention**, not a
+single setting we impose — and the parser is always someone else's, by design. Symbol-level
+provenance is therefore a *config*, not a feature we build once and impose.
+
 ## What we explicitly dropped from v1
 
 - The hardcoded `AIModel` / `AIProvider` enums (→ open fields / small registry).
