@@ -9,6 +9,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { serializeSpanManifest, parseSpanManifest, type SpanAttestationV0 } from "@madeby/core";
 import { captureLocalSpans } from "./capture-local";
 import { detectParser } from "./tool-parsers";
 
@@ -32,10 +33,6 @@ export interface ProveResult {
   message: string;
   /** an input-problem code when nothing was written: "transcript-not-found" | "unrecognized-format" */
   error?: string;
-}
-
-interface StoredAttestation {
-  attribution?: { source?: string };
 }
 
 function git(root: string, ...a: string[]): string {
@@ -100,19 +97,18 @@ export function proveRepo(root: string, opts: ProveOptions = {}): ProveResult {
 
   // Merge: replace this tool's session-log attestations, keep everything else (other tools, trailers).
   const out = join(root, ".madeby", "spans", `${commit}.json`);
-  let kept: StoredAttestation[] = [];
+  let kept: SpanAttestationV0[] = [];
   if (existsSync(out)) {
     const thisSource = `${result.tool}-session-log`;
     try {
-      const prior = JSON.parse(readFileSync(out, "utf8")) as { attestations?: StoredAttestation[] };
-      kept = (prior.attestations ?? []).filter((a) => a?.attribution?.source !== thisSource);
+      kept = parseSpanManifest(readFileSync(out, "utf8")).attestations.filter((a) => a.attribution.source !== thisSource);
     } catch {
-      /* overwrite a malformed manifest */
+      /* overwrite a malformed/legacy manifest */
     }
   }
   const manifest = { ...result.manifest, attestations: [...kept, ...result.manifest.attestations] };
   mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, JSON.stringify(manifest, null, 2) + "\n");
+  writeFileSync(out, serializeSpanManifest(manifest));
 
   return {
     written: true,
