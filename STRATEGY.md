@@ -71,7 +71,7 @@ The agent-native block above is agents *operating* MadeBy. This is the other hal
 **machine-readable context an agent reads**. When an AI returns to code it (or another model) wrote,
 the disclosed provenance tells it what it is touching: **human decisions made on purpose** (preserve,
 tread carefully) vs. **AI-scaffolded work and the tool/model behind it** (and, when captured via
-`prove`, the session). That reframes MadeBy from a disclosure/compliance gate into **infrastructure
+`madeby ai`, the session). That reframes MadeBy from a disclosure/compliance gate into **infrastructure
 that makes human+AI collaboration legible over time** — a bigger, more defensible story than the gate
 alone.
 
@@ -343,7 +343,7 @@ underneath** (progressive disclosure, `ARCHITECTURE §1`), never the headline. T
   not an *artifact*.** You *can* witness your own authorship firsthand — it simply leaves nothing
   independently re-checkable, so to a third party it is an *attestation* (asserted → signed → sworn
   testimony), never a verification that no machine was involved. AI is the mirror image: it *can*
-  leave a re-checkable artifact (a session log, `prove`), and inline AI leaves *none* (≈0% untrailered
+  leave a re-checkable artifact (a session log, `madeby ai`), and inline AI leaves *none* (≈0% untrailered
   recall). Both directions climb the **same tier ladder**; the only asymmetry is artifact-vs-testimony
   on the *evidence* axis, not the tier — which is why the honest default *past a positive signal*
   stays **unknown**, never human.
@@ -414,7 +414,7 @@ unknown.**
    existing `Co-Authored-By` AI trailers, DCO sign-offs, signatures, and bot authorship are
    recognized now even though they predate adoption. Much of a repo's history is already partly
    disclosed — zero fabrication.
-2. **Attach recoverable evidence** (opt-in, evidence-grade): old AI-tool session logs via `prove`
+2. **Attach recoverable evidence** (opt-in, evidence-grade): old AI-tool session logs via `madeby ai`
    (structurally verified — only matches content actually present), committed AI-tool configs
    (repo-level signal).
 3. **Set the adoption boundary** (the watermark). The commit that introduced `.madeby/policy.json`
@@ -536,7 +536,7 @@ trust, or network:
 > disclosure/accountability control over their own repo's incoming PRs, via two committed files, day
 > one). Because it is **disclosure not detection**, it is *retainable* (no false-accusation fights to
 > make them uninstall it). The multiplier: **the gate is a forcing function** — every contributor
-> must disclose/sign/`prove` to pass, so one maintainer's single action **manufactures N producers**
+> must disclose/sign/record to pass, so one maintainer's single action **manufactures N producers**
 > who never chose to adopt. The loop: *maintainer control → conscripted contributor-producers →
 > maintainer↔contributor spread → `.madeby` travels + registers → dependency-graph density → (past a
 > threshold) consumer/reliance value switches on → consumers demand-pull provenance from producers →
@@ -726,15 +726,15 @@ conversion action.
 *under-claim*, never an AI accusation.** Lead with what we can prove and dare the rest:
 
 > *"By what we can see, this is **{provableAI}% provably AI-assisted** — past that we honestly can't
-> tell either way. Think that's wrong? Prove us wrong — or remove all doubt as to your human
-> authorship. **Either way: `npx madeby prove`.**"*
+> tell either way. Think that's wrong? Record the AI's share with **`npx madeby ai`**, or affirm your
+> own authorship with **`npx madeby me`** — either way, you raise your disclosure."*
 
-**The provocation is symmetric — and that is the point.** The same command serves two opposite
-motivations, so it can't be read as pushing a verdict either way:
-- the **AI-proud** vibe-coder, wanting credit for the AI's share we can't yet see, runs it to prove it;
-- the **human-proud** author, wanting no ambiguity, runs it to *clear the doubt* and stand behind
-  their own work.
-Both roads are the same asserted→verified conversion action. Framing the CTA as *resolve the doubt*
+**The provocation is symmetric — and that is the point.** We hand you *two equal, opposite verbs*, so
+the tool can't be read as pushing a verdict either way:
+- the **AI-proud** vibe-coder, wanting credit for the AI's share we can't yet see, runs **`madeby ai`** to record it;
+- the **human-proud** author, wanting no ambiguity, runs **`madeby me`** to *clear the doubt* and stand
+  behind their own work.
+Both roads are the same asserted→verified conversion action — one verb per motivation, offered equally. Framing the CTA as *resolve the doubt*
 (not *disprove an accusation*) is what makes it land as neutral — the tool arbitrates, it doesn't
 allege — which is exactly the honesty posture, not a compromise of it.
 
@@ -784,11 +784,14 @@ person); self-directed to the owner; **consent-gated for third parties** (no pub
 over-claims — ARCH §8); and in scope for the ToS/counsel review (a formation deliverable,
 `COMPLIANCE.md`). This is **framing/copy — routing, not a detector** (no doctrine change).
 
-**The command is `prove`** (`npx madeby prove`; alt considered: `receipts`) — the verb is the
-motivation, and zero-install `npx` is the frictionless path the study named as the real flywheel
-bet. It runs the `capture --local` engine (`capture-local.ts`). **Launch prerequisite:** the `npx`
-package must exist before the mirror is public — you cannot publish a CTA to a command that 404s
-(itself a trust-brand tell). Until then the CTA is staged on the localhost mirror.
+**The commands are `ai` and `me`** (`npx madeby ai` / `npx madeby me`) — the two symmetric write verbs
+of the "made by ___" surface (`who`/`ai`/`me`, renamed from the earlier single `prove` in the
+UX-minimization pass: "prove" over-claimed — what you record is asserted-tier, self-reported, not
+proof — and it collapsed two opposite motivations into one word). `ai` records your AI session's
+witnessed spans (the `capture-local.ts` engine); `me` affirms your own authorship; `who` reads the
+result back. Zero-install `npx` is the frictionless path the study named as the flywheel bet.
+**Launch prerequisite:** the `npx` package must exist before the mirror is public — you cannot publish
+a CTA to a command that 404s (itself a trust-brand tell). Until then the CTA is staged on the localhost mirror.
 
 **Consequence — the public draw is a coverage metric, not an "AI%" (decision, 2026-07-06).** Once
 the default is *unknown* rather than *human*, we lose the ability to publish an honest site-wide
@@ -864,7 +867,7 @@ because you can leave); the default is what builds the moat. Contestable by GitH
 
 **Build discipline unchanged:** this re-weights the *target*, not the near-term plan. Governance is
 Tier-2 (`OPERATIONS.md §4a`), **validated with a design partner before it is built** — cheaply, by
-having one org run the free `madeby check`/`prove` across its private repos and asking the compliance
+having one org run the free `madeby check`/`who` across its private repos and asking the compliance
 owner *what dashboard, record, and report they would pay for on top.* The act of attribution stays
 free forever; we charge for governance, trust, and asking at scale.
 

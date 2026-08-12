@@ -125,7 +125,7 @@ and laptop.** The stack in §4 is still the right *stake in the ground*, but **m
 deferred behind a trigger, not day-one.** Re-sequence what we actually operate:
 
 **Tier 0 — we operate nothing (the growth engine).** The `madeby` CLI (`packages/cli`), the GitHub
-Action (`packages/action`), local `prove` capture, self-hosted `.madeby` declarations, and the
+Action (`packages/action`), local `madeby ai` capture, self-hosted `.madeby` declarations, and the
 disclosure recognizer/vocabulary. Hosted by **npm / GitHub / the user's CI**. Our cost is package
 maintenance, not servers. *The thing that drives adoption costs us ≈ $0 to run.*
 

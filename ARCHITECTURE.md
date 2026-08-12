@@ -533,8 +533,8 @@ neither advise nor obstruct. Fail-safe throughout: a parse error or our own bug 
 
 **Packaging (landed).** `scripts/*.mjs` are the no-build dev entries; the installable form is
 `packages/cli` — the `madeby` package, esbuild-bundled into a single standalone `dist/madeby.mjs`
-(bundling sidesteps the type-stripping import constraints), exposing `madeby check` and
-`madeby prove`. `packages/action/` is the thin composite Action that runs `npx madeby check` on a
+(bundling sidesteps the type-stripping import constraints), exposing `madeby check`, `madeby who`,
+and the disclosure writes `madeby ai`/`me`. `packages/action/` is the thin composite Action that runs `npx madeby check` on a
 PR — so a maintainer adopts the whole wedge by committing two files (`.madeby/policy.json` + a
 workflow). The one remaining outward step is `npm publish` of the `madeby` package (owner's call);
 until then the CLI runs locally and the Action manifest is inert.
@@ -695,7 +695,7 @@ metric a CISO gates on. It surfaces the *unattributed* fraction honestly.
 **relative to the adoption boundary** — the commit that introduced `.madeby/policy.json` (derivable:
 `git log --diff-filter=A -- .madeby/policy.json`). Post-boundary commits are in-regime and measured;
 pre-boundary commits default to **`unknown`** (never "human"/"AI") unless independently disclosed by
-what's already in history (recognized trailers/DCO/signatures/bots) or attached evidence (`prove` on
+what's already in history (recognized trailers/DCO/signatures/bots) or attached evidence (`madeby ai` on
 an old session log). This makes the pre-adoption gap explicit and dated rather than hidden, and never
 fabricates disclosure for the past. Full strategy: `STRATEGY.md §4` (honest backfill).
 
@@ -951,7 +951,7 @@ without proof of control."
 - **Forge-hosted repo:** OAuth to the forge + verify admin/write via its API (GitHub/GitLab/Gitea is
   the authority on who controls the repo — the Vercel/Netlify pattern), **or** the self-proving
   alternative: commit a signed `.madeby` / challenge token to the repo (only a controller can write
-  to it — the Search-Console / DNS-TXT pattern, and the same act as the gate/`prove`).
+  to it — the Search-Console / DNS-TXT pattern, and the same act as the gate / `madeby ai`).
 - **Published package:** the registry's publisher identity (npm/PyPI "who can publish this").
 - **Build artifact:** the `DERIVED_FROM` edge back to controllable source (SLSA/in-toto) — reduces
   to the forge/registry case.
@@ -1088,10 +1088,10 @@ writing today's code are the ones that should disclose it and can adopt the tool
   capability discovery, structured JSON I/O, agent-held token auth, idempotent ops, and *actionable
   structured errors* (never a human-only stack trace). The CLI already gives agents a scriptable
   surface (stable exit codes); MCP is the same core, made discoverable + typed. **Shipped** as
-  `madeby mcp` (stdio, dependency-free) — today `init` (align a repo: policy + CI check), `recognize`,
-  `check`, `prove` (the write primitive: an agent records its own witnessed spans, asserted-tier,
-  tier-capped), `list_host_adapters`, `resolve_identity`; `grant`, `explain-tier`, `scaffold-adapter`
-  land as those primitives do. The server is **self-teaching** via MCP resources (`madeby://guide/align`,
+  `madeby mcp` (stdio, dependency-free) — today `init` (set a repo up: policy + CI check), `check`
+  (the gate), `who` (the cross-carrier attestation read — one file or the whole repo), `ai` (the
+  write primitive: an agent records its own witnessed spans, asserted-tier, tier-capped); `grant`,
+  `explain-tier`, `scaffold-adapter` land as those primitives do. The server is **self-teaching** via MCP resources (`madeby://guide/align`,
   `madeby://schema/policy`) so an agent discovers *how* to align a repo, not just which verbs exist —
   "align my repo with MadeBy" is fully agent-serviceable (branch protection is the host's setting, and
   history is never backfilled — disclosure is going-forward).
@@ -1120,8 +1120,9 @@ environment**:
 
 - a **stable library** — `@madeby/core` (recognizers/evaluators: `commitDisclosureKinds`,
   `evaluateDisclosurePolicy`), `@madeby/analyzer` (git read, identity, the host-adapter registry);
-- **CLI primitives with structured I/O** — `madeby recognize --json` (the raw recognizer, no policy)
-  and `madeby check --json` (the gate's result), composable from any language or agent.
+- **CLI primitives with structured I/O** — `madeby check --json` (the gate's result) and
+  `madeby who --json` (the attestation read), composable from any language or agent. The raw
+  recognizer, no policy, is the library (`@madeby/core`'s `commitDisclosureKinds`).
 
 Supporting a new host, gate, or view is **composing our primitives on their compute** — never
 registering a bundle with us. A new CI host needs *no adapter from us*: compute the range however
