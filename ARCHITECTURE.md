@@ -288,6 +288,28 @@ inferring from source is the sin we don't commit. Undisclosed code stays **unkno
   — teaching the read a carrier we didn't ship — and adopt what it finds. A user-declared or
   unverifiable type resolves through the same cage: **capped at asserted** until a known
   canonicalization/verify path exists. Extension widens *coverage*, never *trust*.
+- **The registry is data, hosted and versioned — recognizers, not code (decision, 2026-08-12).** The
+  set of recognized carriers/attestation-types is itself a **MadeBy-hosted, versioned dataset** the
+  tool pulls and caches — not a table hardcoded in the CLI. User-declared types (above) flow *up* as
+  proposals; lightweight curation (the media-type-registry governance, §3) folds the reasonable ones
+  in; every tool instance then recognizes them **with no release**, so coverage *compounds* over time.
+  This shared vocabulary — "how to read the world's attestations" — is the moat (§12 strategic
+  reading). Two disciplines keep a hosted, growing recognizer set from becoming a trust hole or a
+  supply-chain surface:
+  - **Declarative, never executable.** An entry is data — a stable identifier, a schema pointer, a
+    field mapping, a canonicalization drawn from a *known-safe set*. You cannot ship us a parser to
+    run (§3 "can't safely execute an arbitrary canonicalization"; §12 "primitives you run, not code
+    you ship"). Pulling the registry cannot pull code.
+  - **Widens coverage, never trust** (load-bearing). A new entry can make a carrier *readable* (parse
+    → **asserted** floor); reaching *verified*/*bound* still needs a known canonicalization **plus a
+    verifiable signature** — parse ≠ verify (§3 graceful degradation). A wrong, stale, or hostile
+    entry can at worst surface something at the asserted floor with a "binding not recognized" flag;
+    it can **never** mint verified or sworn. Richer registry buys recall, not credulity.
+
+  Operationally: the tool **caches the registry and works offline** (fail-safe: unknown → asserted,
+  never break), and the gate **pins a registry version** so a `check` stays reproducible as the
+  registry grows underneath it. madeby.fyi thus serves the tool *two* things — the **claims**
+  (asker-pull by hash, below) and the **recognizer registry** (how to read carriers).
 - **Roadmap.** (1) Broaden the local sweep from two carriers to the full registry + sworn detector.
   (2) Interactive opt-in adoption during the sweep (CLI prompt or agent via MCP). (3) Opt-in
   **madeby.fyi hash-resolve fallback** for locally-undisclosed content (asker-pull, §1) — default
