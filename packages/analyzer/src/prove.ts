@@ -1,5 +1,5 @@
-// `proveRepo` — the disclosure WRITE primitive as a library function (shared by `madeby prove` and
-// the MCP `prove` tool). Reads a local AI-tool session log, confirms the AI's work is structurally
+// `proveRepo` — the disclosure WRITE primitive as a library function (shared by `madeby ai` and
+// the MCP `ai` tool). Reads a local AI-tool session log, confirms the AI's work is structurally
 // present in the checkout, and writes witnessed span evidence to `.madeby/spans` (asserted tier,
 // self-reported). Honest by construction: `captureLocalSpans` discards any span whose content isn't
 // present, so it cannot over-claim; and it can never mint a higher tier or attribute to anyone else.

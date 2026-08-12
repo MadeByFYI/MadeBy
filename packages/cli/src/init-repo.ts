@@ -65,7 +65,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   if (mode !== "required") {
     nextSteps.push('When ready to enforce: set mode to "required", then make the check required on the protected branch — the host\'s control plane (GitHub: gh api branch protection; Azure: a build-validation policy). See the MCP resource madeby://guide/enforce for exact commands.');
   }
-  nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer, a DCO Signed-off-by, a signed commit, or 'madeby prove'.");
+  nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), a DCO Signed-off-by, a signed commit, or 'madeby ai' (record your own AI session's witnessed spans).");
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
   return { created, skipped, policyMode: mode, host, nextSteps };
