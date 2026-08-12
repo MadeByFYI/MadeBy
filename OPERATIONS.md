@@ -137,9 +137,13 @@ static page**, not a live pipeline.
 
 **Tier 2 — the real services (deferred; where revenue lives).** The **resolver + registry store**
 (Neon — needed only once there's cross-content data and askers querying; today an in-memory demo),
-**ingestion at scale** for a live index (Modal/batch, CPU not GPU), and the monetized core —
-**verified identity / KYB / signing** and the **enterprise private-repo dashboard** (§6). These are
-the heaviest to operate (security, private data, identity) and **none are built.**
+the **hosted recognizer registry** (the versioned "how to read the world's attestations" dataset the
+tool pulls, plus the light propose→curate→publish path for user-declared attestation types —
+`ARCHITECTURE §3`; the authority-moat surface, not lock-in), **ingestion at scale** for a live index
+(Modal/batch, CPU not GPU), and the monetized core — **verified identity / KYB / signing** and the
+**enterprise private-repo dashboard** (§6). These are the heaviest to operate (security, private
+data, identity) and **none are built.** The recognizer registry is the *thinnest* of them — a
+versioned data endpoint (cache-fronted, scale-to-zero) + a curation queue — so it can graduate early.
 
 **Consequences for §2/§3/§4/§9:**
 - **Day-one footprint = a Vercel app + an npm package.** Everything else graduates in behind a real

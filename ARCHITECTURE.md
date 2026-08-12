@@ -63,20 +63,28 @@ honestly, for any subject:
    weak (no "disputed!" stigma on strong content); challenges and the (reopenable) dispute state
    visible (§11).
 5. **From what / part of what** — the provenance graph: derivation lineage and the part-of roll-up
-   with **provenance coverage** (% bound/verified/asserted/unattributed), recomputable from signed
-   leaves (§6).
+   with **provenance coverage** — the **`known %`** (origin on the record), decomposed by tier
+   (bound/verified/asserted); the remainder is **unknown** (the compliance surface's *unattributed*
+   fraction — the same quantity: `known % = 100 − unattributed %`). Recomputable from signed
+   leaves (§6). *Lexicon: **known / unknown** is the user-facing pair (it mirrors the default-unknown
+   doctrine); "provenance coverage" is the metric name for the compliance view; they are the same
+   number.*
 6. **Why** (when artifacts exist) — links to the motivating tickets / design docs / ADRs as **tiered
    edges** (declared vs. inferred), surfaced with their confidence (§6; STRATEGY §3).
 7. **Verify it yourself** — the canonical claim, the signature, and the open verification recipe /
    reference verifier (`VERIFYING.md`). Genuineness = this page, not the badge image.
 
 Design discipline (the mission guardrails): **altitude** — richness lives here so the badge stays
-short; **name the creator, uncertainty in the tier**; the *who*-headline is **human/machine** (a
-confidence gradient — provable-machine floor / unverified / attested-human), with the bot-vs-AI /
+short; **name the creator, uncertainty in the tier**; the *who*-headline is the **`hi + ai`
+composition** — the disclosed authors (Human Intelligence + AI), symmetric — with the bot-vs-AI /
 codegen-vs-generative detail **underneath**, never in the headline (`STRATEGY §3`); **celebrate
-transparency, neutral on the human/AI ratio** (prestige in the tier mark, never the %); **show
-conflicts, never fake a resolution.** The page is also the prime **conversion surface** — an unclaimed or contested page is
-exactly where a real author is moved to verify-and-outrank (STRATEGY §4).
+transparency, neutral on the human/AI ratio** — prestige lives in the **tier mark**, never in a
+"% AI" ratio. (The **`known %`** — how much origin is on the record — is a *different* number and is
+allowed: it is the disclosed share, not an AI ratio.) **Show conflicts, never fake a resolution.**
+This page is the badge's destination: the redesigned badge (§9) is `made by hi + ai` + `known %` + a
+tier color, and *this page is that badge expanded* — the per-author split, named models, identities,
+and per-tier decomposition. It is also the prime **conversion surface** — an unclaimed or contested
+page is exactly where a real author is moved to verify-and-outrank (STRATEGY §4).
 
 > **Progressive disclosure is a hard rule (review 2026-06-29, Concern B).** The 7 questions above
 > are the *full* answer, not the *default view* — presenting all of them, over a 4-tier ladder, two
@@ -293,9 +301,11 @@ inferring from source is the sin we don't commit. Undisclosed code stays **unkno
   tool pulls and caches — not a table hardcoded in the CLI. User-declared types (above) flow *up* as
   proposals; lightweight curation (the media-type-registry governance, §3) folds the reasonable ones
   in; every tool instance then recognizes them **with no release**, so coverage *compounds* over time.
-  This shared vocabulary — "how to read the world's attestations" — is the moat (§12 strategic
-  reading). Two disciplines keep a hosted, growing recognizer set from becoming a trust hole or a
-  supply-chain surface:
+  Being the **canonical steward** of this shared vocabulary — "how to read the world's attestations" —
+  is an **authority moat** (`STRATEGY.md §6` "authority moat"; §12), **not lock-in**: the registry
+  stays open for anyone to implement (`MISSION.md` value 6, "open, and no lock-in"), and the advantage
+  is curation + default gravity, never trapping data. Two disciplines keep a hosted, growing
+  recognizer set from becoming a trust hole or a supply-chain surface:
   - **Declarative, never executable.** An entry is data — a stable identifier, a schema pointer, a
     field mapping, a canonicalization drawn from a *known-safe set*. You cannot ship us a parser to
     run (§3 "can't safely execute an arbitrary canonicalization"; §12 "primitives you run, not code
@@ -648,6 +658,10 @@ registry**, not a fixed enum (same discipline as carriers/algorithms):
 - `IMPLEMENTS` / `MOTIVATED_BY` / `DECIDED_BY` / `DISCUSSED_IN` — link code to the **management
   artifacts that shaped it** (tickets, PRs, design docs, ADRs) — the *why* layer and the first
   non-code frontier (`STRATEGY.md` §3). These edges are usually inferred, hence tiered.
+- `ADOPTS` — a contributor **endorses an external attestation** the cross-carrier `who` sweep found
+  (§3, opt-in adoption) into their own provenance. It **points** at the external claim by hash +
+  carrier, never re-hosts it, and inherits that claim's **own tier** (adoption *includes*, never
+  *elevates*; bounded by the cardinal sins — you adopt only claims you're entitled to make).
 
 ### What the DAG enables (one graph, many lenses)
 
@@ -684,7 +698,7 @@ Aggregating a tree of mixed tiers gives a codebase a measurable, verifiable **pr
 profile** — like test coverage, for authorship:
 
 ```
-This release: 87% provenance-covered — 60% bound, 27% verified, 13% unattributed.
+This release: 87% provenance-covered (known) — 60% bound, 27% verified; 13% unattributed (unknown).
 AI-generated: 22%, all operator-attested.
 ```
 

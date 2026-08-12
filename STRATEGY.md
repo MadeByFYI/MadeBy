@@ -467,6 +467,15 @@ in-the-wild* disclosure we recognize, so we build an **open disclosure-signal re
 **in-toto/SLSA** provenance, and our own manifests/declarations. Same open posture as the carrier
 registry (`ARCHITECTURE §3`) and detect-don't-host.
 
+**It graduates from a local module to a hosted, community-fed data service.** The registry starts as
+code (`disclosure.ts`), but the set of recognized carriers/types becomes a **hosted, versioned
+dataset** the tool pulls and caches (`ARCHITECTURE §3`, the cross-carrier `who` sweep): users propose
+new attestation types, lightweight curation folds the reasonable ones in, and every tool recognizes
+them with no release — coverage *compounds*. Being its **canonical steward is an authority moat** (§6
+"authority moat"), **not lock-in**: the registry stays open for anyone to implement (`MISSION.md`
+value 6), and it only ever widens what we can *read*, never what we're willing to *believe* (the
+trust cage, `ARCHITECTURE §3/§12`).
+
 **The flywheel (now with a forcing function):** the gate compels disclosure → the recognizer reads
 it (ours + others') → the index aggregates it into public authority → authority drives more
 maintainers to the gate.
