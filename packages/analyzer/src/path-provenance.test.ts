@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { provenanceOf, provenanceMap } from "./path-provenance";
-import { proveRepo } from "./prove";
+import { recordAiSpans } from "./record-spans";
 
 const dirs: string[] = [];
 const AI_SRC = "export function add(a, b) {\n  return a + b;\n}\n";
@@ -26,10 +26,10 @@ describe("provenanceOf — the agent-context read", () => {
     writeFileSync(join(root, "math.ts"), AI_SRC);
     git(root, "add", "-A");
     git(root, "commit", "--no-verify", "-m", "feat: math\n\nCo-Authored-By: Claude <noreply@anthropic.com>");
-    // capture a real witnessed span for math.ts (transcript path uses `root`, matching proveRepo's repoRoot)
+    // capture a real witnessed span for math.ts (transcript path uses `root`, matching recordAiSpans's repoRoot)
     const log = join(root, "s.jsonl");
     writeFileSync(log, JSON.stringify({ type: "assistant", message: { model: "claude-opus-4-8", content: [{ type: "tool_use", name: "Write", input: { file_path: join(root, "math.ts"), content: AI_SRC } }] } }) + "\n");
-    expect(proveRepo(root, { transcriptPath: log }).written).toBe(true);
+    expect(recordAiSpans(root, { transcriptPath: log }).written).toBe(true);
 
     const p = provenanceOf(root, "math.ts");
     const span = p.records.find((r) => r.source === "span");
@@ -78,7 +78,7 @@ describe("provenanceMap — the repo-wide orientation", () => {
     git(root, "commit", "--no-verify", "-m", "feat: math\n\nCo-Authored-By: Claude <noreply@anthropic.com>");
     const log = join(root, "s.jsonl");
     writeFileSync(log, JSON.stringify({ type: "assistant", message: { model: "claude-opus-4-8", content: [{ type: "tool_use", name: "Write", input: { file_path: join(root, "math.ts"), content: AI_SRC } }] } }) + "\n");
-    expect(proveRepo(root, { transcriptPath: log }).written).toBe(true);
+    expect(recordAiSpans(root, { transcriptPath: log }).written).toBe(true);
 
     const map = provenanceMap(root);
     expect(map.trackedFiles).toBeGreaterThanOrEqual(2);

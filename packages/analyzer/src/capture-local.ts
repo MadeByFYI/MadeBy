@@ -1,5 +1,5 @@
-// `madeby capture --local` engine (#80) — the PRIMARY recall fix. Reads the user's OWN AI-tool
-// session log locally and turns it into WITNESSED span evidence: the tool recorded what it wrote,
+// The span-capture engine (#80) behind `madeby ai` — the PRIMARY recall fix. Reads the user's OWN
+// AI-tool session log locally and turns it into WITNESSED span evidence: the tool recorded what it wrote,
 // and we confirm that content is structurally present in the repo. Unlike #68's blob-SHA-at-a-commit
 // anchor, we anchor by the AI content's **structural fingerprint** (the §4 span anchor) and match by
 // structural similarity, so attribution survives squash / rebase / reformat. AI work that didn't

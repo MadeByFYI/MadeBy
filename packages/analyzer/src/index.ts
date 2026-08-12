@@ -4,16 +4,16 @@
 export { readGitLog } from "./git";
 export { analyzeCommits } from "./analyze";
 export type { AnalysisResult } from "./analyze";
-// Disclosure primitives as library functions — shared by the CLI (check/recognize) and the MCP
+// Disclosure primitives as library functions — shared by the CLI (check) and the MCP
 // server, and importable by any third party's own runtime (ARCHITECTURE §12).
-export { recognizeCommits, evaluateRepoDisclosure } from "./recognize";
-export type { RecognizedCommit, RepoDisclosure } from "./recognize";
+export { readDisclosures, evaluateRepoDisclosure } from "./read-disclosures";
+export type { DisclosedCommit, RepoDisclosure } from "./read-disclosures";
 // The agent-context read: provenance on the record for a path/line-range (ARCH §12 — line range is
 // the universal contract; we never parse code). Composes witnessed spans + last-touch blame.
 export { provenanceOf, provenanceMap } from "./path-provenance";
 export type { PathProvenance, ProvenanceRecord, ProvenanceMap, WitnessedFile } from "./path-provenance";
-export { proveRepo } from "./prove";
-export type { ProveOptions, ProveResult } from "./prove";
+export { recordAiSpans } from "./record-spans";
+export type { RecordOptions, RecordResult } from "./record-spans";
 export { badgeSnippet } from "./badge";
 export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
 export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";

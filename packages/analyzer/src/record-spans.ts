@@ -1,4 +1,4 @@
-// `proveRepo` — the disclosure WRITE primitive as a library function (shared by `madeby ai` and
+// `recordAiSpans` — the disclosure WRITE primitive as a library function (shared by `madeby ai` and
 // the MCP `ai` tool). Reads a local AI-tool session log, confirms the AI's work is structurally
 // present in the checkout, and writes witnessed span evidence to `.madeby/spans` (asserted tier,
 // self-reported). Honest by construction: `captureLocalSpans` discards any span whose content isn't
@@ -13,7 +13,7 @@ import { serializeSpanManifest, parseSpanManifest, type SpanAttestationV0 } from
 import { captureLocalSpans } from "./capture-local";
 import { detectParser } from "./tool-parsers";
 
-export interface ProveOptions {
+export interface RecordOptions {
   /** explicit transcript path; omitted ⇒ auto-discover the Claude Code transcript for this repo */
   transcriptPath?: string;
   /** the commit the spans anchor to (default HEAD) */
@@ -22,7 +22,7 @@ export interface ProveOptions {
   now?: string;
 }
 
-export interface ProveResult {
+export interface RecordResult {
   written: boolean;
   /** the manifest path written, when written */
   path?: string;
@@ -56,7 +56,7 @@ function autodiscover(root: string): string | null {
 }
 
 /** Capture witnessed AI spans from a session log into `.madeby/spans`. Never throws on input problems. */
-export function proveRepo(root: string, opts: ProveOptions = {}): ProveResult {
+export function recordAiSpans(root: string, opts: RecordOptions = {}): RecordResult {
   const transcriptPath = opts.transcriptPath ?? autodiscover(root);
   if (!transcriptPath || !existsSync(transcriptPath)) {
     return { written: false, matched: 0, discarded: 0, message: "transcript not found — pass a transcript path", error: "transcript-not-found" };
