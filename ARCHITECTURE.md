@@ -255,6 +255,45 @@ Governance is lightweight (media-type-registry style — who may claim a binding
 The format itself is open and governed: an adopted open spec is a moat; a proprietary one is
 a liability.
 
+### Examining a repo: the cross-carrier attestation sweep (`madeby who`) (decision, 2026-08-12)
+
+`madeby who` **is** the examine read — "made by whom?" asked of a whole repo (no path) or one file
+(a path). Its job is **discovery, never detection**: it reads *attestations that already exist*, in
+**any carrier we recognize**, and surfaces the union. It never reads the *code* to infer authorship
+— reading an in-toto envelope, an SPDX header, a git-notes payload, a DCO sign-off, a commit
+signature, or a self-hosted sworn declaration is finding a claim its author *deliberately published*;
+inferring from source is the sin we don't commit. Undisclosed code stays **unknown**, never a guess.
+
+- **The sweep = the carrier registry, applied.** For a repo, run every recognized carrier's parser
+  (§3 registry: MadeBy spans, git-notes, in-toto/SLSA, SPDX; plus the sworn-declaration detector,
+  §3 "sworn carrier") and merge the results. Each row is tagged with its **carrier** and its
+  **resolved tier** — recognized carrier → its tier; **unrecognized carrier → capped at asserted**
+  with a "binding not recognized" flag (the same graceful degradation as above); nothing is elevated
+  beyond what its carrier + signature support (invariants §10.3, §10.5).
+- **Honest current reality (2026-08-12): the sweep is partial.** `who` today reads only two carriers
+  — `.madeby/spans` and commit trailers/signatures via `git blame`. The registry bindings
+  (in-toto/SPDX/git-notes) and the sworn-declaration detector *exist in core/analyzer but are not yet
+  wired into the read*. Broadening `who` to the full registry sweep is a build item, not new
+  architecture — the parsers and the registry are already here; the examine read just doesn't call
+  them yet.
+- **Opt-in adoption — declare into your record what the sweep finds.** Discovery is passive; a
+  contributor (or their agent) can then **opt in** to a found attestation, adopting it into their own
+  provenance. Adoption **points, does not re-host** (like the sworn carrier): it records a MadeBy
+  **edge** (§6 — edges are claims) referencing the external attestation by hash + carrier, at the
+  attestation's **own tier**. Adoption *includes*, it never *elevates* — and it is bounded by the
+  cardinal sins: you may adopt only claims you're entitled to make (your own contributions), never
+  one that over-claims about someone else (§10, §12 safety cage).
+- **User-declarable attestation types, in real time.** The recognized-type set is **open and
+  user-extensible** (§12): during a sweep a user can declare "treat this as an attestation of type X"
+  — teaching the read a carrier we didn't ship — and adopt what it finds. A user-declared or
+  unverifiable type resolves through the same cage: **capped at asserted** until a known
+  canonicalization/verify path exists. Extension widens *coverage*, never *trust*.
+- **Roadmap.** (1) Broaden the local sweep from two carriers to the full registry + sworn detector.
+  (2) Interactive opt-in adoption during the sweep (CLI prompt or agent via MCP). (3) Opt-in
+  **madeby.fyi hash-resolve fallback** for locally-undisclosed content (asker-pull, §1) — default
+  stays local/zero-network; the fallback is a flag and uses **private fingerprints** so you can ask
+  "is this attested anywhere?" without revealing raw content hashes of private code.
+
 ### The anchor registry: substrate-agnostic non-repudiation (design commitment, 2026-08-10)
 
 Non-repudiation — *this claim existed at time T and the record wasn't altered* — is the layer

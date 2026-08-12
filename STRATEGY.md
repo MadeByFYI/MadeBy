@@ -75,10 +75,10 @@ tread carefully) vs. **AI-scaffolded work and the tool/model behind it** (and, w
 that makes human+AI collaboration legible over time** — a bigger, more defensible story than the gate
 alone.
 
-- **Real today, not aspirational.** The record is already machine-readable via the MCP tools
-  (`recognize`, `resolve_identity`) and committed `.madeby/spans` (tool + model + session). An agent
-  reads provenance the same way it reads the code. The human/AI distinction is *decision-relevant*
-  context (correct agent behavior differs), not decoration.
+- **Real today, not aspirational.** The record is already machine-readable via the MCP `who` tool
+  and committed `.madeby/spans` (tool + model + session). An agent reads provenance the same way it
+  reads the code. The human/AI distinction is *decision-relevant* context (correct agent behavior
+  differs), not decoration.
 - **Stays disclosure-not-detection.** The agent reads what was disclosed; it never guesses. We
   provide the record + the read tools — what an agent does with the context is the agent's; never
   over-claim we improve a model's output.
