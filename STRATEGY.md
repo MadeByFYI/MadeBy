@@ -338,10 +338,15 @@ underneath** (progressive disclosure, `ARCHITECTURE §1`), never the headline. T
 - **Machine** — a bot committer *or* disclosed AI: a **provable floor** on machine involvement,
   labeled *"machine / automation (incl. disclosed AI)."*
 - **Unverified** — a person *committed* it, but machine-assistance isn't disclosed. The honest middle.
-- **Attested human** — a verified person who signed + swore human authorship (the sworn declaration,
-  `ARCH §3`). Note: **"human" is *attested*, never *proven*** — absence of AI is unprovable (0%
-  untrailered recall), so the honest human end is a legally-consequential *attestation*, not a claim
-  we verified no machine was involved.
+- **Attested human** — a person *affirms* human authorship (the `Authored-by-human` trailer; sign or
+  swear it to climb the ladder — `ARCH §3`). The precise point: **human authorship is *testimony*,
+  not an *artifact*.** You *can* witness your own authorship firsthand — it simply leaves nothing
+  independently re-checkable, so to a third party it is an *attestation* (asserted → signed → sworn
+  testimony), never a verification that no machine was involved. AI is the mirror image: it *can*
+  leave a re-checkable artifact (a session log, `prove`), and inline AI leaves *none* (≈0% untrailered
+  recall). Both directions climb the **same tier ladder**; the only asymmetry is artifact-vs-testimony
+  on the *evidence* axis, not the tier — which is why the honest default *past a positive signal*
+  stays **unknown**, never human.
 
 **Two layers map onto it** (the free floor + the adoption upgrade, validated on real repos, #118):
 - **Ambient (free):** hands you the **machine floor** (bots by committer identity + disclosed AI) and
