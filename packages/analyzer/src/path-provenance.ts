@@ -13,7 +13,7 @@ import { execFileSync } from "node:child_process";
 import { commitDisclosureKinds, type DisclosureKind } from "@madeby/core";
 import { isBotIdentity } from "@madeby/classify";
 import { readSpanManifestsFromDir } from "./provenance";
-import { recognizeCommits } from "./recognize";
+import { readDisclosures } from "./read-disclosures";
 
 export interface ProvenanceRecord {
   /** where the signal came from */
@@ -169,7 +169,7 @@ export function provenanceOf(
 // ---- repo-wide provenance map -------------------------------------------------------------------
 // The orientation an agent reads BEFORE it works: the witnessed AI surface across the repo (precise,
 // from .madeby/spans) plus commit-level disclosure coverage. Cheap by construction — spans + one
-// recognize pass + `ls-files`, NO per-file blame. Files without a witnessed span have unknown origin
+// disclosure-read pass + `ls-files`, NO per-file blame. Files without a witnessed span have unknown origin
 // (disclosure, not detection — never "human"). Scope to a path prefix for a subtree.
 
 export interface WitnessedFile {
@@ -220,7 +220,7 @@ export function provenanceMap(root: string, opts: { prefix?: string; commitLimit
   }
 
   // commit-level disclosure coverage (one pass; context, deliberately NOT claimed per-file)
-  const commits = recognizeCommits(root, { limit: opts.commitLimit ?? 500 });
+  const commits = readDisclosures(root, { limit: opts.commitLimit ?? 500 });
   const disclosed = commits.filter((c) => c.disclosures.length > 0).length;
   const pct = commits.length ? Math.round((disclosed / commits.length) * 100) : 0;
   const scope = prefix ?? "repo";

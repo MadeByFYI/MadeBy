@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { parseSpanManifest } from "@madeby/core";
-import { proveRepo } from "./prove";
+import { recordAiSpans } from "./record-spans";
 
 const dirs: string[] = [];
 const AI_SRC = "export function add(a, b) {\n  return a + b;\n}\n";
@@ -32,10 +32,10 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 
-describe("proveRepo — records only structurally-present AI spans (asserted, local)", () => {
+describe("recordAiSpans — records only structurally-present AI spans (asserted, local)", () => {
   it("writes .madeby/spans when the AI content is present in the checkout", () => {
     const { root, transcript } = setup(AI_SRC);
-    const r = proveRepo(root, { transcriptPath: transcript, now: "2026-06-30T00:00:00Z" });
+    const r = recordAiSpans(root, { transcriptPath: transcript, now: "2026-06-30T00:00:00Z" });
     expect(r.written).toBe(true);
     expect(r.matched).toBe(1);
     expect(existsSync(r.path!)).toBe(true);
@@ -53,7 +53,7 @@ describe("proveRepo — records only structurally-present AI spans (asserted, lo
 
   it("records NOTHING when the AI content is not present (honest discard)", () => {
     const { root, transcript } = setup("a poem about the sea, nothing like the code\n");
-    const r = proveRepo(root, { transcriptPath: transcript, now: "2026-06-30T00:00:00Z" });
+    const r = recordAiSpans(root, { transcriptPath: transcript, now: "2026-06-30T00:00:00Z" });
     expect(r.written).toBe(false);
     expect(r.matched).toBe(0);
     expect(r.discarded).toBe(1);
@@ -61,7 +61,7 @@ describe("proveRepo — records only structurally-present AI spans (asserted, lo
 
   it("returns a transcript-not-found error, never throws", () => {
     const { root } = setup(AI_SRC);
-    const r = proveRepo(root, { transcriptPath: join(root, "nope.jsonl") });
+    const r = recordAiSpans(root, { transcriptPath: join(root, "nope.jsonl") });
     expect(r.written).toBe(false);
     expect(r.error).toBe("transcript-not-found");
   });

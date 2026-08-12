@@ -10,7 +10,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { evaluateRepoDisclosure, proveRepo, provenanceOf, provenanceMap } from "@madeby/analyzer";
+import { evaluateRepoDisclosure, recordAiSpans, provenanceOf, provenanceMap } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
@@ -114,7 +114,7 @@ const TOOLS: Tool[] = [
         ref: { type: "string", description: "commit the spans anchor to (default: HEAD)" },
       },
     },
-    handler: (args) => proveRepo(rootFor(args.path as string | undefined), { transcriptPath: args.log as string | undefined, ref: args.ref as string | undefined }),
+    handler: (args) => recordAiSpans(rootFor(args.path as string | undefined), { transcriptPath: args.log as string | undefined, ref: args.ref as string | undefined }),
   },
 ];
 

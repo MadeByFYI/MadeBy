@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, it, expect } from "vitest";
-import { recognizeCommits, evaluateRepoDisclosure } from "./recognize";
+import { readDisclosures, evaluateRepoDisclosure } from "./read-disclosures";
 
 const dirs: string[] = [];
 function git(dir: string, ...args: string[]): string {
@@ -17,7 +17,7 @@ function commit(dir: string, file: string, body: string, msg: string): void {
 
 let repo = "";
 beforeAll(() => {
-  repo = mkdtempSync(join(tmpdir(), "madeby-recognize-"));
+  repo = mkdtempSync(join(tmpdir(), "madeby-read-disclosures-"));
   dirs.push(repo);
   git(repo, "init", "-q", "-b", "main");
   commit(repo, "a.txt", "1\n", "chore: base"); // undisclosed
@@ -28,9 +28,9 @@ afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
 });
 
-describe("recognizeCommits — the raw library primitive (no policy)", () => {
-  it("reports per-commit disclosure kinds", () => {
-    const rows = recognizeCommits(repo);
+describe("readDisclosures — the raw library primitive (reads what commits declare, no policy)", () => {
+  it("reads per-commit disclosure kinds", () => {
+    const rows = readDisclosures(repo);
     expect(rows.find((r) => r.subject === "chore: base")!.disclosures).toEqual([]);
     expect(rows.find((r) => r.subject.startsWith("feat: b"))!.disclosures).toContain("ai-trailer");
     expect(rows.find((r) => r.subject.startsWith("fix: c"))!.disclosures).toContain("dco-signoff");
