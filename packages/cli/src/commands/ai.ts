@@ -1,9 +1,9 @@
 // `madeby ai [<log>] [<ref>]` — made by AI: the disclosure on-ramp. Reads your OWN AI-tool session
 // log locally, confirms the AI's work is structurally present in your checkout, and writes witnessed
 // span evidence to .madeby/spans. Privacy-clean: logs/content never leave the machine; only derived
-// attribution is written. A thin renderer over the shared `proveRepo` library primitive.
+// attribution is written. A thin renderer over the shared `recordAiSpans` library primitive.
 
-import { proveRepo } from "@madeby/analyzer";
+import { recordAiSpans } from "@madeby/analyzer";
 import { repoRoot } from "../scope";
 
 export function aiCommand(args: string[]): void {
@@ -14,7 +14,7 @@ export function aiCommand(args: string[]): void {
     return;
   }
 
-  const res = proveRepo(root, { transcriptPath: args[0], ref: args[1] });
+  const res = recordAiSpans(root, { transcriptPath: args[0], ref: args[1] });
 
   if (res.error === "transcript-not-found") {
     console.error("madeby ai: session log not found — pass it: madeby ai <transcript.jsonl> [ref]");

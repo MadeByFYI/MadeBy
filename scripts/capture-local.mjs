@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// `madeby capture --local` (#80) — the on-ramp that collapses the adoption barrier from "set up a
-// hook months ago" to "run one command now." Reads the user's OWN AI-tool session log locally,
+// The dev-script form of `madeby ai` (#80) — the on-ramp that collapses the adoption barrier from
+// "set up a hook months ago" to "run one command now." Reads the user's OWN AI-tool session log locally,
 // confirms the AI's work is structurally present in their checkout, and writes witnessed span
 // evidence to .madeby/spans — privacy-clean (logs/content never leave the machine; only derived
 // attribution is written). The mirror folds it in (provenance.ts), and the same act is the on-ramp
