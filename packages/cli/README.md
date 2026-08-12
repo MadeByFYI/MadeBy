@@ -105,6 +105,11 @@ an AI agent can use MadeBy with no human in the loop. It exposes the same primit
 - **`check`** `{ path?, range? }` — the gate result (`pass`, `mode`, `undisclosed[]`). *read*
 - **`prove`** `{ path?, log?, ref? }` — record witnessed AI spans from the agent's own session log
   into `.madeby/spans` (asserted tier, local; only spans structurally present are kept). *write*
+- **`provenance`** `{ path, startLine?, endLine? }` — what's *on the record* about a file's origin:
+  witnessed AI spans (model/tool) where captured, last-touch commit disclosure elsewhere, unknown
+  otherwise. The read for **provenance-as-context**. The line range is the contract — for
+  function/symbol resolution, turn a symbol into a range with your own tooling (tree-sitter/LSP);
+  MadeBy never parses code. *read*
 - **`list_host_adapters`** — the known forges and each one's capabilities. *read*
 - **`resolve_identity`** `{ name?, email?, host? }` — a committer's stable key + public handle. *read*
 
