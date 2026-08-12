@@ -808,27 +808,27 @@ audience.
   `[![madeby.fyi](https://madeby.fyi/b/owner/repo.svg)](https://madeby.fyi/owner/repo)`.
 - **Pointer, never proof.** Genuineness = follow the link to the authoritative subject page,
   which shows the signed claims, tiers, and verified identities. Forgery is self-defeating.
-- **The face completes the sentence "made by ___" (decision, 2026-08-12).** The badge names the
-  *disclosed authors*, never a metric — `madeby ∙ hi + ai` (Human Intelligence + AI), `madeby ∙ ai`,
-  `madeby ∙ hi`. This is the grammar the whole surface follows (`who`/`ai`/`me`), and it rules a bare
-  number off the face: "madeby ∙ 97%" is not a sentence. It replaces the earlier "% of commits with
-  AI involvement" ratio, which is off-doctrine now — AI-forward, asymmetric (human affirmation rides
-  the same ladder), and honestly wrong-low (untrailered AI is invisible). Three rules keep the face honest:
-  - **Disclosed authors, plus `?` only when the undisclosed share is *material*.** The face names the
-    disclosed authors (`hi`, `ai`); `?` joins them only when undisclosed work is a material share — so
-    a well-disclosed repo reads `madeby ∙ hi + ai`, and an undisclosed-heavy one reads
-    `madeby ∙ ? + ai`, where `?` earns its place (and can rank first). An *always-on* `+ ?` is
-    wallpaper — every repo has some unknown, so a permanent `?` carries no information; gating it by
-    materiality is what makes it informative, while the exact proportion stays on the link. It is the
-    honest gap (the narrative default is *unknown*, `STRATEGY.md` §5), never hidden — but we never
-    promote unknown → human, nor assert undisclosed → AI.
-  - **Qualitative on the face, proportion on the link.** The face is the composition
-    (`hi + ai + ?`), which can't be gamed by padding a number. The exact mix (%, and lines/tokens
-    where span evidence exists), the named models, and the verified identities live on the resolver
-    page — where genuineness is checkable, not asserted.
-  - **Tier is color, not words.** The right segment's hue rises along the ladder (asserted → sworn →
-    verified → bound), so the same `hi + ai` *deepens* as the repo signs and swears — the upgrade
-    pull, with zero extra text. The legend lives on the resolver page.
+- **Two rows: who, then how much (decision, 2026-08-12).** The badge holds the two facts separately,
+  each in its own row. It replaces the earlier "% of commits with AI involvement" ratio, which is
+  off-doctrine now — AI-forward, asymmetric (human affirmation rides the same ladder), and honestly
+  wrong-low (untrailered AI is invisible).
+  - **Row 1 — the composition — completes the sentence "made by ___".** It names the *disclosed
+    authors*, never a metric: `madeby ∙ hi + ai` (Human Intelligence + AI), `madeby ∙ ai`,
+    `madeby ∙ hi`. This is the grammar the whole surface follows (`who`/`ai`/`me`), and it rules a
+    bare number off *this* row: "madeby ∙ 97%" is not a sentence. Qualitative, so it can't be gamed by
+    padding a number.
+  - **Row 2 — the coverage — `known X%`.** How much of the origin is on the record. The undisclosed
+    gap (100−X%) is carried *here*, as one honest number — which is why the composition row needs no
+    `?`: an always-on `?` is wallpaper (every repo has some unknown), whereas a coverage figure is the
+    sized statement of the gap. "Known" (chosen over "disclosed"/"disclosure") is the exact mirror of
+    the narrative default *unknown* (`STRATEGY.md` §5). We never promote unknown → human, nor assert
+    undisclosed → AI; the gap is shown, never hidden.
+  - **The link carries the full split.** One coverage number on the badge; the exact per-author
+    proportions (and lines/tokens where span evidence exists), the named models, and the verified
+    identities live on the resolver page — where genuineness is checkable, not asserted.
+  - **Tier is color, not words.** The composition segment's hue rises along the ladder (asserted →
+    sworn → verified → bound), so the same `hi + ai` *deepens* as the repo signs and swears — the
+    upgrade pull, with zero extra text. The legend lives on the resolver page.
 
 ---
 
