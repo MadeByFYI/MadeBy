@@ -37,6 +37,7 @@ A commit **discloses its origin** if it carries any of:
 
 - an **AI-authorship trailer** — `Co-Authored-By:` / `Generated-by:` / `Assisted-by:` naming an AI
   tool (Claude Code, Copilot, Cursor, aider, … already emit these);
+- an **affirmative human-authorship trailer** — `Authored-by-human: <you>` (see below);
 - a **DCO `Signed-off-by:`** line;
 - a **commit signature**;
 - a **`madeby prove`** attestation.
@@ -48,6 +49,23 @@ before you decide to enforce anything.
 In CI, omit `<range>` — on a pull-request build `madeby check` **auto-scopes to the PR's own
 commits** from the CI environment (GitHub today; other hosts via their adapter). Pass an explicit
 `<range>` to override.
+
+### Affirm human authorship
+
+Disclosure runs both ways: if you wrote code yourself, affirm it so your work is *disclosed-human*,
+not lumped into unknown. It's just a commit trailer — the "tool" is git. Make it a keystroke with an
+alias:
+
+```sh
+git config alias.affirm '!git commit --trailer "Authored-by-human: $(git config user.name) <$(git config user.email)>"'
+git affirm -m "hand-written parser"     # discloses human authorship
+```
+
+Human and AI disclosure ride the **same ladder** — a trailer is *asserted*; sign the commit and it's
+*verified* (the signature authenticates *who* affirmed it, not the human-vs-AI content — equally true
+of AI disclosure); a sworn declaration is *sworn*. The one asymmetry is evidence, not tier: AI can
+leave a re-checkable artifact (a session log, `prove`); human authorship is your firsthand testimony.
+If you used AI, disclose the AI — don't claim human.
 
 ```json
 // .madeby/policy.json
