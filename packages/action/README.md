@@ -21,8 +21,9 @@ madeby check — 1/2 commits disclose origin (required; accepts: any recognized 
 Undisclosed commits (1):
   ✗ cdf9baca  feat: add subtract helper
 
-To disclose: add a Co-Authored-By / Generated-by trailer, a DCO Signed-off-by, sign the commit,
-or attest with 'madeby prove'. (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)
+To disclose: add a Co-Authored-By / Generated-by trailer, an Authored-by-human trailer ('madeby me'),
+a DCO Signed-off-by, sign the commit, or record your AI session with 'madeby ai'.
+(Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)
 ```
 
 The fix is **one trailer line, not a rewrite** — the contributor adds a `Signed-off-by:` (or a
@@ -46,7 +47,7 @@ A commit discloses its origin if it carries any of:
   work you wrote yourself, so it's *disclosed-human*, not lumped into unknown;
 - a **DCO `Signed-off-by:`** line;
 - a **cryptographic signature** on the commit;
-- a **`madeby prove`** attestation (a contributor's own captured AI-session record).
+- a **`madeby ai`** attestation (a contributor's own captured AI-session record).
 
 Bot/automation commits (dependabot, codegen) are recognized as machine-authored automatically.
 Human and AI disclosure ride the **same ladder**: a trailer is *asserted*; signing verifies *who*
@@ -116,8 +117,9 @@ CI step on that host (compute the range from that host's env).
 
 ## What a contributor does to pass a `required` gate
 
-Whatever discloses origin — add a `Co-Authored-By:` / `Generated-by:` trailer, a DCO `Signed-off-by:`,
-sign the commit, or run `madeby prove`. The check comments a short summary and points to how.
+Whatever discloses origin — add a `Co-Authored-By:` / `Generated-by:` trailer, affirm your own
+authorship with `madeby me`, add a DCO `Signed-off-by:`, sign the commit, or record your AI session
+with `madeby ai`. The check comments a short summary and points to how.
 
 ## Honest notes
 

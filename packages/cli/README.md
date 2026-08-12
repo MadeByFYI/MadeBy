@@ -21,14 +21,19 @@ npm i -g madeby
 ## Usage
 
 ```
-madeby check     [<range>]     Evaluate commits against .madeby/policy.json (the disclosure gate).
-                               <range> e.g. origin/main..HEAD — a PR's own commits. --json for output.
-madeby recognize [<range>]     The raw disclosure primitive: per-commit disclosure kinds, no policy.
-                               --json for structured output. Compose it into your own gate/view.
-madeby prove     [<log>] [<ref>]  Capture your AI session log's witnessed spans into .madeby/spans.
-madeby mcp                     Run the MCP server (stdio) — the primitives as agent-callable tools.
+madeby init                    Set MadeBy up: write .madeby/policy.json + the CI disclosure check.
+madeby check  [<range>]        The gate: do commits meet .madeby/policy.json? (a verdict — exit code
+                               gates). <range> e.g. origin/main..HEAD — a PR's own commits. --json too.
+madeby who    [<path>]         Made by whom? What's on the record about who made this — one file's
+  (alias: whom)                origin, or the whole repo with no path. --lines=A-B to scope. --json too.
+madeby ai     [<log>] [<ref>]  Made by AI: record your AI session's witnessed spans into .madeby/spans.
+madeby me                      Made by me: affirm you authored HEAD yourself (an Authored-by-human trailer).
+madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
 madeby help
 ```
+
+The surface is your product thesis — **"made by ___"**: `who` reads it, `ai` and `me` write the two
+sides of it, and `init`/`check` are the setup and the gate.
 
 ### `madeby check` — the disclosure gate
 
@@ -40,7 +45,7 @@ A commit **discloses its origin** if it carries any of:
 - an **affirmative human-authorship trailer** — `Authored-by-human: <you>` (see below);
 - a **DCO `Signed-off-by:`** line;
 - a **commit signature**;
-- a **`madeby prove`** attestation.
+- a **`madeby ai`** attestation (your own AI session's witnessed spans).
 
 Exit codes: **0** = pass · **1** = a `required` policy failed on an undisclosed commit · **2** = not
 a git repository. Under `advisory`/`off` it only reports (always exit 0) — so it's safe to add to CI
@@ -50,22 +55,22 @@ In CI, omit `<range>` — on a pull-request build `madeby check` **auto-scopes t
 commits** from the CI environment (GitHub today; other hosts via their adapter). Pass an explicit
 `<range>` to override.
 
-### Affirm human authorship
+### `madeby me` — affirm human authorship
 
 Disclosure runs both ways: if you wrote code yourself, affirm it so your work is *disclosed-human*,
-not lumped into unknown. It's just a commit trailer — the "tool" is git. Make it a keystroke with an
-alias:
+not lumped into unknown. `madeby me` adds an `Authored-by-human` trailer to your last commit — the
+symmetric human claim to `madeby ai`. (The "tool" underneath is just git; if you prefer it at commit
+time, `git commit --trailer "Authored-by-human: …"` does the same thing.)
 
 ```sh
-git config alias.affirm '!git commit --trailer "Authored-by-human: $(git config user.name) <$(git config user.email)>"'
-git affirm -m "hand-written parser"     # discloses human authorship
+madeby me     # affirms human authorship of HEAD
 ```
 
 Human and AI disclosure ride the **same ladder** — a trailer is *asserted*; sign the commit and it's
 *verified* (the signature authenticates *who* affirmed it, not the human-vs-AI content — equally true
 of AI disclosure); a sworn declaration is *sworn*. The one asymmetry is evidence, not tier: AI can
-leave a re-checkable artifact (a session log, `prove`); human authorship is your firsthand testimony.
-If you used AI, disclose the AI — don't claim human.
+leave a re-checkable artifact (a session log, `madeby ai`); human authorship is your firsthand
+testimony. If you used AI, disclose the AI — don't claim human.
 
 ```json
 // .madeby/policy.json
@@ -93,12 +98,11 @@ MadeBy is composable primitives, not a plugin host. To support a **new CI host, 
 your own dashboard**, you don't register code with us — you run the primitives **in your own
 environment**:
 
-- **`madeby recognize --json`** — the raw recognizer: per-commit disclosure kinds, no policy. Build
-  any view or gate on top.
 - **`madeby check --json`** — the gate's structured result (`pass`, `mode`, `undisclosed[]`); the
   exit code still gates, so CI can use either.
-- The same logic as a library: [`@madeby/core`](https://www.npmjs.com/package/@madeby/core)
-  (`commitDisclosureKinds`, `evaluateDisclosurePolicy`).
+- The raw recognizer as a library: [`@madeby/core`](https://www.npmjs.com/package/@madeby/core)
+  (`commitDisclosureKinds`, `evaluateDisclosurePolicy`) — per-commit disclosure kinds, no policy.
+  Build any view or gate on top, in your own runtime.
 
 **A new host needs no adapter from us** — compute the range however that host exposes it and pass it.
 Any CI without a built-in adapter ships nothing to MadeBy; e.g. a Jenkins pipeline:
@@ -117,22 +121,22 @@ matter who runs them.
 `madeby mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over stdio, so
 an AI agent can use MadeBy with no human in the loop. It exposes the same primitives as typed tools:
 
-- **`init`** `{ path?, mode?, host? }` — align a repo: create `.madeby/policy.json` + the CI check
+- **`init`** `{ path?, mode?, host? }` — set a repo up: create `.madeby/policy.json` + the CI check
   (idempotent). The one-call setup. *write*
-- **`recognize`** `{ path?, range? }` — per-commit disclosure kinds (no policy). *read*
-- **`check`** `{ path?, range? }` — the gate result (`pass`, `mode`, `undisclosed[]`). *read*
-- **`prove`** `{ path?, log?, ref? }` — record witnessed AI spans from the agent's own session log
-  into `.madeby/spans` (asserted tier, local; only spans structurally present are kept). *write*
-- **`provenance`** `{ path, startLine?, endLine? }` — what's *on the record* about a file's origin:
-  witnessed AI spans (model/tool) where captured, last-touch commit disclosure elsewhere, unknown
-  otherwise. The read for **provenance-as-context**. The line range is the contract — for
-  function/symbol resolution, turn a symbol into a range with your own tooling (tree-sitter/LSP);
-  MadeBy never parses code. *read*
-- **`provenance_map`** `{ prefix?, commitLimit? }` — the repo-wide orientation an agent reads *before*
-  it works: the witnessed AI surface (files/regions, model-named) + commit-level disclosure coverage.
-  Files without a witnessed span are unknown-origin. *read*
-- **`list_host_adapters`** — the known forges and each one's capabilities. *read*
-- **`resolve_identity`** `{ name?, email?, host? }` — a committer's stable key + public handle. *read*
+- **`check`** `{ path?, range? }` — the gate: do commits meet the policy? Returns `pass`, `mode`,
+  `undisclosed[]`. *read (verdict)*
+- **`who`** `{ path?, repo?, startLine?, endLine?, prefix?, commitLimit? }` — made by whom? With a
+  `path`: what's *on the record* about that file's origin — witnessed AI spans (model/tool) where
+  captured, last-touch commit disclosure elsewhere, unknown otherwise. With no `path`: the repo-wide
+  map an agent reads *before* it works (the witnessed AI surface + commit-level coverage; cheap). The
+  line range is the contract — for a symbol, turn it into a range with your own tooling
+  (tree-sitter/LSP); MadeBy never parses code. *read (attribution)*
+- **`ai`** `{ path?, log?, ref? }` — made by AI: record witnessed AI spans from the agent's own
+  session log into `.madeby/spans` (asserted tier, local; only spans structurally present are kept).
+  *write*
+
+(`me` — affirming *human* authorship — is a CLI command, not an agent tool: an agent is AI, so it
+discloses with `ai`, never `me`.)
 
 The server is also **self-teaching** via MCP resources, so an agent can discover *how* to align a
 repo, not just which verbs exist:
@@ -147,11 +151,10 @@ repo, not just which verbs exist:
 - **`madeby://schema/policy`** — the `.madeby/policy.json` schema.
 
 So "align my repo with MadeBy" is fully agent-serviceable: the agent reads the guide, calls **`init`**
-to write the policy + CI check, records its own AI work with **`prove`**, and verifies with
-**`check`** — no human in the loop. (Two things stay outside the tools, by design: turning on branch
-protection is the *host's* setting, and historical commits are never backfilled — disclosure is
-going-forward. `prove` cannot claim a higher tier or attribute to anyone else, and nothing leaves the
-machine.)
+to write the policy + CI check, records its own AI work with **`ai`**, and verifies with **`check`** —
+no human in the loop. (Two things stay outside the tools, by design: turning on branch protection is
+the *host's* setting, and historical commits are never backfilled — disclosure is going-forward.
+`ai` cannot claim a higher tier or attribute to anyone else, and nothing leaves the machine.)
 
 Point an MCP client at the command (e.g. a `claude_desktop_config.json` / `.mcp.json` entry):
 

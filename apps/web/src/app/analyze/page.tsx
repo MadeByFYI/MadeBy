@@ -153,10 +153,13 @@ export default async function AnalyzePage({ searchParams }: { searchParams: Prom
             the AI-proud raise it by proving the AI's share; the human-proud raise it by signing +
             attesting their own work. Either way the action is "raise your score", never an accusation. */}
         <p style={{ margin: ".6rem 0 0", fontSize: ".95rem" }}>
-          Think that undisclosed slice is too high? <strong>Raise your Disclosure Score</strong> — prove
-          the AI&apos;s share, or sign &amp; attest your own authorship.{" "}
-          <strong>Either way: <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby prove</code></strong>{" "}
-          reads your own session logs locally (nothing leaves your machine) and records what it finds.
+          Think that undisclosed slice is too high? <strong>Raise your Disclosure Score</strong> — record
+          the AI&apos;s share with{" "}
+          <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby ai</code>{" "}
+          (it reads your own session logs locally — nothing leaves your machine), or affirm your own
+          authorship with{" "}
+          <code style={{ background: "#11161f", padding: "0 .3rem", borderRadius: 4 }}>npx madeby me</code>.
+          Either way, you raise the score.
         </p>
       </div>
 

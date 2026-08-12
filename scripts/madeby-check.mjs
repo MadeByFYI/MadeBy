@@ -54,8 +54,9 @@ if (result.nonCompliant.length && policy.mode !== "off") {
   }
   if (result.nonCompliant.length > 20) console.log(`  … and ${result.nonCompliant.length - 20} more`);
   console.log(
-    `\nTo disclose: add a Co-Authored-By / Generated-by trailer, a DCO Signed-off-by, sign the commit,` +
-      ` or attest with 'madeby prove'. (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
+    `\nTo disclose: add a Co-Authored-By / Generated-by trailer, an Authored-by-human trailer ('madeby me'),` +
+      ` a DCO Signed-off-by, sign the commit, or record your AI session with 'madeby ai'.` +
+      ` (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
   );
 }
 
