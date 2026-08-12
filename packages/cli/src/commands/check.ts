@@ -1,6 +1,7 @@
 // `madeby check [<range>] [--json]` — the OSS-maintainer disclosure gate. Evaluates each commit's
 // recognized disclosure against `.madeby/policy.json` and exits non-zero only under `mode: required`.
-// Fail-safe: a missing/malformed policy degrades to `off`, so we never block a PR on our own error
+// The policy file is optional — with none (or a malformed one) it degrades to `advisory`, so we
+// never block a PR on our own error
 // and never invent a stricter gate than the maintainer wrote. A thin renderer over the shared
 // `evaluateRepoDisclosure` library primitive; `@madeby/core`'s `commitDisclosureKinds` is the raw recognizer.
 
@@ -33,7 +34,7 @@ export function checkCommand(args: string[]): void {
   if (autoHost) console.log(`madeby check: auto-scoped to the ${autoHost} PR range.`);
   console.log(`madeby check — ${result.summary}`);
 
-  if (result.undisclosed.length && result.mode !== "off") {
+  if (result.undisclosed.length) {
     console.log(`\nUndisclosed commits (${result.undisclosed.length}):`);
     for (const v of result.undisclosed.slice(0, 20)) {
       console.log(`  ✗ ${v.ref}  ${v.subject.slice(0, 60)}`);
@@ -46,6 +47,6 @@ export function checkCommand(args: string[]): void {
     );
   }
 
-  // `required` gates; `advisory`/`off` only report. Never exit non-zero on our own error.
+  // `required` gates; `advisory` only reports. Never exit non-zero on our own error.
   process.exit(result.pass ? 0 : 1);
 }
