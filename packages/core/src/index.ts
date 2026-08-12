@@ -91,6 +91,7 @@ export {
   hasDcoSignoff,
   recognizeAiTrailers,
   hasAiTrailer,
+  hasHumanAttestation,
   recognizeSpdxIdentifiers,
   disclosureKindsPresent,
   commitDisclosureKinds,

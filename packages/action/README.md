@@ -42,11 +42,16 @@ A commit discloses its origin if it carries any of:
 
 - an **AI-authorship trailer** — `Co-Authored-By:` / `Generated-by:` / `Assisted-by:` naming an AI
   tool (Claude Code, Copilot, Cursor, aider, … already emit these);
+- an **affirmative human-authorship trailer** — `Authored-by-human: <you>` — the symmetric claim for
+  work you wrote yourself, so it's *disclosed-human*, not lumped into unknown;
 - a **DCO `Signed-off-by:`** line;
 - a **cryptographic signature** on the commit;
 - a **`madeby prove`** attestation (a contributor's own captured AI-session record).
 
 Bot/automation commits (dependabot, codegen) are recognized as machine-authored automatically.
+Human and AI disclosure ride the **same ladder**: a trailer is *asserted*; signing verifies *who*
+claimed it; a sworn declaration is *sworn*. Disclosure, not detection — MadeBy records what's
+claimed, never guesses; if you used AI, disclose the AI rather than claiming human.
 
 ## Setup — two files
 
