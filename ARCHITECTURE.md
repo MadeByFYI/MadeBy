@@ -840,12 +840,24 @@ audience.
     code that carries its own attestation is surfaced per that claim — the maker can always opt their
     tooling's output onto the record. So the badge focuses on non-generated authorship; automation is
     a fact you drill into, not a slice of the "made by" line.
-  - **Row 2 — the coverage — `known X%`.** How much of the origin is on the record. The undisclosed
-    gap (100−X%) is carried *here*, as one honest number — which is why the composition row needs no
-    `?`: an always-on `?` is wallpaper (every repo has some unknown), whereas a coverage figure is the
-    sized statement of the gap. "Known" (chosen over "disclosed"/"disclosure") is the exact mirror of
-    the narrative default *unknown* (`STRATEGY.md` §5). We never promote unknown → human, nor assert
+  - **Row 2 — the coverage — `known X%`.** How much of the origin's authorship *type* we actually
+    know (`hi`/`ai`/`bot`) — not merely that *something* was disclosed. The undisclosed gap (100−X%)
+    is carried *here*, as one honest number — which is why the composition row needs no `?`: an
+    always-on `?` is wallpaper (every repo has some unknown), whereas a coverage figure is the sized
+    statement of the gap. "Known" (chosen over "disclosed"/"disclosure") is the exact mirror of the
+    narrative default *unknown* (`STRATEGY.md` §5). We never promote unknown → human, nor assert
     undisclosed → AI; the gap is shown, never hidden.
+  - **Authentication is not authorship-type (decision, 2026-08-12).** A signature or DCO sign-off
+    proves *who is accountable*, not *whether a human or AI authored it* — a person can sign
+    AI-assisted work, so counting "signed" as `hi` would promote *no-AI-mentioned* into a *human
+    claim* (the mild sin). A signed-but-unlabeled commit is therefore **unknown-which**: it raises the
+    **tier** (the authentication axis), never the `hi + ai` composition, and does **not** count toward
+    `known %`. The accountability it *does* establish — *verified identity, authorship-type
+    undisclosed* — is a **resolver-page drill-in, never the badge** (the same rule as automation).
+    Consequence: the badge's `known %` (do we know the authorship type?) answers a *different* question
+    from the gate's compliance check (did every commit disclose something the policy `accept`s?) — a
+    repo can be fully gate-compliant on signatures alone yet honestly show a low `known %`. Not a
+    contradiction: different questions.
   - **The link carries the full split.** One coverage number on the badge; the exact per-author
     proportions (and lines/tokens where span evidence exists), the named models, and the verified
     identities live on the resolver page — where genuineness is checkable, not asserted.
