@@ -62,9 +62,9 @@ claimed, never guesses; if you used AI, disclose the AI rather than claiming hum
 { "version": 0, "mode": "advisory" }
 ```
 
-- `advisory` — report the disclosure coverage on each PR; never fails the check.
+- `advisory` — report the disclosure coverage on each PR; never fails the check. The default, and
+  what you get with no policy file at all (it's optional).
 - `required` — fail the check on any commit that discloses nothing your policy accepts.
-- `off` — no gate.
 - optional `"accept": ["dco-signoff", "ai-trailer", ...]` — restrict what satisfies the policy
   (omit ⇒ any recognized disclosure counts).
 

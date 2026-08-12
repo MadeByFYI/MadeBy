@@ -14,10 +14,12 @@ describe("parseDisclosurePolicy — fail-safe normalization", () => {
       accept: ["dco-signoff"],
     });
   });
-  it("degrades unknown/garbage input to the safe 'off' default (never invents a stricter gate)", () => {
+  it("degrades unknown/garbage input to the safe 'advisory' default (never invents a stricter gate)", () => {
+    expect(DEFAULT_POLICY.mode).toBe("advisory"); // the floor is report-only, not silence
     expect(parseDisclosurePolicy(null)).toEqual(DEFAULT_POLICY);
     expect(parseDisclosurePolicy("nope")).toEqual(DEFAULT_POLICY);
-    expect(parseDisclosurePolicy({ mode: "banhammer" })).toEqual({ version: 0, mode: "off" });
+    expect(parseDisclosurePolicy({ mode: "banhammer" })).toEqual({ version: 0, mode: "advisory" });
+    expect(parseDisclosurePolicy({ mode: "off" })).toEqual({ version: 0, mode: "advisory" }); // "off" is gone → advisory
   });
   it("drops an empty accept list (⇒ any recognized disclosure counts)", () => {
     expect(parseDisclosurePolicy({ mode: "required", accept: [] })).toEqual({ version: 0, mode: "required" });
@@ -48,10 +50,11 @@ describe("evaluateDisclosurePolicy", () => {
     expect(r.pass).toBe(true); // advisory never blocks
   });
 
-  it("off never blocks and reads as no-policy", () => {
+  it("the default policy is advisory — reports coverage, never blocks", () => {
     const r = evaluateDisclosurePolicy(DEFAULT_POLICY, commits);
+    expect(r.mode).toBe("advisory");
     expect(r.pass).toBe(true);
-    expect(r.summary).toMatch(/no disclosure policy/i);
+    expect(r.summary).toMatch(/disclose origin \(advisory/i);
   });
 
   it("an empty commit set passes (nothing to gate)", () => {
