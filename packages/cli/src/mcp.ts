@@ -10,7 +10,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { recognizeCommits, evaluateRepoDisclosure, proveRepo, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
+import { recognizeCommits, evaluateRepoDisclosure, proveRepo, provenanceOf, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
@@ -105,6 +105,31 @@ const TOOLS: Tool[] = [
       },
     },
     handler: (args) => proveRepo(rootFor(args.path as string | undefined), { transcriptPath: args.log as string | undefined, ref: args.ref as string | undefined }),
+  },
+  {
+    name: "provenance",
+    description:
+      "Provenance-as-context: for a file (optionally a line range), what's ON THE RECORD about its " +
+      "origin — witnessed AI spans (model/tool, precise) where captured, last-touch commit disclosure " +
+      "from git blame elsewhere (approximate, labeled), unknown otherwise. The universal contract is " +
+      "the line range: for function/symbol resolution, turn a symbol into a line range with your own " +
+      "tooling (tree-sitter/LSP/ctags) and pass it — MadeBy never parses code. Disclosure, not " +
+      "detection: it reports what's disclosed and never asserts 'human'.",
+    inputSchema: {
+      type: "object",
+      required: ["path"],
+      properties: {
+        path: { type: "string", description: "repo-relative file path to read provenance for" },
+        repo: { type: "string", description: "path to the repo (default: the server's working directory)" },
+        startLine: { type: "number", description: "optional 1-based start of the line range" },
+        endLine: { type: "number", description: "optional 1-based end of the line range" },
+      },
+    },
+    handler: (args) =>
+      provenanceOf(rootFor(args.repo as string | undefined), args.path as string, {
+        startLine: args.startLine as number | undefined,
+        endLine: args.endLine as number | undefined,
+      }),
   },
   {
     name: "list_host_adapters",
@@ -335,5 +360,5 @@ export function startMcpServer(): void {
     }
     handle(msg);
   });
-  process.stderr.write("madeby mcp: ready (stdio; tools: init, recognize, check, prove, list_host_adapters, resolve_identity; resources: align guide, policy schema)\n");
+  process.stderr.write("madeby mcp: ready (stdio; tools: init, recognize, check, prove, provenance, list_host_adapters, resolve_identity; resources: align/enforce/backfill guides, policy schema)\n");
 }
