@@ -3,31 +3,36 @@
 // type-stripping import constraints the scripts/*.mjs dev entries have to work around), so
 // `npx madeby …` runs on plain Node with no monorepo layout and no flags.
 //
-// The commands, all honest-by-construction:
-//   madeby check      — evaluate commits against .madeby/policy.json (the maintainer disclosure gate)
-//   madeby recognize  — the raw disclosure primitive (per-commit kinds, no policy) to compose on
-//   madeby prove      — capture your own AI session log's witnessed spans into .madeby/spans
+// The surface is "made by ___": two conventions (init, check) and the disclosure family.
+//   madeby init   — set MadeBy up: .madeby/policy.json + the CI disclosure check
+//   madeby check  — the gate: do commits meet the policy? (a verdict; the exit code gates)
+//   madeby who    — made by whom? read what's on the record about who made this (file or repo)
+//   madeby ai     — made by AI: record your own AI session's witnessed spans
+//   madeby me     — made by me: affirm you authored HEAD yourself (the symmetric human claim)
 
 import { checkCommand } from "./commands/check";
-import { recognizeCommand } from "./commands/recognize";
-import { proveCommand } from "./commands/prove";
+import { aiCommand } from "./commands/ai";
+import { meCommand } from "./commands/me";
+import { whoCommand } from "./commands/who";
 import { initCommand } from "./commands/init";
 import { startMcpServer } from "./mcp";
 
 function help(): void {
-  console.log(`madeby — verifiable content provenance
+  console.log(`madeby — verifiable content provenance ("made by whom?")
 
 Usage:
-  madeby init                    Align this repo: write .madeby/policy.json + the CI disclosure check.
+  madeby init                    Set MadeBy up: write .madeby/policy.json + the CI disclosure check.
                                  --required to enforce now; --host azure-devops for Azure Pipelines.
-  madeby check [<range>]         Evaluate commits against .madeby/policy.json (disclosure gate).
-                                 <range> e.g. origin/main..HEAD; in CI the PR range is auto-detected.
-                                 --json for a machine-readable result (exit code still gates).
-  madeby recognize [<range>]     The raw disclosure primitive: per-commit disclosure kinds, no policy.
-                                 Compose it into your own gate/dashboard/index. --json for structured output.
-  madeby prove [<log>] [<ref>]   Capture your AI session log's witnessed spans into .madeby/spans.
+  madeby check [<range>]         The gate: do commits meet .madeby/policy.json? (a verdict — exit
+                                 code gates). <range> e.g. origin/main..HEAD; in CI it's auto-detected.
+                                 --json for a machine-readable result.
+  madeby who [<path>]            Made by whom? Read what's on the record about who made this — one
+   (alias: whom)                 file's origin, or the whole repo with no path. --lines=A-B to scope.
+  madeby ai [<log>] [<ref>]      Made by AI: record your AI session's witnessed spans into .madeby/spans.
                                  <log> defaults to the auto-discovered Claude Code transcript.
-  madeby mcp                     Run the MCP server (stdio) — the primitives as agent-callable tools.
+  madeby me                      Made by me: affirm you authored HEAD yourself (an Authored-by-human
+                                 trailer — the symmetric human claim to \`ai\`).
+  madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
   madeby help                    Show this help.
 
 Disclosure, never detection: madeby states what origin was disclosed; it never asserts whether
@@ -43,15 +48,18 @@ switch (cmd) {
   case "check":
     checkCommand(rest);
     break;
-  case "recognize":
-    recognizeCommand(rest);
+  case "who":
+  case "whom":
+    whoCommand(rest);
+    break;
+  case "ai":
+    aiCommand(rest);
+    break;
+  case "me":
+    meCommand(rest);
     break;
   case "mcp":
     startMcpServer();
-    break;
-  case "prove":
-  case "capture":
-    proveCommand(rest);
     break;
   case undefined:
   case "help":

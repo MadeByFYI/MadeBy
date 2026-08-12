@@ -2,7 +2,7 @@
 // recognized disclosure against `.madeby/policy.json` and exits non-zero only under `mode: required`.
 // Fail-safe: a missing/malformed policy degrades to `off`, so we never block a PR on our own error
 // and never invent a stricter gate than the maintainer wrote. A thin renderer over the shared
-// `evaluateRepoDisclosure` library primitive; `madeby recognize` exposes the raw recognizer.
+// `evaluateRepoDisclosure` library primitive; `@madeby/core`'s `commitDisclosureKinds` is the raw recognizer.
 
 import { evaluateRepoDisclosure } from "@madeby/analyzer";
 import { repoRoot, resolveRange } from "../scope";
@@ -40,8 +40,9 @@ export function checkCommand(args: string[]): void {
     }
     if (result.undisclosed.length > 20) console.log(`  … and ${result.undisclosed.length - 20} more`);
     console.log(
-      `\nTo disclose: add a Co-Authored-By / Generated-by trailer, a DCO Signed-off-by, sign the commit,` +
-        ` or attest with 'madeby prove'. (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
+      `\nTo disclose: add a Co-Authored-By / Generated-by trailer, affirm your own authorship with 'madeby me',` +
+        ` add a DCO Signed-off-by, sign the commit, or record your AI session with 'madeby ai'.` +
+        ` (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
     );
   }
 

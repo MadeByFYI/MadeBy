@@ -10,7 +10,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import { recognizeCommits, evaluateRepoDisclosure, proveRepo, provenanceOf, provenanceMap, listHostAdapters, getHostAdapter, resolveIdentity } from "@madeby/analyzer";
+import { evaluateRepoDisclosure, proveRepo, provenanceOf, provenanceMap } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
@@ -60,25 +60,6 @@ const TOOLS: Tool[] = [
     handler: (args) => initRepo(rootFor(args.path as string | undefined), { mode: args.mode as InitMode | undefined, host: args.host as string | undefined }),
   },
   {
-    name: "recognize",
-    description:
-      "The raw disclosure primitive: for each commit, which disclosure signals it carries " +
-      "(AI-authorship trailer, DCO Signed-off-by, commit signature) — NO policy applied. Disclosure, " +
-      "never detection: it reports what a commit states about its origin, never guesses whether code is AI.",
-    inputSchema: repoInput,
-    handler: (args) => {
-      const rows = recognizeCommits(rootFor(args.path as string | undefined), { range: args.range as string | undefined });
-      return {
-        commits: rows.map((r) => ({
-          sha: r.sha.slice(0, 8),
-          subject: r.subject,
-          disclosed: r.disclosures.length > 0,
-          disclosures: r.disclosures,
-        })),
-      };
-    },
-  },
-  {
     name: "check",
     description:
       "Evaluate a repo's commits against its .madeby/policy.json disclosure policy (the maintainer " +
@@ -88,14 +69,43 @@ const TOOLS: Tool[] = [
     handler: (args) => evaluateRepoDisclosure(rootFor(args.path as string | undefined), { range: args.range as string | undefined }),
   },
   {
-    name: "prove",
+    name: "who",
     description:
-      "WRITE: record witnessed AI-authorship spans from YOUR OWN session log into the repo's " +
-      ".madeby/spans (asserted tier, self-reported) — how an agent DISCLOSES its own contribution. " +
-      "Honest by construction: it records only spans whose AI-authored content is STRUCTURALLY PRESENT " +
-      "in the checkout (survives reformatting); anything not present is discarded. Writes only derived " +
-      "attribution, locally — the log/content never leave the machine. It cannot claim a higher tier " +
-      "or attribute work to anyone else.",
+      "Made by whom? Read what's ON THE RECORD about who made this. With `path`: one file's origin — " +
+      "witnessed AI spans (model/tool, precise) where captured, last-touch commit disclosure from git " +
+      "blame elsewhere (approximate, labeled), unknown otherwise. With no `path`: a repo-wide map (the " +
+      "orientation to read BEFORE you work) — the witnessed AI surface plus commit-level disclosure " +
+      "coverage, cheap (no per-file blame). The universal contract is the line range: for a symbol, " +
+      "turn it into a line range with your own tooling (tree-sitter/LSP/ctags) and pass it — MadeBy " +
+      "never parses code. Disclosure, not detection: it reports what's disclosed and never asserts 'human'.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "repo-relative file to read one file's origin (omit for a repo-wide map)" },
+        repo: { type: "string", description: "path to the repo (default: the server's working directory)" },
+        startLine: { type: "number", description: "with `path`: optional 1-based start of a line range" },
+        endLine: { type: "number", description: "with `path`: optional 1-based end of a line range" },
+        prefix: { type: "string", description: "map only: limit to a path prefix, e.g. src/" },
+        commitLimit: { type: "number", description: "map only: recent commits to include in the coverage figure (default 500)" },
+      },
+    },
+    handler: (args) =>
+      args.path
+        ? provenanceOf(rootFor(args.repo as string | undefined), args.path as string, {
+            startLine: args.startLine as number | undefined,
+            endLine: args.endLine as number | undefined,
+          })
+        : provenanceMap(rootFor(args.repo as string | undefined), { prefix: args.prefix as string | undefined, commitLimit: args.commitLimit as number | undefined }),
+  },
+  {
+    name: "ai",
+    description:
+      "Made by AI (WRITE): record witnessed AI-authorship spans from YOUR OWN session log into the " +
+      "repo's .madeby/spans (asserted tier, self-reported) — how an agent DISCLOSES its own " +
+      "contribution. Honest by construction: it records only spans whose AI-authored content is " +
+      "STRUCTURALLY PRESENT in the checkout (survives reformatting); anything not present is discarded. " +
+      "Writes only derived attribution, locally — the log/content never leave the machine. It cannot " +
+      "claim a higher tier or attribute work to anyone else.",
     inputSchema: {
       type: "object",
       properties: {
@@ -106,91 +116,6 @@ const TOOLS: Tool[] = [
     },
     handler: (args) => proveRepo(rootFor(args.path as string | undefined), { transcriptPath: args.log as string | undefined, ref: args.ref as string | undefined }),
   },
-  {
-    name: "provenance",
-    description:
-      "Provenance-as-context: for a file (optionally a line range), what's ON THE RECORD about its " +
-      "origin — witnessed AI spans (model/tool, precise) where captured, last-touch commit disclosure " +
-      "from git blame elsewhere (approximate, labeled), unknown otherwise. The universal contract is " +
-      "the line range: for function/symbol resolution, turn a symbol into a line range with your own " +
-      "tooling (tree-sitter/LSP/ctags) and pass it — MadeBy never parses code. Disclosure, not " +
-      "detection: it reports what's disclosed and never asserts 'human'.",
-    inputSchema: {
-      type: "object",
-      required: ["path"],
-      properties: {
-        path: { type: "string", description: "repo-relative file path to read provenance for" },
-        repo: { type: "string", description: "path to the repo (default: the server's working directory)" },
-        startLine: { type: "number", description: "optional 1-based start of the line range" },
-        endLine: { type: "number", description: "optional 1-based end of the line range" },
-      },
-    },
-    handler: (args) =>
-      provenanceOf(rootFor(args.repo as string | undefined), args.path as string, {
-        startLine: args.startLine as number | undefined,
-        endLine: args.endLine as number | undefined,
-      }),
-  },
-  {
-    name: "provenance_map",
-    description:
-      "Provenance-as-context, repo-wide — the orientation an agent reads BEFORE it works. Returns the " +
-      "witnessed AI surface (files/regions with .madeby/spans, model-named — precise) plus commit-level " +
-      "disclosure coverage. Files without a witnessed span have unknown origin (disclosure, not " +
-      "detection — never 'human'). Cheap (no per-file blame). Optionally scope to a path prefix; use " +
-      "the `provenance` tool to drill into one file.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        repo: { type: "string", description: "path to the repo (default: the server's working directory)" },
-        prefix: { type: "string", description: "limit the map to a path prefix, e.g. src/" },
-        commitLimit: { type: "number", description: "how many recent commits to include in the coverage figure (default 500)" },
-      },
-    },
-    handler: (args) => provenanceMap(rootFor(args.repo as string | undefined), { prefix: args.prefix as string | undefined, commitLimit: args.commitLimit as number | undefined }),
-  },
-  {
-    name: "list_host_adapters",
-    description:
-      "List the forge host adapters MadeBy knows (GitHub, Azure DevOps, …) and which capabilities each " +
-      "implements — handle-from-email, public profile URL, API handle/profile resolution, CI-range " +
-      "auto-detection. Use it to discover which hosts are turnkey; any other host is supported by " +
-      "composing `check` with a range you compute yourself.",
-    inputSchema: { type: "object", properties: {} },
-    handler: () => ({
-      adapters: listHostAdapters().map((a) => ({
-        id: a.id,
-        name: a.name,
-        capabilities: {
-          handleFromEmail: typeof a.handleFromEmail === "function",
-          profileUrl: typeof a.profileUrl === "function",
-          resolveHandleViaApi: typeof a.resolveHandleViaApi === "function",
-          fetchProfile: typeof a.fetchProfile === "function",
-          ciRange: typeof a.ciRange === "function",
-        },
-      })),
-    }),
-  },
-  {
-    name: "resolve_identity",
-    description:
-      "Resolve a git committer (name/email) to a stable identity key and, where the host encodes it in " +
-      "the commit email, a public handle. Zero-network. Never deanonymizes a private email — absent a " +
-      "publicly-linked handle the key falls back to the email.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        email: { type: "string" },
-        host: { type: "string", description: "host adapter id (default: github)" },
-      },
-    },
-    handler: (args) => {
-      const adapter = args.host ? getHostAdapter(args.host as string) : undefined;
-      const id = resolveIdentity(args.name as string | undefined, args.email as string | undefined, adapter);
-      return { key: id.key, handle: id.handle ?? null };
-    },
-  },
 ];
 
 // Resources make the server self-teaching: an agent can read the workflow + the policy schema, so it
@@ -200,13 +125,13 @@ const ALIGN_GUIDE = `# Aligning a repository with MadeBy
 MadeBy is **disclosure, not detection** — it records what a commit *states* about its origin, never
 guesses whether code is AI. To align a repo:
 
-1. **Assess** — call \`check\` (or \`recognize\`) to see the current disclosure coverage.
+1. **Assess** — call \`check\` (or \`who\` with no path for a repo-wide map) to see current coverage.
 2. **Set up** — call \`init\`: it writes \`.madeby/policy.json\` (advisory) and the CI disclosure check.
    Idempotent; it never clobbers an existing policy or workflow. Then commit the created files.
 3. **Disclose going forward** — contributors disclose origin with a Co-Authored-By / Generated-by
    trailer (AI), an \`Authored-by-human\` trailer (work they wrote themselves — the symmetric human
-   claim), a DCO Signed-off-by, a signed commit, or \`prove\` (record your own AI session's witnessed
-   spans, structurally verified and local). Human and AI disclosure ride the same ladder.
+   claim; \`madeby me\` adds it), a DCO Signed-off-by, a signed commit, or \`ai\` (record your own AI
+   session's witnessed spans, structurally verified and local). Human and AI disclosure ride the same ladder.
 4. **Account for existing history honestly** — do NOT fabricate disclosure for past commits. Read the
    \`madeby://guide/backfill\` resource: recognize what's already disclosed, attach recoverable
    evidence, and set an adoption boundary — pre-boundary history is labeled *unknown*, never invented.
@@ -255,12 +180,12 @@ You cannot retroactively disclose past commits by inventing origin — that is f
 refuses it. But you CAN make an honest, verifiable statement about history. Backfill in layers, and
 never raise a commit's origin above its evidence — unknown stays unknown, just explicitly so.
 
-1. **Recognize what's already there** (free, pure evidence). Run recognize / check over FULL history:
+1. **Recognize what's already there** (free, pure evidence). Run \`check\` over FULL history:
    existing Co-Authored-By AI trailers, DCO Signed-off-by, signed commits, and bot authorship are
    recognized now even though they predate adoption. Much of your history may already be disclosed.
 
 2. **Attach recoverable evidence** (opt-in, evidence-grade):
-   - Old AI-tool session logs -> \`prove\` attaches structurally-verified spans to their commits (it
+   - Old AI-tool session logs -> \`ai\` attaches structurally-verified spans to their commits (it
      only matches content actually present, so it cannot over-claim). Pass the transcript + the ref.
    - Committed AI-tool configs (.cursor/, CLAUDE.md, ...) are repo-level evidence the repo used AI.
 
@@ -379,5 +304,5 @@ export function startMcpServer(): void {
     }
     handle(msg);
   });
-  process.stderr.write("madeby mcp: ready (stdio; tools: init, recognize, check, prove, provenance, provenance_map, list_host_adapters, resolve_identity; resources: align/enforce/backfill guides, policy schema)\n");
+  process.stderr.write("madeby mcp: ready (stdio; tools: init, check, who, ai; resources: align/enforce/backfill guides, policy schema)\n");
 }

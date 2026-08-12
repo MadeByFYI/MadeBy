@@ -148,20 +148,42 @@ describe("madeby check — the disclosure gate fires per policy", () => {
   });
 });
 
-describe("madeby recognize — the raw disclosure primitive (no policy)", () => {
-  it("--json: reports per-commit disclosure kinds, never gates (exit 0)", () => {
-    const { code, out } = runCmd("recognize", repo, "--json");
-    expect(code).toBe(0); // a primitive reports; it does not gate
-    const parsed = JSON.parse(out) as { commits: { subject: string; disclosed: boolean; disclosures: string[] }[] };
-    const root = parsed.commits.find((c) => c.subject === "chore: initial commit")!;
-    expect(root.disclosed).toBe(false);
-    expect(parsed.commits.find((c) => c.subject.startsWith("feat: add b"))!.disclosures).toContain("ai-trailer");
-    expect(parsed.commits.find((c) => c.subject.startsWith("fix: tweak c"))!.disclosures).toContain("dco-signoff");
-  });
-  it("human output lists commits and a disclosed count", () => {
-    const { code, out } = runCmd("recognize", repo);
-    expect(code).toBe(0);
+describe("madeby who — made by whom? (read what's on the record)", () => {
+  it("no path: a repo-wide map with disclosure coverage (exit 0, never gates)", () => {
+    const { code, out } = runCmd("who", repo);
+    expect(code).toBe(0); // a read; it does not gate
     expect(out).toMatch(/disclose origin/);
+  });
+  it("a path: one file's origin from last-touch blame — the AI-trailer commit surfaces", () => {
+    const { code, out } = runCmd("who", repo, "b.txt", "--json");
+    expect(code).toBe(0);
+    const parsed = JSON.parse(out) as { path: string; records: { source: string; ai: boolean }[] };
+    expect(parsed.path).toBe("b.txt");
+    expect(parsed.records.some((r) => r.source === "blame" && r.ai === true)).toBe(true);
+  });
+  it("whom is an alias for who (for the pedants)", () => {
+    expect(runCmd("whom", repo).code).toBe(0);
+  });
+});
+
+describe("madeby me — made by me (affirm human authorship of HEAD)", () => {
+  it("amends HEAD with an Authored-by-human trailer; is idempotent", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    // `madeby me` reads the repo's own git identity (the spawned bin doesn't see the helper's -c pins).
+    git(d, "config", "user.name", "Test");
+    git(d, "config", "user.email", "test@example.com");
+    git(d, "config", "commit.gpgsign", "false");
+    commit(d, "x.txt", "hi\n", "feat: my own work");
+    const first = runCmd("me", d);
+    expect(first.code).toBe(0);
+    const msg = git(d, "show", "-s", "--format=%B", "HEAD");
+    expect(msg).toMatch(/Authored-by-human: Test <test@example.com>/);
+    // second run is a no-op (already affirmed) — no duplicate trailer
+    const second = runCmd("me", d);
+    expect(second.out).toMatch(/already affirms|Nothing to do/i);
+    const after = git(d, "show", "-s", "--format=%B", "HEAD");
+    expect((after.match(/Authored-by-human/g) ?? []).length).toBe(1);
   });
 });
 
@@ -222,33 +244,21 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     const res = await mcpCall(repo, [
       { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2024-11-05", capabilities: {} } },
       { jsonrpc: "2.0", id: 2, method: "tools/list" },
-      { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "recognize", arguments: {} } },
       { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "check", arguments: {} } },
-      { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "list_host_adapters", arguments: {} } },
-      { jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "resolve_identity", arguments: { email: "1+octocat@users.noreply.github.com" } } },
     ]);
 
     // initialize
     expect((res.get(1)!.result as { serverInfo: { name: string } }).serverInfo.name).toBe("madeby");
-    // tools/list
+    // tools/list — the minimal "made by ___" surface, no more
     const names = (res.get(2)!.result as { tools: { name: string }[] }).tools.map((t) => t.name);
-    expect(names).toEqual(expect.arrayContaining(["recognize", "check", "prove", "provenance", "provenance_map", "list_host_adapters", "resolve_identity"]));
-    // recognize tool → the AI-trailer commit is surfaced
-    const rec = JSON.parse((res.get(3)!.result as { content: { text: string }[] }).content[0]!.text) as { commits: { disclosures: string[] }[] };
-    expect(rec.commits.some((c) => c.disclosures.includes("ai-trailer"))).toBe(true);
+    expect(names.sort()).toEqual(["ai", "check", "init", "who"]);
     // check tool → the gate fires
     const chk = JSON.parse((res.get(4)!.result as { content: { text: string }[] }).content[0]!.text) as { mode: string; pass: boolean };
     expect(chk.mode).toBe("required");
     expect(chk.pass).toBe(false);
-    // list_host_adapters → both forges discoverable
-    const adapters = (JSON.parse((res.get(5)!.result as { content: { text: string }[] }).content[0]!.text) as { adapters: { id: string }[] }).adapters.map((a) => a.id);
-    expect(adapters).toEqual(expect.arrayContaining(["github", "azure-devops"]));
-    // resolve_identity → the noreply handle
-    const idn = JSON.parse((res.get(6)!.result as { content: { text: string }[] }).content[0]!.text) as { handle: string | null };
-    expect(idn.handle).toBe("octocat");
   }, 30000);
 
-  it("the prove tool records witnessed spans (the agent discloses its own work)", async () => {
+  it("the ai tool records witnessed spans (the agent discloses its own work)", async () => {
     // A prove-able repo: a committed file whose content matches a session transcript.
     const AI_SRC = "export function add(a, b) {\n  return a + b;\n}\n";
     const proot = tmpRepo();
@@ -265,13 +275,13 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
       JSON.stringify({ type: "assistant", message: { model: "claude-opus-4-8", content: [{ type: "tool_use", name: "Write", input: { file_path: join(resolved, "math.ts"), content: AI_SRC } }] } }) + "\n",
     );
 
-    const res = await mcpCall(proot, [{ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "prove", arguments: { log } } }]);
+    const res = await mcpCall(proot, [{ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "ai", arguments: { log } } }]);
     const out = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { written: boolean; matched: number };
     expect(out.written).toBe(true);
     expect(out.matched).toBe(1);
   }, 30000);
 
-  it("the provenance tool reads a path's origin (witnessed span + last-touch), the agent-context read", async () => {
+  it("the who tool reads a path's origin (witnessed span + last-touch), the agent-context read", async () => {
     const AI_SRC = "export function add(a, b) {\n  return a + b;\n}\n";
     const proot = tmpRepo();
     git(proot, "init", "-q", "-b", "main");
@@ -284,9 +294,9 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     writeFileSync(log, JSON.stringify({ type: "assistant", message: { model: "claude-opus-4-8", content: [{ type: "tool_use", name: "Write", input: { file_path: join(resolved, "math.ts"), content: AI_SRC } }] } }) + "\n");
 
     const res = await mcpCall(proot, [
-      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "prove", arguments: { log } } },
-      { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "provenance", arguments: { path: "math.ts" } } },
-      { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "provenance_map", arguments: {} } },
+      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "ai", arguments: { log } } },
+      { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "who", arguments: { path: "math.ts" } } },
+      { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "who", arguments: {} } },
     ]);
     const prov = JSON.parse((res.get(2)!.result as { content: { text: string }[] }).content[0]!.text) as {
       records: { source: string; ai: boolean; model?: string }[];
