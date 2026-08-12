@@ -3,9 +3,11 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readSpanManifestsFromDir, summarizeSpanEvidence } from "./provenance";
+import { serializeSpanManifest, type SpanManifest } from "@madeby/core";
 
-function manifest(commit: string, files: { path: string; provider?: string; model?: string; source?: string }[]) {
-  return JSON.stringify({
+// Build a manifest through the real serializer so fixtures always match the on-disk carrier format.
+function manifest(commit: string, files: { path: string; provider?: string; model?: string; source?: string }[]): string {
+  const m: SpanManifest = {
     version: "0",
     commit,
     generatedAt: "2026-06-30T00:00:00Z",
@@ -13,7 +15,8 @@ function manifest(commit: string, files: { path: string; provider?: string; mode
       anchor: { fingerprint: { algorithm: "git-blob-sha1", target: "FILE", value: "abc" }, hint: { path: f.path } },
       attribution: { provider: f.provider ?? "anthropic", model: f.model ?? "claude", operatorId: "mac@madeby.fyi", source: f.source ?? "claude-code-session-log" },
     })),
-  });
+  };
+  return serializeSpanManifest(m);
 }
 
 describe("span-evidence reading + summary (the witnessed recall signal)", () => {
