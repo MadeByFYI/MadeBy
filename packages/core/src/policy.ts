@@ -10,11 +10,14 @@
 
 import type { DisclosureKind } from "./disclosure";
 
-export type PolicyMode = "required" | "advisory" | "off";
+// Two modes, not three: `advisory` reports, `required` gates. "Off" isn't a mode — it's not running
+// the check (or removing the workflow). So advisory is the floor: the safe default and the safe
+// degrade, and it never blocks a PR.
+export type PolicyMode = "required" | "advisory";
 
 export interface DisclosurePolicy {
   version: number;
-  /** required = fail non-disclosing commits; advisory = report only; off = no gate */
+  /** required = fail non-disclosing commits; advisory = report only (never blocks) */
   mode: PolicyMode;
   /**
    * The disclosure kinds that SATISFY the policy. Omitted/empty = any recognized disclosure signal
@@ -23,20 +26,20 @@ export interface DisclosurePolicy {
   accept?: DisclosureKind[];
 }
 
-/** The safe default: no gate. A missing or malformed policy degrades to this (never blocks on our bug). */
-export const DEFAULT_POLICY: DisclosurePolicy = { version: 0, mode: "off" };
+/** The safe default: report-only. A missing or malformed policy degrades to this (never blocks on our bug). */
+export const DEFAULT_POLICY: DisclosurePolicy = { version: 0, mode: "advisory" };
 
-const MODES: readonly PolicyMode[] = ["required", "advisory", "off"];
+const MODES: readonly PolicyMode[] = ["required", "advisory"];
 
 /**
  * Parse + normalize a policy from untrusted JSON. Fail-safe: anything unrecognized degrades to
- * `off` (advisory-or-nothing) — we never fabricate a stricter gate than the maintainer wrote, and
- * we never block a PR because our parser choked.
+ * `advisory` (report-only) — we never fabricate a stricter gate than the maintainer wrote, and we
+ * never block a PR because our parser choked.
  */
 export function parseDisclosurePolicy(input: unknown): DisclosurePolicy {
   if (!input || typeof input !== "object") return DEFAULT_POLICY;
   const o = input as Record<string, unknown>;
-  const mode = MODES.includes(o.mode as PolicyMode) ? (o.mode as PolicyMode) : "off";
+  const mode = MODES.includes(o.mode as PolicyMode) ? (o.mode as PolicyMode) : "advisory";
   const version = typeof o.version === "number" ? o.version : 0;
   const accept = Array.isArray(o.accept)
     ? (o.accept.filter((k) => typeof k === "string") as DisclosureKind[])
@@ -71,7 +74,7 @@ export interface PolicyEvaluation {
 /**
  * Evaluate a policy against a set of contributions. A commit is compliant iff it carries at least
  * one accepted disclosure kind (any recognized kind, when `accept` is unset). `required` fails the
- * gate on any non-compliant commit; `advisory`/`off` always pass (report only). Fail-safe: an empty
+ * gate on any non-compliant commit; `advisory` always passes (report only). Fail-safe: an empty
  * commit set passes (nothing to gate).
  */
 export function evaluateDisclosurePolicy(
@@ -92,10 +95,8 @@ export function evaluateDisclosurePolicy(
 
   const wanted = accept ? accept.join(", ") : "any recognized disclosure";
   const summary =
-    policy.mode === "off"
-      ? `No disclosure policy in effect (${compliant}/${verdicts.length} commits disclose origin).`
-      : `${compliant}/${verdicts.length} commits disclose origin (${policy.mode}; accepts: ${wanted}).` +
-        (nonCompliant.length ? ` ${nonCompliant.length} undisclosed.` : "");
+    `${compliant}/${verdicts.length} commits disclose origin (${policy.mode}; accepts: ${wanted}).` +
+    (nonCompliant.length ? ` ${nonCompliant.length} undisclosed.` : "");
 
   return { mode: policy.mode, pass, total: verdicts.length, compliant, nonCompliant, summary };
 }

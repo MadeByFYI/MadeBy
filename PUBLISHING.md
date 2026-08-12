@@ -11,7 +11,7 @@ live. Everything below is verified — the CLI builds, runs end-to-end, and the 
   deps — `@madeby/*` are bundled in at build time, kept as `devDependencies`).
 - `npm pack --dry-run` ships exactly **3 files**: `README.md`, `dist/madeby.mjs`, `package.json`.
 - The disclosure gate is covered end-to-end by `packages/cli/src/check.integration.test.ts` (spawns
-  the built bin against throwaway repos: advisory / required / off / range / malformed / non-repo →
+  the built bin against throwaway repos: advisory / required / optional-policy / range / malformed / non-repo →
   asserts exit codes). It runs in CI's trust-gate job.
 
 ## Publish (use `pnpm publish`)

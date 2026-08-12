@@ -30,7 +30,7 @@ const repoInput = {
   },
 } as const;
 
-type InitMode = "off" | "advisory" | "required";
+type InitMode = "advisory" | "required";
 
 interface Tool {
   name: string;
@@ -53,7 +53,7 @@ const TOOLS: Tool[] = [
       type: "object",
       properties: {
         path: { type: "string", description: "path to the repo (default: the server's working directory)" },
-        mode: { enum: ["off", "advisory", "required"], description: "policy mode to seed (default: advisory)" },
+        mode: { enum: ["advisory", "required"], description: "policy mode to seed (default: advisory)" },
         host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
       },
     },
@@ -63,8 +63,8 @@ const TOOLS: Tool[] = [
     name: "check",
     description:
       "Evaluate a repo's commits against its .madeby/policy.json disclosure policy (the maintainer " +
-      "gate). Returns pass/fail, the policy mode, and the undisclosed commits. Fail-safe: a missing or " +
-      "invalid policy degrades to 'off' (never a false gate).",
+      "gate). Returns pass/fail, the policy mode, and the undisclosed commits. The policy file is " +
+      "optional — with no file (or an invalid one) it degrades to advisory (report-only, never a false gate).",
     inputSchema: repoInput,
     handler: (args) => evaluateRepoDisclosure(rootFor(args.path as string | undefined), { range: args.range as string | undefined }),
   },
@@ -213,7 +213,7 @@ const POLICY_SCHEMA = {
   required: ["version", "mode"],
   properties: {
     version: { const: 0 },
-    mode: { enum: ["off", "advisory", "required"], description: "off: no gate; advisory: report only; required: fail on any undisclosed commit" },
+    mode: { enum: ["advisory", "required"], description: "advisory: report only (the default, and the safe degrade); required: fail on any undisclosed commit" },
     accept: { type: "array", items: { type: "string" }, description: "restrict what satisfies the policy (e.g. dco-signoff, ai-trailer, commit-signature); omit ⇒ any recognized disclosure counts" },
   },
 };

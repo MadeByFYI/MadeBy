@@ -45,7 +45,9 @@ export interface RepoDisclosure {
   warning?: string;
 }
 
-/** Evaluate a repo's commits against its `.madeby/policy.json` — the gate, as data. Fail-safe. */
+// Evaluate a repo's commits against its `.madeby/policy.json` — the gate, as data. Fail-safe. The
+// policy file is OPTIONAL: with no file, the default is advisory (report-only), so `check` is useful
+// with zero config — you only add the file to go `required`.
 export function evaluateRepoDisclosure(root: string, opts: { range?: string; limit?: number } = {}): RepoDisclosure {
   let policy = DEFAULT_POLICY;
   let warning: string | undefined;
@@ -54,7 +56,7 @@ export function evaluateRepoDisclosure(root: string, opts: { range?: string; lim
     try {
       policy = parseDisclosurePolicy(JSON.parse(readFileSync(policyPath, "utf8")));
     } catch {
-      warning = ".madeby/policy.json is not valid JSON — treating as no policy (off).";
+      warning = ".madeby/policy.json is not valid JSON — degrading to advisory (report-only, never blocks).";
     }
   }
   const commits = recognizeCommits(root, opts);

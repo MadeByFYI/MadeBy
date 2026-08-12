@@ -48,7 +48,7 @@ A commit **discloses its origin** if it carries any of:
 - a **`madeby ai`** attestation (your own AI session's witnessed spans).
 
 Exit codes: **0** = pass · **1** = a `required` policy failed on an undisclosed commit · **2** = not
-a git repository. Under `advisory`/`off` it only reports (always exit 0) — so it's safe to add to CI
+a git repository. Under `advisory` it only reports (always exit 0) — so it's safe to add to CI
 before you decide to enforce anything.
 
 In CI, omit `<range>` — on a pull-request build `madeby check` **auto-scopes to the PR's own
@@ -72,19 +72,26 @@ of AI disclosure); a sworn declaration is *sworn*. The one asymmetry is evidence
 leave a re-checkable artifact (a session log, `madeby ai`); human authorship is your firsthand
 testimony. If you used AI, disclose the AI — don't claim human.
 
+**The policy file is optional.** With no `.madeby/policy.json`, `check` defaults to **advisory** —
+it reports coverage and never blocks, so you can run it (or add the CI check) with zero config. Add
+the file only when you want to enforce:
+
 ```json
 // .madeby/policy.json
-{ "version": 0, "mode": "advisory" }
+{ "version": 0, "mode": "required" }
 ```
 
-- `advisory` — report coverage on each run; never fails.
+Two modes, nothing more:
+
+- `advisory` — report coverage on each run; never fails. **The default** (and what you get with no file).
 - `required` — fail on any commit that discloses nothing your policy accepts.
-- `off` — no gate.
 - optional `"accept": ["dco-signoff", "ai-trailer", …]` — restrict what satisfies the policy
   (omit ⇒ any recognized disclosure counts).
 
-Fail-safe by design: a missing or malformed policy degrades to `off`. `madeby` never blocks a PR on
-its own error, and never invents a stricter gate than the maintainer wrote.
+(There's no "off" — that's just not running the check. Advisory is the floor.)
+
+Fail-safe by design: a missing or malformed policy degrades to `advisory`. `madeby` never blocks a PR
+on its own error, and never invents a stricter gate than the maintainer wrote.
 
 ## Use it as a PR check
 

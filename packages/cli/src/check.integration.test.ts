@@ -3,7 +3,7 @@
 // build) exactly as `npx madeby check` would, against throwaway git repos we construct with a known
 // mix of disclosed / undisclosed commits, and assert the exit code + output for each policy mode.
 //
-// Exit-code contract (commands/check.ts): 0 = pass (advisory/off always pass; required passes when
+// Exit-code contract (commands/check.ts): 0 = pass (advisory always passes; required passes when
 // every in-range commit discloses), 1 = required gate fails on an undisclosed commit, 2 = not a git
 // repo. The gate is the product's whole promise to a maintainer — if it can't fail a required PR,
 // nothing else matters.
@@ -103,10 +103,20 @@ describe("madeby check — the disclosure gate fires per policy", () => {
     expect(code).toBe(0);
   });
 
-  it("off: never gates, even with undisclosed commits (exit 0)", () => {
-    writePolicy(repo, "off");
-    const { code } = run(repo);
+  it("the policy file is optional: with none, check defaults to advisory (reports, exit 0)", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    commit(d, "a.txt", "one\n", "chore: initial commit"); // undisclosed, no .madeby/policy.json
+    const { code, out } = run(d);
+    expect(code).toBe(0); // advisory default never blocks
+    expect(out).toMatch(/advisory/i);
+  });
+
+  it("a retired mode like 'off' degrades to advisory (still exit 0, now reports)", () => {
+    writePolicy(repo, "off"); // "off" is gone → parsed as advisory
+    const { code, out } = run(repo);
     expect(code).toBe(0);
+    expect(out).toMatch(/advisory/i);
   });
 
   it("auto-scopes to the PR range from the GitHub CI env — no range arg", () => {
@@ -126,7 +136,7 @@ describe("madeby check — the disclosure gate fires per policy", () => {
     expect(r.stdout ?? "").toMatch(/auto-scoped to the github/i);
   });
 
-  it("fails safe: a malformed policy degrades to off, never blocks (exit 0)", () => {
+  it("fails safe: a malformed policy degrades to advisory, never blocks (exit 0)", () => {
     writeFileSync(join(repo, ".madeby", "policy.json"), "{ not valid json");
     const { code } = run(repo);
     expect(code).toBe(0);

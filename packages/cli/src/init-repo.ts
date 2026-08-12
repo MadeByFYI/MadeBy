@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 
 export interface InitOptions {
   /** policy mode to seed (default "advisory" — reports, never fails) */
-  mode?: "off" | "advisory" | "required";
+  mode?: "advisory" | "required";
   /** CI host to wire (default "github"; "azure-devops" is guided; others get a generic next-step) */
   host?: string;
 }
