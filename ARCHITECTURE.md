@@ -808,11 +808,23 @@ audience.
   `[![madeby.fyi](https://madeby.fyi/b/owner/repo.svg)](https://madeby.fyi/owner/repo)`.
 - **Pointer, never proof.** Genuineness = follow the link to the authoritative subject page,
   which shows the signed claims, tiers, and verified identities. Forgery is self-defeating.
-- **Headline content (v0):** named AI collaborators + a **provenance-coverage** mark, with any
-  ratio labeled "% of commits with AI involvement" — **not** an implied code split (review
-  2026-06-29, Finding 1; `STRATEGY.md` §5). The precise mix-led lines/tokens ratio is reserved for
-  the tiers where span evidence exists. Tier gradient lives in the **trust mark**, not aesthetic
-  quality; the honest qualifier doubles as the upgrade pull.
+- **The face completes the sentence "made by ___" (decision, 2026-08-12).** The badge names the
+  *disclosed authors*, never a metric — `madeby ∙ hi + ai` (Human Intelligence + AI), `madeby ∙ ai`,
+  `madeby ∙ hi`. This is the grammar the whole surface follows (`who`/`ai`/`me`), and it rules a bare
+  number off the face: "madeby ∙ 97%" is not a sentence. It replaces the earlier "% of commits with
+  AI involvement" ratio, which is off-doctrine now — AI-forward, asymmetric (human affirmation rides
+  the same ladder), and honestly wrong-low (untrailered AI is invisible). Three rules keep the face honest:
+  - **Disclosed authors only; the unknown is shown as `?`, never claimed.** A repo with an
+    undisclosed tail reads `madeby ∙ hi + ai + ?` — the `?` is the honest gap (the narrative default
+    is *unknown*, `STRATEGY.md` §5), dared on the face rather than hidden. We never promote unknown →
+    human, nor assert undisclosed → AI.
+  - **Qualitative on the face, proportion on the link.** The face is the composition
+    (`hi + ai + ?`), which can't be gamed by padding a number. The exact mix (%, and lines/tokens
+    where span evidence exists), the named models, and the verified identities live on the resolver
+    page — where genuineness is checkable, not asserted.
+  - **Tier is color, not words.** The right segment's hue rises along the ladder (asserted → sworn →
+    verified → bound), so the same `hi + ai` *deepens* as the repo signs and swears — the upgrade
+    pull, with zero extra text. The legend lives on the resolver page.
 
 ---
 
