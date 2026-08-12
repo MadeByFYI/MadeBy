@@ -831,6 +831,15 @@ audience.
     `madeby ∙ hi`. This is the grammar the whole surface follows (`who`/`ai`/`me`), and it rules a
     bare number off *this* row: "madeby ∙ 97%" is not a sentence. Qualitative, so it can't be gamed by
     padding a number.
+  - **Automation is off the headline, on the page (decision, 2026-08-12).** The composition names
+    *authored* origins and by **default excludes generated/automation commits** — a Dependabot bump
+    moves a pointer; it doesn't author code. A bot is **not `ai`** (folding it in would over-claim AI
+    over a mechanical change) and **not the headline**; it surfaces on the **resolver page** as a
+    drill-in slice, where automation counts as *known* origin (the bot identity self-discloses — it
+    raises `known %`, it doesn't lower it). The default is **overridable by attestation**: generated
+    code that carries its own attestation is surfaced per that claim — the maker can always opt their
+    tooling's output onto the record. So the badge focuses on non-generated authorship; automation is
+    a fact you drill into, not a slice of the "made by" line.
   - **Row 2 — the coverage — `known X%`.** How much of the origin is on the record. The undisclosed
     gap (100−X%) is carried *here*, as one honest number — which is why the composition row needs no
     `?`: an always-on `?` is wallpaper (every repo has some unknown), whereas a coverage figure is the
