@@ -60,6 +60,22 @@ stay untouched. The convention (types in `@madeby/core`'s `span.ts`; format in `
   AI-authored span (`ARCHITECTURE.md` §4). The manifest is operator-signable (`signature` over
   `canonicalizeSpanManifest`).
 - **Model-agnostic.** Any agent (Claude / Copilot / Cursor / …) can emit it.
+- **Human-readable at a glance.** The on-disk carrier is flat — a self-describing tag and one row
+  per span — even though the signed *canonical* payload is a separate, stable derivation (invariant
+  2: the signature covers the payload, not the file's shape):
+
+  ```json
+  {
+    "madeby": "spans/0",
+    "commit": "b69604f4…",
+    "recorded": "2026-06-30T01:54:44Z",
+    "spans": [
+      { "file": "src/edges.ts", "lines": "1-40", "model": "claude-opus-4-8",
+        "provider": "anthropic", "source": "claude-code-session-log",
+        "operator": "you@example.com", "fingerprint": "git-blob-sha1:FILE:3091fd…" }
+    ]
+  }
+  ```
 
 Capture for a commit (writes/updates the sidecar):
 

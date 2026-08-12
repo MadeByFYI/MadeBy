@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
+import { parseSpanManifest } from "@madeby/core";
 import { proveRepo } from "./prove";
 
 const dirs: string[] = [];
@@ -38,7 +39,13 @@ describe("proveRepo — records only structurally-present AI spans (asserted, lo
     expect(r.written).toBe(true);
     expect(r.matched).toBe(1);
     expect(existsSync(r.path!)).toBe(true);
-    const manifest = JSON.parse(readFileSync(r.path!, "utf8")) as { attestations: { attribution: { source: string; model: string } }[] };
+    const raw = readFileSync(r.path!, "utf8");
+    // written in the flat, glance-readable carrier format
+    const disk = JSON.parse(raw) as { madeby: string; spans: { model: string; source: string }[] };
+    expect(disk.madeby).toBe("spans/0");
+    expect(disk.spans[0]!.model).toBe("claude-opus-4-8");
+    // and it round-trips through the real parser
+    const manifest = parseSpanManifest(raw);
     expect(manifest.attestations).toHaveLength(1);
     expect(manifest.attestations[0]!.attribution.source).toBe("claude-code-session-log");
     expect(manifest.attestations[0]!.attribution.model).toBe("claude-opus-4-8");
