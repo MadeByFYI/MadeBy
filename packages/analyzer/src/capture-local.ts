@@ -27,7 +27,7 @@ export interface CaptureLocalInput {
   operatorId: string;
   /** RFC 3339 capture time */
   now: string;
-  /** structural-similarity floor below which AI work is treated as not-present (default 0.5) */
+  /** structural-similarity floor below which AI work is treated as not-present (default MATCH_THRESHOLD) */
   threshold?: number;
   /** the tool parser for this log (detect it with detectParser); omitted ⇒ no-op */
   parser?: ToolParser;
@@ -42,6 +42,13 @@ export interface CaptureLocalResult {
   /** files where the AI content was not structurally present (discarded, honestly not attested) */
   discarded: string[];
 }
+
+// The calibrated structural-match floor (#86; TESTING §5). NOT a magic number: chosen as the midpoint
+// of the precision-1.0 band on a labeled corpus (see match-calibration.ts / MATCH-CALIBRATION.md),
+// biased toward DISCARD — precision over recall, so a witnessed attestation never over-claims content
+// the AI didn't actually ship. `match-calibration.test.ts` asserts this equals the harness's derived
+// value, so it cannot silently drift from the corpus.
+export const MATCH_THRESHOLD = 0.52;
 
 interface FileAi {
   content: string[];
@@ -78,7 +85,7 @@ function groupEdits(edits: readonly AiEdit[], repoRoot: string): Map<string, Fil
 
 /** Turn a local session log into witnessed, structurally-matched span attestations. */
 export function captureLocalSpans(input: CaptureLocalInput): CaptureLocalResult {
-  const threshold = input.threshold ?? 0.5;
+  const threshold = input.threshold ?? MATCH_THRESHOLD;
   const parser = input.parser;
   const empty: CaptureLocalResult = {
     manifest: { version: "0", commit: input.commit, generatedAt: input.now, attestations: [] },
