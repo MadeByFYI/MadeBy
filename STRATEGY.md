@@ -612,6 +612,13 @@ show confidence. A provenance authority that overstates its own confidence is se
 
 ### Regulatory tailwind
 
+> **[HYPOTHESIS — FALSIFIED 2026-08-13.](../research/regulatory-check-2026-08-13.md)** The EU AI Act
+> and ISO 42001 do **not** require *code-authorship* attestation. Their obligations bind
+> providers/deployers of AI *systems* and the marking of AI *outputs* (Art. 50) — not who wrote which
+> lines of a codebase. The narrower true kernel below (labs' Art. 50 output-marking) stands, but it
+> points at a *different buyer* than the intra-org governance line in §6. Repositioning is a
+> first-contact decision (frozen, `PRE-INCORPORATION §6`).
+
 The EU AI Act and similar disclosure rules convert "nice-to-have provenance" into "must
 demonstrate provenance." That makes AI labs both a **distribution channel** and a potential
 **customer** (their tools' outputs must be disclosably attributable). Design the standard to
@@ -934,7 +941,9 @@ the products we put on the graph.
   graph is dense**, so it is the graph's first paying reliance customer. It converts
   episodic→continuous single-handedly.
 - Supply-chain provenance **monitoring** (Dependabot-for-AI-provenance); **continuous compliance
-  evidence** (always-current attestation for EU AI Act / ISO 42001 — the strongest forcing function);
+  evidence** (always-current attestation for EU AI Act / ISO 42001 — ~~the strongest forcing
+  function~~ **[HYPOTHESIS — FALSIFIED 2026-08-13](../research/regulatory-check-2026-08-13.md): neither
+  reaches code-authorship attestation; this leg does not hold**);
   **M&A / litigation / certified-package** products (episodic, high-value, the legal-non-repudiation moat).
 - **Platform/API** — expose the graph so third parties build vertical tools → the graph becomes
   load-bearing infrastructure others depend on (the deepest continuous reliance and moat).
@@ -963,7 +972,11 @@ default, routing every enrichment/validity call to us (`ARCHITECTURE §3`).
 **Decisive variable = the forcing functions** (regulation, IP/license liability, supply-chain
 security). Where one makes provenance a *must-check-every-build*, reliance is continuous and
 non-optional; two of the three are strengthening through 2026, which makes the continuous case
-bet-able rather than wishful. **Honest gates:** all of this is downstream of producer-side *density*
+bet-able rather than wishful. **[Revised 2026-08-13:** the *regulation* leg is
+[falsified for code-authorship attestation](../research/regulatory-check-2026-08-13.md) — the AI Act /
+ISO 42001 don't reach it. The remaining live drivers are **IP/license liability** and
+**supply-chain security**, both weaker than a mandate; the governance case now rests on those, not on
+regulation. Re-weighting the line is a first-contact decision, frozen per `PRE-INCORPORATION §6`.**] **Honest gates:** all of this is downstream of producer-side *density*
 (a transitive gate is useless if deps aren't covered), and format *recognition* is the slow part.
 
 ### Ruled out (corrosive to a trust instrument)
