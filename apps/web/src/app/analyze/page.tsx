@@ -1,4 +1,5 @@
 import { analyzeRepo, badgeSnippet, resolveHandles, isAnalyzeError, githubAdapter } from "@madeby/analyzer";
+import "@madeby/analyzer/host/github-api"; // enable the GitHub API path (fetchProfile / resolveHandleViaApi) on this network-capable surface
 import { track, FUNNEL } from "@/lib/analytics";
 import { mirrorCoverage } from "@/lib/coverage";
 
