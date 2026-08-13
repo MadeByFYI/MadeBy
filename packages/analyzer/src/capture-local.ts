@@ -48,12 +48,24 @@ interface FileAi {
   models: Set<string>;
 }
 
+/** Normalize a tool-recorded path to a repo-relative path, or null if it lies outside the repo.
+ *  Handles both the absolute paths Claude Code records and the repo-relative paths aider records
+ *  (incl. Windows backslashes); anything absolute-but-outside or escaping via `../` is rejected. */
+function repoRelative(recorded: string, repoRoot: string): string | null {
+  const p = recorded.replace(/\\/g, "/");
+  const root = repoRoot.replace(/\\/g, "/");
+  if (p.startsWith(root + "/")) return p.slice(root.length + 1); // absolute, under the repo
+  if (p.startsWith("/")) return null; // absolute, outside the repo
+  if (p === ".." || p.startsWith("../")) return null; // relative but escapes the repo
+  return p.replace(/^\.\//, ""); // already repo-relative
+}
+
 /** Group a parser's flat edits into per-repo-file AI content, relativized + filtered to the repo. */
 function groupEdits(edits: readonly AiEdit[], repoRoot: string): Map<string, FileAi> {
   const out = new Map<string, FileAi>();
   for (const e of edits) {
-    if (!e.path.startsWith(repoRoot + "/")) continue; // outside the repo
-    const rel = e.path.slice(repoRoot.length + 1);
+    const rel = repoRelative(e.path, repoRoot);
+    if (rel === null) continue; // outside the repo
     if (rel.startsWith(".madeby/") || rel.includes("node_modules/")) continue; // don't attest our own records
     if (!e.content) continue;
     const cur = out.get(rel) ?? { content: [], models: new Set<string>() };

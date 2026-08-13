@@ -10,7 +10,8 @@
 
 /** A normalized AI edit: content the tool recorded its model writing, and where. */
 export interface AiEdit {
-  /** absolute file path the tool recorded (the harness relativizes + filters to the repo) */
+  /** the path the tool recorded — absolute (Claude Code) or repo-relative (aider); the harness
+   *  normalizes backslashes, relativizes, and filters to the repo */
   path: string;
   /** the content the AI wrote (full file for a create, the region for an edit) */
   content: string;
@@ -77,8 +78,66 @@ export const claudeCodeParser: ToolParser = {
   },
 };
 
+// aider (`.aider.chat.history.md`, #85). aider commits a durable markdown transcript to the repo
+// root, so — unlike Copilot/Cursor inline completion — its edits are recoverable. Format reverse-
+// engineered from real public logs (tooshel/poppoll, mpazaryna/codex, launchapp-dev/animus-cli), not
+// guessed. Two edit formats appear in the wild, both handled:
+//   • "diff"  (default): a filename line, then a fenced block holding SEARCH/REPLACE — the AI-written
+//              content is the REPLACE side.
+//   • "whole" (weaker models): a filename line, then a fenced block holding the entire new file.
+// The tool announces which: `> Model: <model> with <fmt> edit format`. We read that for the model and
+// only slurp whole-file fences when the session actually declared the whole format (else a stray code
+// block in prose could be mistaken for a file write).
+const AIDER_FENCE = /^([^\n]+)\n```[^\n]*\n([\s\S]*?)\r?\n```/gm;
+const AIDER_FILENAME = /^[\w./\\-]+\.\w+$/; // a path-like line (extension required) before the fence
+// The SEARCH side is optional: a file CREATION has an empty search (`SEARCH` then `=======` on the
+// next line), which real logs (mpazaryna/codex) do constantly. The REPLACE side (group 1) is the
+// AI-written content.
+const AIDER_SR = /<<<<<<< SEARCH\r?\n(?:[\s\S]*?\r?\n)?=======\r?\n([\s\S]*?)\r?\n>>>>>>> REPLACE/g;
+const AIDER_MODEL = /^> Model:\s*(.+?)\s+with\s+[\w-]+ edit format/gim;
+
+/** the model aider announced most recently before position `pos` (fallback: the tool name). */
+function aiderModelAt(raw: string, pos: number): string {
+  let model = "aider";
+  AIDER_MODEL.lastIndex = 0;
+  for (let m: RegExpExecArray | null; (m = AIDER_MODEL.exec(raw)); ) {
+    if (m.index > pos) break;
+    model = m[1]!.trim();
+  }
+  return model;
+}
+
+export const aiderParser: ToolParser = {
+  id: "aider",
+  provider: "aider",
+  detect(raw) {
+    return /^# aider chat started at /m.test(raw) || /^> Aider v\d/m.test(raw);
+  },
+  parse(raw) {
+    const wholeFormat = /with whole edit format/i.test(raw);
+    const edits: AiEdit[] = [];
+    AIDER_FENCE.lastIndex = 0;
+    for (let f: RegExpExecArray | null; (f = AIDER_FENCE.exec(raw)); ) {
+      const name = f[1]!.trim();
+      if (!AIDER_FILENAME.test(name)) continue; // the preceding line isn't a filename → not an edit
+      const path = name.replace(/\\/g, "/");
+      const body = f[2]!;
+      const model = aiderModelAt(raw, f.index);
+      let sawSearchReplace = false;
+      AIDER_SR.lastIndex = 0;
+      for (let s: RegExpExecArray | null; (s = AIDER_SR.exec(body)); ) {
+        sawSearchReplace = true;
+        const content = s[1]!; // the REPLACE side = what the AI wrote
+        if (content.trim()) edits.push({ path, content, model });
+      }
+      if (!sawSearchReplace && wholeFormat && body.trim()) edits.push({ path, content: body, model });
+    }
+    return edits;
+  },
+};
+
 /** Registered parsers. Add a tool here once its ToolParser exists (needs real sample logs). */
-export const TOOL_PARSERS: readonly ToolParser[] = [claudeCodeParser];
+export const TOOL_PARSERS: readonly ToolParser[] = [claudeCodeParser, aiderParser];
 
 /** Pick the parser whose format the log matches, or null if none recognize it. */
 export function detectParser(raw: string, parsers: readonly ToolParser[] = TOOL_PARSERS): ToolParser | null {
