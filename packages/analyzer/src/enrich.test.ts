@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { enrichContributors, resolveHandles, enrichIdentity } from "./enrich";
+import "./host/github-api"; // augment the GitHub adapter with the network methods these tests exercise
 import type { Contributor } from "./analyze";
 
 const c = (over: Partial<Contributor>): Contributor => ({ kind: "human", name: "x", commits: 1, ...over });
