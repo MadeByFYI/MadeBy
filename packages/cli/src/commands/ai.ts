@@ -48,8 +48,8 @@ export function aiCommand(args: string[]): void {
   }
   if (res.error === "unrecognized-format") {
     console.error(
-      "madeby ai: unrecognized log format — no registered tool parser matched (Claude Code and aider\n" +
-        "  are supported today). Help add your tool WITHOUT sharing any code or prompts:\n" +
+      "madeby ai: unrecognized log format — no registered tool parser matched (Claude Code, aider, and\n" +
+        "  SpecStory are supported today). Help add your tool WITHOUT sharing any code or prompts:\n" +
         "    madeby ai --make-parser-sample <log>   # writes a content-free format sample to review + share",
     );
     process.exit(1);
