@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { parseSpanManifest } from "@madeby/core";
-import { recordAiSpans } from "./record-spans";
+import { recordAiSpans, writeParserSample } from "./record-spans";
 
 const dirs: string[] = [];
 const AI_SRC = "export function add(a, b) {\n  return a + b;\n}\n";
@@ -64,5 +64,21 @@ describe("recordAiSpans — records only structurally-present AI spans (asserted
     const r = recordAiSpans(root, { transcriptPath: join(root, "nope.jsonl") });
     expect(r.written).toBe(false);
     expect(r.error).toBe("transcript-not-found");
+  });
+});
+
+describe("writeParserSample — content-free sample for the contribution path", () => {
+  it("writes a redacted skeleton (no code/secret) that a user can review + share", () => {
+    const root = mkdtempSync(join(tmpdir(), "madeby-sample-"));
+    dirs.push(root);
+    const secret = "sk-LEAK-abc123";
+    const log = join(root, "unknown-tool.log");
+    writeFileSync(log, `PROPRIETARY v1\nassistant wrote: const k = "${secret}"\n`);
+    const r = writeParserSample(root, { transcriptPath: log, now: "2026-08-13T00:00:00Z" });
+    expect(r.written).toBe(true);
+    expect(existsSync(r.path!)).toBe(true);
+    const skeleton = readFileSync(r.path!, "utf8");
+    expect(skeleton).not.toContain(secret); // the secret never reaches the shareable file
+    expect(skeleton).toContain("madeby parser-sample"); // self-describing header
   });
 });

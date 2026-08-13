@@ -136,10 +136,28 @@ export const aiderParser: ToolParser = {
   },
 };
 
-/** Registered parsers. Add a tool here once its ToolParser exists (needs real sample logs). */
-export const TOOL_PARSERS: readonly ToolParser[] = [claudeCodeParser, aiderParser];
+// The open tool-parser registry — the capture-side of the symmetric plugin model (ARCHITECTURE §12),
+// mirroring registerHostAdapter. A third party who uses a tool we don't support can register a
+// ToolParser for it WITHOUT forking core: they validate it against their OWN local logs (which never
+// leave their machine — the spine) and contribute the parser code. Built-ins register through the
+// same door; nothing here is privileged over a third party's parser.
+const registry = new Map<string, ToolParser>();
+
+/** Register a tool parser (idempotent by id). A third-party parser is a first-class citizen here. */
+export function registerToolParser(parser: ToolParser): void {
+  registry.set(parser.id, parser);
+}
+
+/** All registered parsers — for discovery ("which tools can `madeby ai` capture?") and detection. */
+export function listToolParsers(): ToolParser[] {
+  return [...registry.values()];
+}
+
+// The reference parsers register through the open door, same as any contribution.
+registerToolParser(claudeCodeParser);
+registerToolParser(aiderParser);
 
 /** Pick the parser whose format the log matches, or null if none recognize it. */
-export function detectParser(raw: string, parsers: readonly ToolParser[] = TOOL_PARSERS): ToolParser | null {
+export function detectParser(raw: string, parsers: readonly ToolParser[] = listToolParsers()): ToolParser | null {
   return parsers.find((p) => p.detect(raw)) ?? null;
 }
