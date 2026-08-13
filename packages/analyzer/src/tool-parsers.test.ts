@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { claudeCodeParser, aiderParser, detectParser, type ToolParser } from "./tool-parsers";
+import { claudeCodeParser, aiderParser, detectParser, registerToolParser, listToolParsers, type ToolParser } from "./tool-parsers";
 import { captureLocalSpans } from "./capture-local";
 
 const ROOT = "/repo";
@@ -120,6 +120,25 @@ describe("aider parser (#85 — format reverse-engineered from real public logs)
     expect(r.manifest.attestations[0]!.attribution.provider).toBe("aider");
     expect(r.manifest.attestations[0]!.attribution.source).toBe("aider-session-log");
     expect(r.manifest.attestations[0]!.attribution.model).toBe("gpt-4o");
+  });
+});
+
+describe("open tool-parser registry (ARCHITECTURE §12 — a parser is a first-class contribution)", () => {
+  it("registers a third-party parser through the same door as the built-ins, and detects it", () => {
+    const before = listToolParsers().length;
+    const acme: ToolParser = { id: "acme-ai-x", provider: "acme", detect: (r) => r.startsWith("ACME-X"), parse: () => [] };
+    registerToolParser(acme);
+    expect(listToolParsers().length).toBe(before + 1);
+    expect(detectParser("ACME-X\nlog")?.id).toBe("acme-ai-x");
+    // idempotent by id — re-registering does not duplicate
+    registerToolParser(acme);
+    expect(listToolParsers().length).toBe(before + 1);
+  });
+
+  it("ships the two reference parsers registered by default", () => {
+    const ids = listToolParsers().map((p) => p.id);
+    expect(ids).toContain("claude-code");
+    expect(ids).toContain("aider");
   });
 });
 
