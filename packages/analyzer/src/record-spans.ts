@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import { serializeSpanManifest, parseSpanManifest, type SpanAttestationV0 } from "@madeby/core";
 import { captureLocalSpans } from "./capture-local";
 import { detectParser } from "./tool-parsers";
+import { redactSample } from "./redact-sample";
 
 export interface RecordOptions {
   /** explicit transcript path; omitted ⇒ auto-discover the Claude Code transcript for this repo */
@@ -118,4 +119,37 @@ export function recordAiSpans(root: string, opts: RecordOptions = {}): RecordRes
     discarded: result.discarded.length,
     message: `wrote ${result.matched.length} witnessed file(s) (${result.discarded.length} discarded)`,
   };
+}
+
+export interface SampleResult {
+  written: boolean;
+  /** the redacted sample path written, when written */
+  path?: string;
+  /** the tool whose format we recognized, or undefined if the log is from an unsupported tool */
+  tool?: string;
+  message: string;
+  /** input-problem code when nothing was written: "transcript-not-found" */
+  error?: string;
+}
+
+/**
+ * Write a CONTENT-FREE format skeleton of a session log to `.madeby/parser-samples/`, for a user to
+ * review and attach to an issue so we can add a parser for a tool we don't yet support. The spine
+ * holds: `redactSample` strips all code/prompts/paths/secrets locally; only the log's structure and
+ * model identifiers remain, and nothing is sent anywhere — the user shares the reviewed file itself.
+ */
+export function writeParserSample(root: string, opts: RecordOptions = {}): SampleResult {
+  const transcriptPath = opts.transcriptPath ?? autodiscover(root);
+  if (!transcriptPath || !existsSync(transcriptPath)) {
+    return { written: false, message: "session log not found — pass its path", error: "transcript-not-found" };
+  }
+  const text = readFileSync(transcriptPath, "utf8");
+  const tool = detectParser(text)?.id; // usually undefined here — the point is UNSUPPORTED tools
+  const skeleton = redactSample(text);
+  const dir = join(root, ".madeby", "parser-samples");
+  mkdirSync(dir, { recursive: true });
+  const stamp = (opts.now ?? new Date().toISOString()).replace(/[:.]/g, "-");
+  const out = join(dir, `${tool ?? "unknown-tool"}-${stamp}.txt`);
+  writeFileSync(out, skeleton);
+  return { written: true, path: out, tool, message: `wrote a content-free format sample to ${out}` };
 }
