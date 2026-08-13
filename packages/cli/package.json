@@ -1,7 +1,7 @@
 {
   "name": "madeby",
   "version": "0.1.0",
-  "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby prove) and gate PRs on disclosure (madeby check).",
+  "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby ai) and gate PRs on disclosure (madeby check).",
   "license": "MIT",
   "type": "module",
   "author": "Mac Dougherty",
