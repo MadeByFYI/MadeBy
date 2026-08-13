@@ -42,5 +42,10 @@ export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
 export { claudeCodeParser, aiderParser, specstoryParser, detectParser, registerToolParser, listToolParsers } from "./tool-parsers";
 export type { ToolParser, AiEdit } from "./tool-parsers";
 export { redactSample } from "./redact-sample";
+export { MATCH_THRESHOLD } from "./capture-local";
+// match-calibration (the #86 harness + labeled corpus) is intentionally NOT re-exported here: it is a
+// calibration/analysis artifact consumed by its own test (and MATCH-CALIBRATION.md), and keeping it
+// off the package index keeps the corpus code-snippets out of the offline CLI bundle. Import it via
+// "@madeby/analyzer/*" internals / the relative path in tests, not the package root.
 export { writeParserSample } from "./record-spans";
 export type { SampleResult } from "./record-spans";
