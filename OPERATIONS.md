@@ -125,7 +125,7 @@ and laptop.** The stack in §4 is still the right *stake in the ground*, but **m
 deferred behind a trigger, not day-one.** Re-sequence what we actually operate:
 
 **Tier 0 — we operate nothing (the growth engine).** The `madeby` CLI (`packages/cli`), the GitHub
-Action (`packages/action`), local `prove` capture, self-hosted `.madeby` declarations, and the
+Action (`packages/action`), local `madeby ai` capture, self-hosted `.madeby` declarations, and the
 disclosure recognizer/vocabulary. Hosted by **npm / GitHub / the user's CI**. Our cost is package
 maintenance, not servers. *The thing that drives adoption costs us ≈ $0 to run.*
 
@@ -137,9 +137,13 @@ static page**, not a live pipeline.
 
 **Tier 2 — the real services (deferred; where revenue lives).** The **resolver + registry store**
 (Neon — needed only once there's cross-content data and askers querying; today an in-memory demo),
-**ingestion at scale** for a live index (Modal/batch, CPU not GPU), and the monetized core —
-**verified identity / KYB / signing** and the **enterprise private-repo dashboard** (§6). These are
-the heaviest to operate (security, private data, identity) and **none are built.**
+the **hosted recognizer registry** (the versioned "how to read the world's attestations" dataset the
+tool pulls, plus the light propose→curate→publish path for user-declared attestation types —
+`ARCHITECTURE §3`; the authority-moat surface, not lock-in), **ingestion at scale** for a live index
+(Modal/batch, CPU not GPU), and the monetized core — **verified identity / KYB / signing** and the
+**enterprise private-repo dashboard** (§6). These are the heaviest to operate (security, private
+data, identity) and **none are built.** The recognizer registry is the *thinnest* of them — a
+versioned data endpoint (cache-fronted, scale-to-zero) + a curation queue — so it can graduate early.
 
 **Consequences for §2/§3/§4/§9:**
 - **Day-one footprint = a Vercel app + an npm package.** Everything else graduates in behind a real
@@ -184,7 +188,7 @@ The cross-repo richness + the index + producer-discovery-at-scale (`STRATEGY §3
 
 **Boundary (keeps it cheap AND honest).** **Metadata-only** — commit identity, message-derived signals
 (trailers/DCO), signature presence, sha/repo/date, and file *paths* (for tooling/config detection);
-**never file content.** It answers **identity-graph** and **disclosure-aggregate** queries. It is
+**never file content.** It answers **identity-graph** and **known-coverage** (origin-aggregate) queries. It is
 explicitly **not** the content-fingerprint corpus (code-similarity) — that stays deferred (§5), because
 content is the cost-existential part (§3).
 
@@ -192,12 +196,16 @@ content is the cost-existential part (§3).
 **BigQuery public GitHub dataset** (bounded bulk backfill, metadata columns only). **Bound the corpus:**
 top-N repos by stars, sampled, date-windowed — the cost knob (§3's "bounded sample, not all of git").
 
-**Store:** Neon (§4a). Rough schema: `repos` · `commits(metadata + disclosed{trailer,signature,dco,bot}
-flags, no content)` · `identities(github_login, name)` (from tier-1/2 resolution) ·
-`contributions(identity↔repo↔kind↔count)` (the cross-repo graph) · aggregate materialized views.
+**Store:** Neon (§4a). Rough schema: `repos` · `commits(metadata + type{hi, ai, bot} + auth{signature,
+dco} flags, no content)` — recognized via the **hosted recognizer registry** (§4a), so the flag set
+stays current as the registry grows; **authorship-type is kept distinct from authentication**
+(`ARCHITECTURE §9`: a signed-but-unlabeled commit is *known-who, unknown-which* — it never counts as
+`hi`) · `identities(handle, host, name)` — host-adapted (any forge; GitHub is the bootstrap source),
+from tier-1/2 resolution · `contributions(identity↔repo↔kind↔count)` (the cross-repo graph) ·
+aggregate materialized views.
 
 **Unlocks:** (1) **cross-repo reach** ("@X's code is in N of your deps," "made Y% of ecosystem E") — the
-"surprising humans" read *at scale*; (2) the **human/machine index** (citable authority, aggregate);
+"surprising humans" read *at scale*; (2) the **known-coverage + `hi`/`ai` index** (aggregate, citable authority);
 (3) **demand-generated, SEO-indexed pages** → producer discovery via search; (4) feeds the reliance
 products (transitive gate / supply-chain).
 
@@ -215,7 +223,7 @@ caps + budget alerts. Content-fingerprint corpus stays out.
   name-attached consent-gate (ARCH §8).
 
 **Phasing (lowest-risk first):** **P0** provisioning (Neon + a bounded ingestion job + schema); **P1**
-the **aggregate index** (human/machine + disclosure % — aggregate-only, sidesteps the PII/dossier
+the **aggregate index** (the `hi`/`ai` composition + **known %** — coverage-led, never "% AI" as the headline; aggregate-only, sidesteps the PII/dossier
 concern, the citable authority number); **P2** the **identity/contribution graph** → cross-repo reach as
 demand-generated neutral pages (§8-gated); **P3** SEO pages / at-scale discovery.
 
