@@ -19,6 +19,27 @@ describe("bot / automation recognition (a disclosed machine committer, not infer
     expect(isBotIdentity("Robert Bott", "rbott@x.com")).toBe(false);
     expect(classifyCommit({ message: "fix", authorName: "Jane Dev", authorEmail: "jane@x.org" }).class).toBe("human");
   });
+
+  it("classifies a [bot] identity that IS a named AI agent as ai, not generic bot", () => {
+    // Real autonomous-agent commits whose GitHub noreply email embeds `[bot]` — the AI signal is
+    // disclosed in the identity and must not be discarded to bot-precedence (GROUND-TRUTH.md).
+    const devin = classifyCommit({
+      message: "feat: scaffold backend",
+      authorName: "Devin AI",
+      authorEmail: "158243242+devin-ai-integration[bot]@users.noreply.github.com",
+    });
+    expect(devin.class).toBe("ai");
+    expect(devin.aiContributors[0]?.provider).toBe("cognition");
+    expect(
+      classifyCommit({ message: "fix", authorName: "Copilot", authorEmail: "1+copilot-swe-agent[bot]@users.noreply.github.com" }).class,
+    ).toBe("ai");
+  });
+
+  it("keeps NON-AI automation as bot (an AI-agent [bot] is the exception, not the rule)", () => {
+    // dependabot / renovate / stainless match no AI pattern → still bot, unchanged.
+    expect(classifyCommit({ message: "bump", authorName: "dependabot[bot]", authorEmail: "49699333+dependabot[bot]@users.noreply.github.com" }).class).toBe("bot");
+    expect(classifyCommit({ message: "regen", authorName: "renovate[bot]" }).class).toBe("bot");
+  });
 });
 
 const human: CommitMeta = { message: "Fix off-by-one in pager", authorName: "Mac", authorEmail: "mac@example.com" };

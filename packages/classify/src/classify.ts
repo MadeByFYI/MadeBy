@@ -99,7 +99,24 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
   // A machine/automation committer is machine-authored by disclosure of its own identity — decided
   // first, before the human/AI logic. (Precedence: the committer *is* the bot; AI-of-the-content is
   // a separate question we don't infer here.)
+  //
+  // BUT a `[bot]` identity that is ITSELF a named AI agent — copilot-swe-agent[bot],
+  // devin-ai-integration[bot], … — is AI authorship, not generic automation. `bot` is reserved for
+  // NON-AI machines (dependabot, renovate, CI). So before falling through to `bot`, read the
+  // disclosed identity: if it matches a known AI pattern, it is `ai`. This is still a disclosure
+  // (a named agent), not an inference. Real autonomous-agent commits (whose GitHub noreply email
+  // embeds `[bot]`) were being lost to bot-precedence — see GROUND-TRUTH.md.
   if (isBotIdentity(commit.authorName, commit.authorEmail)) {
+    const botText = `${commit.authorName ?? ""} ${commit.authorEmail ?? ""}`.trim();
+    const agentAi = botText ? matchAi(botText) : null;
+    if (agentAi) {
+      return {
+        class: "ai",
+        confidence: CONF_AI,
+        signals: [`author:${agentAi.provider}`],
+        aiContributors: [{ ...agentAi, raw: botText }],
+      };
+    }
     return { class: "bot", confidence: CONF_BOT, signals: ["author:bot"], aiContributors };
   }
 
