@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
 import { githubAdapter } from "./github";
+import "./github-api"; // augment the adapter with the network methods this test exercises
 import { getHostAdapter, listHostAdapters, detectCiRange } from "./registry";
 
 const origFetch = globalThis.fetch;
