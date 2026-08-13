@@ -39,7 +39,7 @@ export type { HostAdapter, RepoRef, HostApiOptions } from "./host/types";
 export type { IdentityProfile } from "./analyze";
 export { captureLocalSpans } from "./capture-local";
 export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
-export { claudeCodeParser, aiderParser, detectParser, registerToolParser, listToolParsers } from "./tool-parsers";
+export { claudeCodeParser, aiderParser, specstoryParser, detectParser, registerToolParser, listToolParsers } from "./tool-parsers";
 export type { ToolParser, AiEdit } from "./tool-parsers";
 export { redactSample } from "./redact-sample";
 export { writeParserSample } from "./record-spans";
