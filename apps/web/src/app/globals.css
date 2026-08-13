@@ -40,7 +40,7 @@
     -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
     overflow-x:hidden;
   }
-  .wrap{max-width:1060px; margin:0 auto; padding:0 24px}
+  .wrap{max-width:1060px; margin:0 auto; padding-inline:24px}
   h1,h2,h3{font-family:var(--serif); font-weight:600; line-height:1.08; letter-spacing:-.01em; text-wrap:balance; margin:0}
   p{margin:0}
   a{color:var(--accent-ink); text-decoration:none}
@@ -63,14 +63,14 @@
   @media (max-width:640px){ nav .nlink{display:none} }
 
   /* ---- section rhythm ---- */
-  section{padding:78px 0}
+  section{padding-block:76px}
   .rule{height:1px; background:var(--line); margin:0}
   .kicker{display:flex; align-items:center; gap:14px; margin-bottom:26px}
   .kicker .eyebrow{white-space:nowrap}
   .kicker .rule{flex:1}
 
   /* ---- hero ---- */
-  .hero{padding:64px 0 40px}
+  .hero{padding-block:52px 44px}
   .hero h1{font-size:clamp(2.5rem,6.2vw,4.35rem); margin:18px 0 0}
   .hero .lead{margin-top:22px; font-size:clamp(18px,2.3vw,21px)}
   .cta-row{display:flex; flex-wrap:wrap; gap:12px; margin-top:30px}

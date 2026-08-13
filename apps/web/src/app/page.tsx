@@ -128,8 +128,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="rule wrap" style={{ maxWidth: "1012px" }}></div>
-
         <section className="statement wrap reveal">
           <div className="kicker">
             <span className="eyebrow">The record</span>
@@ -273,8 +271,6 @@ export default function Home() {
             Disclosure runs <strong>both ways</strong>: affirm human authorship, or disclose the AI — both ride the same ladder, and MadeBy records what&apos;s claimed rather than guessing. If you wrote it yourself, one trailer says so.
           </p>
         </section>
-
-        <div className="rule wrap" style={{ maxWidth: "1012px" }}></div>
 
         <section className="wrap reveal">
           <div className="kicker">
@@ -484,8 +480,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="rule wrap" style={{ maxWidth: "1012px" }}></div>
-
         <section className="wrap reveal">
           <div className="kicker">
             <span className="eyebrow">Any host</span>
@@ -510,8 +504,6 @@ export default function Home() {
             </span>
           </div>
         </section>
-
-        <div className="rule wrap" style={{ maxWidth: "1012px" }}></div>
 
         <section className="wrap reveal">
           <div className="kicker">
@@ -547,8 +539,6 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="rule wrap" style={{ maxWidth: "1012px" }}></div>
-
         <section id="scope" className="wrap reveal">
           <div className="kicker">
             <span className="eyebrow">What it is — and isn&apos;t</span>
@@ -569,10 +559,8 @@ export default function Home() {
         <section className="wrap reveal">
           <div className="proof">
             <div>
-              <div className="stat tnum">
-                <b>100</b> / 103
-              </div>
-              <div className="lbl">MadeBy records its own provenance. Commits in this repository that disclose their origin — measured by the tool itself.</div>
+              <div className="stat">Who made MadeBy?</div>
+              <div className="lbl">Our own answer, measured by the tool itself — from the first commit.</div>
               <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
                 <span className="badge">
                   <span className="badge-row">
@@ -589,8 +577,8 @@ export default function Home() {
                     <span className="cov-pct">97%</span>
                   </span>
                 </span>
-                <span style={{ fontSize: "13px", color: "var(--faint)", lineHeight: "1.5", maxWidth: "44ch" }}>
-                  A README badge in two lines: <b style={{ color: "var(--muted)" }}>made by hi + ai</b> (Human Intelligence + AI, the disclosed authors), and <b style={{ color: "var(--muted)" }}>known 97%</b> — how much of the origin is on the record; the rest is honestly unknown. The composition&apos;s color is the trust tier; the link resolves the exact split.
+                <span style={{ fontSize: "13.5px", color: "var(--muted)", lineHeight: "1.55", maxWidth: "40ch" }}>
+                  100 of our 103 commits disclose their origin. The other three we can&apos;t yet vouch for — so we mark them <b style={{ color: "var(--ink)" }}>unknown</b>, never &quot;human.&quot; Honesty is the product.
                 </span>
               </div>
             </div>
