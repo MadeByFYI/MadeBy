@@ -9,6 +9,8 @@
 //   madeby who    — made by whom? read what's on the record about who made this (file or repo)
 //   madeby ai     — made by AI: record your own AI session's witnessed spans
 //   madeby me     — made by me: affirm you authored HEAD yourself (the symmetric human claim)
+//   madeby me --with-ai [tool] — made by me, WITH AI: the assisted middle state (human accountable,
+//                 AI disclosed → with_ai / badge `hi + ai`)
 
 import { checkCommand } from "./commands/check";
 import { aiCommand } from "./commands/ai";
@@ -32,6 +34,8 @@ Usage:
                                  <log> defaults to the auto-discovered Claude Code transcript.
   madeby me                      Made by me: affirm you authored HEAD yourself (an Authored-by-human
                                  trailer — the symmetric human claim to \`ai\`).
+  madeby me --with-ai [tool]     Made by me, with AI: also disclose AI assistance (Assisted-by:
+                                 <tool>, default "AI") — the assisted middle state, classified with_ai.
   madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
   madeby help                    Show this help.
 

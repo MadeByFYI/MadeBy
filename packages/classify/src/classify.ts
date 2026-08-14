@@ -65,6 +65,17 @@ function matchAi(text: string): AiContributor | null {
   return null;
 }
 
+// An explicit but UNNAMED AI-assistance disclosure in a trailer — e.g. `Assisted-by: AI`, which
+// `madeby me --with-ai` writes when the maker discloses "made with AI" without naming the tool. It's a
+// disclosure, so we honor it (provider "unspecified"), but ONLY on an EXACT whole-value match, so a
+// human co-author named "AI Team" or "AI Weiwei" is never swept in. Used only in the trailer context
+// below — never for author-name inference, where a generic "AI" would false-positive on people.
+const GENERIC_AI_TRAILER = /^(?:AI|an? AI|AI (?:assistant|tool|pair)|artificial intelligence)$/i;
+function genericAiDisclosure(who: string): AiContributor | null {
+  const w = who.trim();
+  return GENERIC_AI_TRAILER.test(w) ? { provider: "unspecified", raw: w } : null;
+}
+
 // Recognize the AI-attribution trailers tools actually emit, not just Co-authored-by (#78).
 // matchAi still gates AI vs. human per entry, so widening the keys never causes a false positive.
 const TRAILER_RE = /^[ \t]*(?:Co-authored-by|Generated-by|Assisted-by):[ \t]*(.+)$/gim;
@@ -123,7 +134,7 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
   const trailers = [...commit.message.matchAll(TRAILER_RE)].map((m) => m[1]!.trim());
   let humanCoAuthors = 0;
   for (const who of trailers) {
-    const ai = matchAi(who);
+    const ai = matchAi(who) ?? genericAiDisclosure(who);
     if (ai) {
       aiContributors.push(ai);
       signals.push(`co-authored-by:${ai.provider}`);
