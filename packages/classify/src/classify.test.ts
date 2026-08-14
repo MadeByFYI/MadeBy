@@ -109,6 +109,21 @@ describe("evidence-grade signals (#78) — wider trailers + agent identities, no
     }
   });
 
+  it("honors an explicit generic AI disclosure in a trailer (madeby me --with-ai, unnamed tool)", () => {
+    // `Assisted-by: AI` is a disclosure, not an inference — count it as AI involvement (with_ai).
+    for (const v of ["AI", "an AI", "AI assistant", "AI tool", "artificial intelligence"]) {
+      const c = classifyCommit({ message: `feat: x\n\nAuthored-by-human: Mac <m@x.com>\nAssisted-by: ${v}`, authorName: "Mac", authorEmail: "m@x.com" });
+      expect(c.class, v).toBe("with_ai");
+      expect(c.aiContributors[0]?.provider, v).toBe("unspecified");
+    }
+  });
+
+  it("does NOT sweep in a human whose NAME merely starts with 'AI' (exact-match guard)", () => {
+    // a human co-author literally named "AI Team", and the artist "Ai Weiwei" as author — both human.
+    expect(classifyCommit({ message: "x\n\nCo-authored-by: AI Team <team@co.com>", authorName: "Mac", authorEmail: "m@x.com" }).class).toBe("human");
+    expect(classifyCommit({ message: "install sunflower seeds", authorName: "Ai Weiwei", authorEmail: "ai@example.cn" }).class).toBe("human");
+  });
+
   it("does NOT false-positive on human names/words that merely contain a tool substring", () => {
     // 'precursor' must not match cursor; 'Aiden' must not match aider; 'codex' is openai (expected).
     expect(classifyCommit({ message: "precursor cleanup", authorName: "Aiden Cody", authorEmail: "aiden@x.com" }).class).toBe("human");
