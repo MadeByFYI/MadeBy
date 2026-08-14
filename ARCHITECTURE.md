@@ -544,10 +544,17 @@ neither advise nor obstruct. Fail-safe throughout: a parse error or our own bug 
 **Packaging (landed).** `scripts/*.mjs` are the no-build dev entries; the installable form is
 `packages/cli` — the `madeby` package, esbuild-bundled into a single standalone `dist/madeby.mjs`
 (bundling sidesteps the type-stripping import constraints), exposing `madeby check`, `madeby who`,
-and the disclosure writes `madeby ai`/`me`. `packages/action/` is the thin composite Action that runs `npx madeby check` on a
-PR — so a maintainer adopts the whole wedge by committing two files (`.madeby/policy.json` + a
-workflow). The one remaining outward step is `npm publish` of the `madeby` package (owner's call);
-until then the CLI runs locally and the Action manifest is inert.
+and the **three-way** disclosure writes that complete "made by ___": `madeby ai` (made by AI),
+`madeby me` (made by hi), and `madeby me --with-ai [tool]` (made by me, WITH AI — the assisted middle).
+`--with-ai` amends HEAD with both an `Authored-by-human` affirmation and an `Assisted-by: <tool>`
+disclosure, so the commit classifies `with_ai` and completes the `hi + ai` composition (§9) on the
+write side — making first-class the assisted state maintainers ask for in the wild
+(`research/policy-evidence-2026-08-13.md`; front-door `madewith.fyi`). `packages/action/` is the thin
+composite Action that runs `npx madeby check` on a PR — so a maintainer adopts the whole wedge by
+committing two files (`.madeby/policy.json` + a workflow). As of 2026-08-13 the `madeby` package (and
+the `@madeby` scope, via `@madeby/cli`) are published to npm as a **defensive name-registration** —
+`0.1.0`, MIT, published by an individual, no announcement — so the Action's `npx madeby` reference now
+resolves.
 
 ---
 
