@@ -4,7 +4,12 @@
   "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby ai) and gate PRs on disclosure (madeby check).",
   "license": "MIT",
   "type": "module",
-  "author": "Mac Dougherty",
+  "author": {
+    "name": "The Registrar"
+  },
+  "contributors": [
+    "Claude, Anthropic (AI-assisted — see the Co-Authored-By trailers in the git history)"
+  ],
   "homepage": "https://github.com/MacDougherty/MadeBy/tree/main/packages/cli#readme",
   "repository": {
     "type": "git",
