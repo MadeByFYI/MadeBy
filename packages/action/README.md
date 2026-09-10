@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0            # so the action can scope to the PR's own commits (base..head)
-      - uses: MacDougherty/MadeBy/packages/action@v0.1.0
+      - uses: MacDougherty/MadeBy/packages/action@v0.2.0
 ```
 
 That's the whole thing: **commit two files.** No app to install, nothing hosted, no data leaves your
@@ -109,7 +109,7 @@ merge-request pipeline it auto-scopes from `CI_MERGE_REQUEST_DIFF_BASE_SHA` + `C
 
 ```yaml
 include:
-  - remote: 'https://raw.githubusercontent.com/MacDougherty/MadeBy/v0.1.0/packages/action/gitlab-ci-disclosure.yml'
+  - remote: 'https://raw.githubusercontent.com/MacDougherty/MadeBy/v0.2.0/packages/action/gitlab-ci-disclosure.yml'
 ```
 
 Any other forge is a single adapter away; until one ships, run `npx madeby check <range>` as a plain
