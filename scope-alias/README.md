@@ -9,6 +9,6 @@ npx madeby check
 ```
 
 This `@madeby/cli` package exists only to hold the `@madeby` scope for the MadeBy
-project. It ships no code. Source: https://github.com/MacDougherty/MadeBy
+project. It ships no code. Source: https://github.com/madeby/MadeBy
 
 Made by The Registrar, with AI (Claude, Anthropic) — disclosed, as the project asks of everyone.

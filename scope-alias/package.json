@@ -9,10 +9,10 @@
   "contributors": [
     "Claude, Anthropic (AI-assisted — see the Co-Authored-By trailers in the git history)"
   ],
-  "homepage": "https://github.com/MacDougherty/MadeBy/tree/main/packages/cli#readme",
+  "homepage": "https://github.com/madeby/MadeBy/tree/main/packages/cli#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MacDougherty/MadeBy.git"
+    "url": "git+https://github.com/madeby/MadeBy.git"
   },
   "keywords": [
     "provenance",
