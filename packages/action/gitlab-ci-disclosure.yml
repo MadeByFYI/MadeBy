@@ -8,7 +8,7 @@
 # Include it from your .gitlab-ci.yml:
 #
 #   include:
-#     - remote: 'https://raw.githubusercontent.com/MacDougherty/MadeBy/v0.1.0/packages/action/gitlab-ci-disclosure.yml'
+#     - remote: 'https://raw.githubusercontent.com/MacDougherty/MadeBy/v0.2.0/packages/action/gitlab-ci-disclosure.yml'
 #
 # Then require the "disclosure" job on the target branch via a merge-request approval / pipeline rule.
 
