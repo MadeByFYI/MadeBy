@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: madeby/MadeBy/packages/action@v0.2.0
+      - uses: MadeByFYI/MadeBy/packages/action@v0.2.0
 `;
 
 function writeIfAbsent(abs: string, rel: string, content: string, created: string[], skipped: string[]): void {
