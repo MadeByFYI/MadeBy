@@ -97,7 +97,7 @@ on its own error, and never invents a stricter gate than the maintainer wrote.
 
 A ready-made GitHub Action, an Azure DevOps Pipelines template, and a GitLab CI job wrap
 `madeby check` — nothing hosted, nothing leaves your CI. See
-[`packages/action`](https://github.com/madeby/MadeBy/tree/main/packages/action#readme).
+[`packages/action`](https://github.com/MadeByFYI/MadeBy/tree/main/packages/action#readme).
 
 ## Extend it anywhere — primitives you run, not code you ship
 
@@ -179,4 +179,4 @@ Disclosure and accountability, **not** an AI slop-blocker or detector. A `requir
 low-effort drive-bys (as the DCO does) and gives a basis to triage — it does not, and will never,
 claim to detect AI.
 
-MIT · part of [MadeBy](https://github.com/madeby/MadeBy)
+MIT · part of [MadeBy](https://github.com/MadeByFYI/MadeBy)
