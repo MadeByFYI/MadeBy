@@ -79,7 +79,7 @@ export default function Home() {
             AI writes a growing share of the code in your pull requests — and nothing tells you which. MadeBy makes origin — human or AI — part of the record on every pull request, then turns that record into a provenance layer you and your agents build on.
           </p>
           <div className="cta-row">
-            <a className="btn btn-primary" href="https://github.com/MacDougherty/MadeBy">
+            <a className="btn btn-primary" href="https://github.com/madeby/MadeBy">
               Get started &nbsp;→
             </a>
             <a className="btn btn-ghost" href="#how">
@@ -239,7 +239,7 @@ export default function Home() {
                 <span className="s">0</span>
                 {" }\n      - "}
                 <span className="k">uses</span>
-                {": MacDougherty/MadeBy/packages/action@v0.1.0"}
+                {": madeby/MadeBy/packages/action@v0.1.0"}
               </pre>
             </div>
           </div>
@@ -586,7 +586,7 @@ export default function Home() {
               <p className="lead" style={{ fontSize: "17px", marginBottom: "16px", maxWidth: "30ch" }}>
                 Two files. Nothing hosted. Start advisory, enforce when ready.
               </p>
-              <a className="btn btn-primary" href="https://github.com/MacDougherty/MadeBy">
+              <a className="btn btn-primary" href="https://github.com/madeby/MadeBy">
                 Get started on GitHub &nbsp;→
               </a>
             </div>

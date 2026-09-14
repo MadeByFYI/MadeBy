@@ -6,7 +6,7 @@
 import { recordAiSpans, writeParserSample } from "@madeby/analyzer";
 import { repoRoot } from "../scope";
 
-const ISSUE_URL = "https://github.com/MacDougherty/MadeBy/issues/new";
+const ISSUE_URL = "https://github.com/madeby/MadeBy/issues/new";
 
 export function aiCommand(args: string[]): void {
   const root = repoRoot();

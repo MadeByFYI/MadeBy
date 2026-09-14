@@ -48,7 +48,7 @@ npx madeby@latest check                 # should print a disclosure summary, exi
 1. **Tell the outreach doc it's unblocked** — the "publish first" warning in
    `GTM/maintainer-outreach.md` is now satisfied; the note can go out.
 2. **The Action is already pinned to `@v0.2.0`.** The quickstart references
-   `MacDougherty/MadeBy/packages/action@v0.2.0` (not `@main`), so a maintainer's CI isn't tracking a
+   `madeby/MadeBy/packages/action@v0.2.0` (not `@main`), so a maintainer's CI isn't tracking a
    moving branch, and the `v0.1.0` git tag marks this release. On a version bump, move in lockstep:
    the CLI `version`, a new `vX.Y.Z` tag, and the quickstart's `@vX.Y.Z` ref.
 3. **Version bumps from here:** edit `packages/cli/package.json` `version`, re-run
