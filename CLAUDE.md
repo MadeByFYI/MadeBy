@@ -34,6 +34,8 @@ The design is authoritative and lives in four root docs — consult them before 
 - Work is tracked as GitHub issues under epics; keep ticket status current (label `in-progress`,
   comment progress, close + check the epic box when done).
 - We dogfood: this repo records its own provenance (#1). Commits should be signed and carry
-  accurate `Co-Authored-By:` trailers.
+  accurate `Co-Authored-By:` trailers. **Disclose authorship per ACO (see `AGENTS.md`):** after
+  committing AI-assisted work, run `madeby me --with-ai <tool>` (adds `Authored-by-human:` +
+  `Assisted-by:` → classifies `with_ai`).
 - End commit messages with:
   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`

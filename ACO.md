@@ -121,6 +121,10 @@ governed lightly (media-type-registry style: who may claim a binding identifier)
 - **Higher tiers** (`verified` / `sworn` / `bound`) layer onto the same claim as evidence, signatures,
   and identity anchoring become available — the asserted claim is never invalidated, only corroborated.
 
+**Adopting the convention (repos):** drop an [`AGENTS.md`](./AGENTS.md) disclosure convention into your
+repository so any agent working there discloses at the asserted tier with no setup (`npx madeby …`). This
+repository's [`AGENTS.md`](./AGENTS.md) is the reference convention.
+
 ## 8. Relationship to neighboring standards
 
 ACO **rides** where a standard exists and **extends into the gap** where none does:
