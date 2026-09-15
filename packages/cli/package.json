@@ -1,6 +1,6 @@
 {
   "name": "madeby",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby ai) and gate PRs on disclosure (madeby check).",
   "license": "MIT",
   "type": "module",
