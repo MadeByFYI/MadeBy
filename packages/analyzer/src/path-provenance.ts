@@ -10,16 +10,24 @@
 // authorship, and we never assert "human" (disclosure, not detection).
 
 import { execFileSync } from "node:child_process";
-import { commitDisclosureKinds, type DisclosureKind } from "@madeby/core";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import {
+  commitDisclosureKinds,
+  recognizeSpdxAiDisclosures,
+  spdxAiDisclosureCategory,
+  aiDisclosureDefault,
+  type DisclosureKind,
+} from "@madeby/core";
 import { isBotIdentity } from "@madeby/classify";
 import { readSpanManifestsFromDir } from "./provenance";
 import { readDisclosures } from "./read-disclosures";
 
 export interface ProvenanceRecord {
   /** where the signal came from */
-  source: "span" | "blame";
+  source: "span" | "blame" | "header";
   /** the resolution this record is anchored at */
-  granularity: "region" | "commit";
+  granularity: "region" | "commit" | "file";
   startLine?: number;
   endLine?: number;
   /** disclosed AI involvement (a span, or a commit AI-trailer) */
@@ -118,6 +126,31 @@ export function provenanceOf(
     }
   }
 
+  // 1b) file-header SPDX-AI-Disclosure tag — a DECLARED authorship disclosure (we read the header, not
+  //     the code: disclosure, not detection). The ggfevans/ai-disclosure convention, recognized as a
+  //     carrier (ACO §5). File-level, so it applies to any queried range.
+  try {
+    const head = readFileSync(join(root, path), "utf8").slice(0, 4096);
+    const sig = recognizeSpdxAiDisclosures(head)[0];
+    if (sig) {
+      const value = sig.subjectRef ?? "";
+      const cat = spdxAiDisclosureCategory(value);
+      const model = /SPDX-AI-Model[ \t]*:[ \t]*(.+)/i.exec(head)?.[1]?.trim();
+      records.push({
+        source: "header",
+        granularity: "file",
+        ai: cat !== "human",
+        bot: false,
+        model,
+        disclosures: ["spdx-ai-disclosure"],
+        confidence: "disclosed",
+        evidence: `SPDX-AI-Disclosure: ${value} (${cat})${model ? ` — ${model}` : ""}`,
+      });
+    }
+  } catch {
+    // file absent / binary / unreadable → skip; never throw
+  }
+
   // 2) last-touch commit disclosure (approximate, commit-granular) — from git blame.
   if (opts.useBlame !== false) {
     try {
@@ -187,6 +220,8 @@ export interface ProvenanceMap {
   witnessed: WitnessedFile[];
   /** commit-level disclosure coverage over the recent window (context, not per-file authorship) */
   commitCoverage: { disclosed: number; total: number };
+  /** repo-level SPDX-AI-Disclosure default declared in AI_DISCLOSURE.md, if any */
+  aiDisclosureDefault?: { value: string; category: string };
   summary: string;
   note: string;
 }
@@ -226,12 +261,25 @@ export function provenanceMap(root: string, opts: { prefix?: string; commitLimit
   const scope = prefix ?? "repo";
   const allModels = [...new Set(witnessed.flatMap((w) => w.models))];
 
+  // repo-level SPDX-AI-Disclosure default (AI_DISCLOSURE.md frontmatter), if declared
+  let aiDefault: { value: string; category: string } | undefined;
+  try {
+    const p = join(root, "AI_DISCLOSURE.md");
+    if (existsSync(p)) {
+      const v = aiDisclosureDefault(readFileSync(p, "utf8"));
+      if (v) aiDefault = { value: v, category: spdxAiDisclosureCategory(v) };
+    }
+  } catch {
+    /* unreadable → no default; never throw */
+  }
+
   return {
     scope,
     trackedFiles,
     witnessedFiles: witnessed.length,
     witnessed,
     commitCoverage: { disclosed, total: commits.length },
+    aiDisclosureDefault: aiDefault,
     summary:
       `${scope}: ${trackedFiles} tracked file${trackedFiles === 1 ? "" : "s"}; ` +
       `${witnessed.length} with witnessed AI provenance${allModels.length ? ` (${allModels.join(", ")})` : ""}; ` +

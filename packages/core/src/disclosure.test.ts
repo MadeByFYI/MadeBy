@@ -6,6 +6,10 @@ import {
   hasAiTrailer,
   hasHumanAttestation,
   recognizeSpdxIdentifiers,
+  recognizeSpdxAiDisclosures,
+  hasSpdxAiDisclosure,
+  spdxAiDisclosureCategory,
+  aiDisclosureDefault,
   disclosureKindsPresent,
   commitDisclosureKinds,
 } from "./disclosure";
@@ -45,6 +49,48 @@ describe("recognizeSpdxIdentifiers", () => {
 
   it("finds nothing in plain source", () => {
     expect(recognizeSpdxIdentifiers("const x = 1;")).toEqual([]);
+  });
+});
+
+describe("recognizeSpdxAiDisclosures — the ggfevans/ai-disclosure convention (ACO §5)", () => {
+  it("recognizes each of the four values across language-specific header comment styles", () => {
+    expect(recognizeSpdxAiDisclosures("// SPDX-AI-Disclosure: ai-generated\n// SPDX-AI-Model: claude-opus-4-6")).toMatchObject([
+      { kind: "spdx-ai-disclosure", tier: "asserted", subjectRef: "ai-generated" },
+    ]);
+    expect(recognizeSpdxAiDisclosures("# SPDX-AI-Disclosure: ai-assisted")[0]).toMatchObject({ subjectRef: "ai-assisted" });
+    expect(recognizeSpdxAiDisclosures(" * SPDX-AI-Disclosure: none")[0]).toMatchObject({ subjectRef: "none" });
+    expect(recognizeSpdxAiDisclosures("SPDX-AI-Disclosure: autonomous")[0]).toMatchObject({ subjectRef: "autonomous" });
+  });
+
+  it("ignores unknown values, unrelated text, and the SPDX *license* tag", () => {
+    expect(recognizeSpdxAiDisclosures("SPDX-AI-Disclosure: maybe")).toEqual([]);
+    expect(recognizeSpdxAiDisclosures("const x = 1;")).toEqual([]);
+    expect(recognizeSpdxAiDisclosures("SPDX-License-Identifier: MIT")).toEqual([]);
+  });
+
+  it("hasSpdxAiDisclosure is a stable boolean (global-regex lastIndex reset — not flaky)", () => {
+    const h = "// SPDX-AI-Disclosure: ai-assisted";
+    expect(hasSpdxAiDisclosure(h)).toBe(true);
+    expect(hasSpdxAiDisclosure(h)).toBe(true);
+    expect(hasSpdxAiDisclosure("no tag here")).toBe(false);
+  });
+
+  it("maps values onto the three-way taxonomy", () => {
+    expect(spdxAiDisclosureCategory("none")).toBe("human");
+    expect(spdxAiDisclosureCategory("ai-assisted")).toBe("with_ai");
+    expect(spdxAiDisclosureCategory("ai-generated")).toBe("ai");
+    expect(spdxAiDisclosureCategory("autonomous")).toBe("ai");
+    expect(spdxAiDisclosureCategory("bogus")).toBe("unknown");
+  });
+
+  it("reads the repo-level disclosure-default from AI_DISCLOSURE.md frontmatter", () => {
+    const md = "---\ndisclosure-default: ai-assisted\nmodels-used:\n  - claude-opus-4-6\n---\n";
+    expect(aiDisclosureDefault(md)).toBe("ai-assisted");
+    expect(aiDisclosureDefault("no frontmatter here")).toBeNull();
+  });
+
+  it("registers the kind as recognized (external, asserted ceiling)", () => {
+    expect(DISCLOSURE_KINDS["spdx-ai-disclosure"]).toMatchObject({ parser: "recognized", ceiling: "asserted", nativeness: "external" });
   });
 });
 
