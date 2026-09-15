@@ -239,7 +239,7 @@ export default function Home() {
                 <span className="s">0</span>
                 {" }\n      - "}
                 <span className="k">uses</span>
-                {": MadeByFYI/MadeBy/packages/action@v0.1.0"}
+                {": MadeByFYI/MadeBy/packages/action@v0.2.0"}
               </pre>
             </div>
           </div>
