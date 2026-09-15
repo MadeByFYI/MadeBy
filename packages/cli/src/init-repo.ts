@@ -35,6 +35,38 @@ jobs:
       - uses: MadeByFYI/MadeBy/packages/action@v0.2.0
 `;
 
+// The ACO agent convention (the initiation lever): dropped into the repo so any agent working here
+// discloses authorship per ACO unprompted. Absolute links — this lands in someone else's repo. The
+// fuller reference is this project's own AGENTS.md.
+const AGENTS_CONVENTION = `# AGENTS.md — Authorship disclosure convention (ACO)
+
+This repository asks any AI agent — or a human working with one — to **disclose who authored the
+changes they make**, per **ACO, the Authorship Certificate of Origin**
+(https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md).
+
+## The rule
+
+When you author or modify content here, disclose the authorship **category** on your commit — one of:
+
+- \`human\` — a human authored it, no AI involvement.
+- \`with_ai\` — a human authored it with disclosed AI assistance.
+- \`ai\` — an AI agent authored it (a human remains accountable).
+
+Disclose **per commit, honestly** — the category describes what actually happened for that change.
+
+## The one-line way (asserted tier — no keys, no setup)
+
+After you commit, run the matching command (works with no install via \`npx\`):
+
+| Category  | Command                          |
+|-----------|----------------------------------|
+| \`human\`   | \`npx madeby me\`                  |
+| \`with_ai\` | \`npx madeby me --with-ai <tool>\` |
+| \`ai\`      | \`npx madeby ai <session-log>\`    |
+
+Undisclosed content stays *unknown*, never guessed. See ACO for the standard.
+`;
+
 function writeIfAbsent(abs: string, rel: string, content: string, created: string[], skipped: string[]): void {
   if (existsSync(abs)) {
     skipped.push(rel);
@@ -52,11 +84,17 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   const skipped: string[] = [];
 
   writeIfAbsent(join(root, ".madeby", "policy.json"), ".madeby/policy.json", JSON.stringify({ version: 0, mode }, null, 2) + "\n", created, skipped);
+  writeIfAbsent(join(root, "AGENTS.md"), "AGENTS.md", AGENTS_CONVENTION, created, skipped);
   if (host === "github") {
     writeIfAbsent(join(root, ".github", "workflows", "disclosure.yml"), ".github/workflows/disclosure.yml", GH_WORKFLOW, created, skipped);
   }
 
   const nextSteps: string[] = ["Commit the created files."];
+  if (created.includes("AGENTS.md")) {
+    nextSteps.push("An AGENTS.md ACO convention was added — agents that read it disclose authorship (e.g. 'npx madeby me --with-ai <tool>'). Tune it to your repo's tools.");
+  } else if (skipped.includes("AGENTS.md")) {
+    nextSteps.push("You already have an AGENTS.md — add the ACO disclosure rule to it (reference: https://github.com/MadeByFYI/MadeBy/blob/main/AGENTS.md).");
+  }
   if (host === "azure-devops") {
     nextSteps.push("Add the Azure Pipelines template (packages/action/azure-pipelines-disclosure.yml) and wire it as a PR build-validation branch policy.");
   } else if (host !== "github") {
