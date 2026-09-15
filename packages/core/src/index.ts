@@ -93,6 +93,10 @@ export {
   hasAiTrailer,
   hasHumanAttestation,
   recognizeSpdxIdentifiers,
+  recognizeSpdxAiDisclosures,
+  hasSpdxAiDisclosure,
+  spdxAiDisclosureCategory,
+  aiDisclosureDefault,
   disclosureKindsPresent,
   commitDisclosureKinds,
 } from "./disclosure";
@@ -102,6 +106,7 @@ export type {
   DisclosureNativeness,
   ParserStatus,
   DisclosureSignal,
+  SpdxAiDisclosureValue,
 } from "./disclosure";
 
 export {

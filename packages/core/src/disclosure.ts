@@ -20,6 +20,7 @@ export type DisclosureKind =
   | "commit-signature" // a cryptographic signature is present on the commit
   | "ai-tool-config" // a committed AI-tool config (.cursorrules, copilot-instructions, …)
   | "spdx-license" // SPDX-License-Identifier / SPDX-FileCopyrightText metadata
+  | "spdx-ai-disclosure" // SPDX-AI-Disclosure AUTHORSHIP tag (the ggfevans/ai-disclosure convention)
   | "reuse" // REUSE-compliant licensing (.reuse/, LICENSES/)
   | "in-toto" // an in-toto attestation predicate
   | "slsa" // SLSA provenance
@@ -56,6 +57,7 @@ export const DISCLOSURE_KINDS: Record<DisclosureKind, DisclosureKindMeta> = {
   "commit-signature": { label: "commit signature", nativeness: "external", ceiling: "verified", parser: "recognized" },
   "ai-tool-config": { label: "committed AI-tool config", nativeness: "external", ceiling: "asserted", parser: "recognized" },
   "spdx-license": { label: "SPDX license metadata", nativeness: "external", ceiling: "asserted", parser: "recognized" },
+  "spdx-ai-disclosure": { label: "SPDX-AI-Disclosure tag", nativeness: "external", ceiling: "asserted", parser: "recognized" },
   reuse: { label: "REUSE licensing", nativeness: "external", ceiling: "asserted", parser: "planned" },
   "in-toto": { label: "in-toto attestation", nativeness: "external", ceiling: "verified", parser: "planned" },
   slsa: { label: "SLSA provenance", nativeness: "external", ceiling: "verified", parser: "planned" },
@@ -142,6 +144,53 @@ export function recognizeSpdxIdentifiers(text: string): DisclosureSignal[] {
     out.push({ kind: "spdx-license", evidence: "SPDX-FileCopyrightText present", tier: "asserted" });
   }
   return out;
+}
+
+// SPDX-AI-Disclosure — the AI-AUTHORSHIP tag (distinct from the SPDX *license* metadata above). The
+// community convention (ggfevans/ai-disclosure): a file-header tag `SPDX-AI-Disclosure: <value>` with
+// four values, optionally companioned by `SPDX-AI-Model:`/`SPDX-AI-Provider:`, plus a repo-level
+// `AI_DISCLOSURE.md` default. We recognize it and map it onto the three-way taxonomy — subsume the
+// convention, don't compete (ARCHITECTURE §3/§7; ACO §5). Asserted tier: a self-declared header tag.
+export type SpdxAiDisclosureValue = "none" | "ai-assisted" | "ai-generated" | "autonomous";
+
+const SPDX_AI_DISCLOSURE_RE = /SPDX-AI-Disclosure[ \t]*:[ \t]*(none|ai-assisted|ai-generated|autonomous)\b/gi;
+const AI_DISCLOSURE_DEFAULT_RE = /^[ \t]*disclosure-default[ \t]*:[ \t]*(none|ai-assisted|ai-generated|autonomous)\b/im;
+
+/** Map an SPDX-AI-Disclosure value onto the three-way authorship taxonomy. */
+export function spdxAiDisclosureCategory(value: string): "human" | "with_ai" | "ai" | "unknown" {
+  switch (value.toLowerCase()) {
+    case "none":
+      return "human";
+    case "ai-assisted":
+      return "with_ai";
+    case "ai-generated":
+    case "autonomous":
+      return "ai";
+    default:
+      return "unknown";
+  }
+}
+
+/** Recognize SPDX-AI-Disclosure authorship tags in a blob of text (a file header). One signal per tag. */
+export function recognizeSpdxAiDisclosures(text: string): DisclosureSignal[] {
+  const out: DisclosureSignal[] = [];
+  for (const m of text.matchAll(SPDX_AI_DISCLOSURE_RE)) {
+    const value = m[1]!.toLowerCase();
+    out.push({ kind: "spdx-ai-disclosure", evidence: `SPDX-AI-Disclosure: ${value}`, tier: "asserted", subjectRef: value });
+  }
+  return out;
+}
+
+/** Cheap boolean: does this text carry an SPDX-AI-Disclosure tag? */
+export function hasSpdxAiDisclosure(text: string): boolean {
+  SPDX_AI_DISCLOSURE_RE.lastIndex = 0;
+  return SPDX_AI_DISCLOSURE_RE.test(text);
+}
+
+/** Extract the repo-level `disclosure-default` value from an `AI_DISCLOSURE.md` body, or null. */
+export function aiDisclosureDefault(md: string): SpdxAiDisclosureValue | null {
+  const m = AI_DISCLOSURE_DEFAULT_RE.exec(md);
+  return m ? (m[1]!.toLowerCase() as SpdxAiDisclosureValue) : null;
 }
 
 /** The distinct disclosure kinds present in a set of signals (for the index / summary). */

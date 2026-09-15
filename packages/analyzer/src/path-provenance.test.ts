@@ -101,3 +101,37 @@ describe("provenanceMap — the repo-wide orientation", () => {
     expect(scoped.witnessed).toEqual([]);
   });
 });
+
+describe("SPDX-AI-Disclosure — recognized as a carrier (ACO §5)", () => {
+  it("surfaces a file-header tag as a disclosed 'header' record (with model)", () => {
+    const root = tmp("madeby-spdxai-");
+    git(root, "init", "-q", "-b", "main");
+    writeFileSync(join(root, "gen.ts"), "// SPDX-AI-Disclosure: ai-generated\n// SPDX-AI-Model: claude-opus-4-6\nexport const x = 1;\n");
+    git(root, "add", "-A");
+    git(root, "commit", "--no-verify", "-m", "add gen.ts");
+    const header = provenanceOf(root, "gen.ts").records.find((r) => r.source === "header");
+    expect(header).toMatchObject({ source: "header", granularity: "file", ai: true, confidence: "disclosed", model: "claude-opus-4-6" });
+    expect(header?.disclosures).toContain("spdx-ai-disclosure");
+    expect(header?.evidence).toContain("ai-generated");
+  });
+
+  it("treats `none` as a human disclosure (ai:false)", () => {
+    const root = tmp("madeby-spdxnone-");
+    git(root, "init", "-q", "-b", "main");
+    writeFileSync(join(root, "h.ts"), "// SPDX-AI-Disclosure: none\nexport const y = 2;\n");
+    git(root, "add", "-A");
+    git(root, "commit", "--no-verify", "-m", "add h.ts");
+    const header = provenanceOf(root, "h.ts").records.find((r) => r.source === "header");
+    expect(header).toMatchObject({ source: "header", ai: false });
+  });
+
+  it("reads the repo-level AI_DISCLOSURE.md default into the provenance map", () => {
+    const root = tmp("madeby-spdxdef-");
+    git(root, "init", "-q", "-b", "main");
+    writeFileSync(join(root, "AI_DISCLOSURE.md"), "---\ndisclosure-default: ai-assisted\n---\n");
+    writeFileSync(join(root, "a.ts"), "export const z = 3;\n");
+    git(root, "add", "-A");
+    git(root, "commit", "--no-verify", "-m", "init");
+    expect(provenanceMap(root, {}).aiDisclosureDefault).toMatchObject({ value: "ai-assisted", category: "with_ai" });
+  });
+});
