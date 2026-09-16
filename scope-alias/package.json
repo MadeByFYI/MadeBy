@@ -1,0 +1,24 @@
+{
+  "name": "@madeby/cli",
+  "version": "0.1.0",
+  "description": "Reserved namespace for the MadeBy project. The provenance CLI is published as `madeby` — install that. This package holds the @madeby scope.",
+  "license": "MIT",
+  "author": {
+    "name": "The Registrar"
+  },
+  "contributors": [
+    "Claude, Anthropic (AI-assisted — see the Co-Authored-By trailers in the git history)"
+  ],
+  "homepage": "https://github.com/MadeByFYI/MadeBy/tree/main/packages/cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MadeByFYI/MadeBy.git"
+  },
+  "keywords": [
+    "provenance",
+    "madeby"
+  ],
+  "files": [
+    "README.md"
+  ]
+}

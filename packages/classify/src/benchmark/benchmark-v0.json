@@ -1,0 +1,31 @@
+{
+  "version": "0",
+  "cases": [
+    { "message": "Fix off-by-one in pagination", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "human" },
+    { "message": "Bump dependency versions", "authorName": "Sam", "authorEmail": "sam@ex.com", "expected": "human" },
+    { "message": "Update README with setup steps", "authorName": "Lee", "authorEmail": "lee@ex.com", "expected": "human" },
+    { "message": "Add unit tests for the parser", "authorName": "Jo", "authorEmail": "jo@ex.com", "expected": "human" },
+    { "message": "Refactor config loader for clarity", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "human" },
+    { "message": "Add AI-provider enum to the schema", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "human", "note": "prose mentions 'AI' but no co-author — must NOT false-positive" },
+    { "message": "Document how Claude Code integrates", "authorName": "Lee", "authorEmail": "lee@ex.com", "expected": "human", "note": "prose mentions 'Claude' in the subject, not a trailer — must NOT false-positive" },
+    { "message": "Implement billing webhook\n\nCo-authored-by: Sam Dev <sam@ex.com>", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "human", "note": "human co-author, not AI" },
+
+    { "message": "Refactor registration form\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "with_ai" },
+    { "message": "Add tests\n\nCo-authored-by: GitHub Copilot <copilot@github.com>", "authorName": "Dev", "authorEmail": "dev@ex.com", "expected": "with_ai" },
+    { "message": "Generate boilerplate\n\nCo-authored-by: Cursor <cursor@cursor.com>", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "with_ai" },
+    { "message": "Draft API docs\n\nCo-authored-by: Gemini <gemini@google.com>", "authorName": "Lee", "authorEmail": "lee@ex.com", "expected": "with_ai" },
+    { "message": "Implement the parser\n\nCo-authored-by: ChatGPT <assistant@openai.com>", "authorName": "Jo", "authorEmail": "jo@ex.com", "expected": "with_ai" },
+    { "message": "Scaffold the module\n\nCo-Authored-By: Claude <noreply@anthropic.com>", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "with_ai" },
+    { "message": "Add export endpoint\n\nGenerated-by: aider", "authorName": "Sam", "authorEmail": "sam@ex.com", "expected": "with_ai", "note": "#78: Generated-by trailer + named AI tool — a miss before evidence-grade signals" },
+    { "message": "Refine the dashboard\n\nAssisted-by: Codeium", "authorName": "Lee", "authorEmail": "lee@ex.com", "expected": "with_ai", "note": "#78: Assisted-by trailer + Codeium" },
+
+    { "message": "Automated dependency bump", "authorName": "Claude", "authorEmail": "noreply@anthropic.com", "expected": "ai" },
+    { "message": "Auto-generated migration", "authorName": "Copilot", "authorEmail": "copilot@github.com", "expected": "ai" },
+    { "message": "Regenerate types", "authorName": "Cursor Agent", "authorEmail": "agent@cursor.com", "expected": "ai" },
+    { "message": "Automated changelog", "authorName": "Claude", "authorEmail": "noreply@anthropic.com", "expected": "ai" },
+
+    { "message": "Implement caching layer", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "with_ai", "note": "AI-assisted in reality, trailer omitted → EXPECTED MISS (untrailered AI; addressed by span-level evidence #2/#10)" },
+    { "message": "Rewrite the serializer", "authorName": "Mac", "authorEmail": "mac@ex.com", "expected": "with_ai", "note": "untrailered AI assist → EXPECTED MISS" },
+    { "message": "Add retry logic to the client", "authorName": "Lee", "authorEmail": "lee@ex.com", "expected": "with_ai", "note": "untrailered AI assist → EXPECTED MISS" }
+  ]
+}

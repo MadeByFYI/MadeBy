@@ -1,0 +1,27 @@
+name: "MadeBy disclosure check"
+description: "Gate PRs on your .madeby/policy.json disclosure policy. Disclosure, never detection — the maintainer owns the policy."
+branding:
+  icon: "check-circle"
+  color: "purple"
+inputs:
+  range:
+    description: "Commit range to check. Defaults to the PR's own commits (base..head) on pull_request events."
+    required: false
+    default: ""
+  version:
+    description: "npm version/tag of the `madeby` CLI to run."
+    required: false
+    default: "latest"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    # No range computation here: on a pull_request event `madeby check` auto-scopes to the PR's own
+    # commits from the CI env (the GitHub host adapter reads GITHUB_EVENT_PATH). Pass `range` only to
+    # override. The range logic lives once, in the adapter (ARCHITECTURE §12) — not in this YAML.
+    - shell: bash
+      run: |
+        set -euo pipefail
+        npx --yes "madeby@${{ inputs.version }}" check ${{ inputs.range }}

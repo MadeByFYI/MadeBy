@@ -1,0 +1,5 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "workers/*"
+# services/ingestion is a Python (Modal) service — not a pnpm workspace member.

@@ -1,0 +1,214 @@
+{
+  "version": "0",
+  "note": "INDEPENDENT ground truth (TESTING.md §6, review 2026-06-29; corpus grown 2026-08-13 with REAL cited public commits). Unlike the synthetic benchmark and the dogfood canary, each label here is established by provenance OTHER than the AI trailer the classifier reads: the commit's ERA (predates LLM coding assistants), an autonomous-agent ACCOUNT, or a build the developer PUBLICLY documented as AI-generated. `untrailered: true` marks the real-world blind spot — AI the classifier fails to flag as AI-involved despite no trailer. This is now purely the no-signal class: inline autocomplete / stripped trailers / AI committed under a human's name — irrecoverable without session-log evidence (#68). (A second sub-cause once lived here — an AI-agent identity DISCARDED because its GitHub noreply email embeds '[bot]', so bot-precedence beat the AI-identity match, e.g. real Devin commits — but that was RECOVERED on 2026-08-13 by a classify.ts precedence refinement, so those cases are now `ai`/detected, not blind.) Real cited cases (repo@sha) are preferred over representative stand-ins and are replacing them over time; the label basis (never the trailer) is documented per case. The corpus grows via captured corrections (#69) and real labeled repos.",
+  "cases": [
+    {
+      "message": "Initial revision of \"git\", the information manager from hell",
+      "authorName": "Linus Torvalds",
+      "authorEmail": "torvalds@ppc970.osdl.org",
+      "expected": "human",
+      "provenanceBasis": "the 2005 initial commit of git — predates LLM coding assistants by ~15 years"
+    },
+    {
+      "message": "Fix memory leak in request handler",
+      "authorName": "Jane Cooper",
+      "authorEmail": "jane@example.org",
+      "expected": "human",
+      "provenanceBasis": "representative pre-2021 OSS commit; predates mainstream AI coding tools"
+    },
+    {
+      "message": "Bump version to 2.4.1 and update changelog",
+      "authorName": "Marco Rossi",
+      "authorEmail": "marco@example.com",
+      "expected": "human",
+      "provenanceBasis": "representative pre-2021 release commit; no AI tooling existed"
+    },
+    {
+      "message": "Refactor auth middleware for clarity",
+      "authorName": "Priya Nair",
+      "authorEmail": "priya@example.net",
+      "expected": "human",
+      "provenanceBasis": "representative human OSS contribution, hand-written (no AI assistance)"
+    },
+    {
+      "message": "Add integration tests for the payments flow",
+      "authorName": "Tom Becker",
+      "authorEmail": "tom@example.com",
+      "expected": "human",
+      "provenanceBasis": "representative human-authored commit, no AI tooling"
+    },
+    {
+      "message": "Correct typo in README installation steps",
+      "authorName": "Aiko Tanaka",
+      "authorEmail": "aiko@example.jp",
+      "expected": "human",
+      "provenanceBasis": "representative human-authored docs fix"
+    },
+
+    {
+      "message": "Add an AI-provider field to the schema",
+      "authorName": "Sam Reed",
+      "authorEmail": "sam@example.com",
+      "expected": "human",
+      "provenanceBasis": "human-authored; message MENTIONS 'AI' but there is no AI co-author — must not false-positive"
+    },
+    {
+      "message": "Document how Claude Code integrates with our CI",
+      "authorName": "Dana Liu",
+      "authorEmail": "dana@example.com",
+      "expected": "human",
+      "provenanceBasis": "human-authored docs; 'Claude' appears in prose only — must not false-positive"
+    },
+    {
+      "message": "Implement webhook retries\n\nCo-authored-by: Pat Singh <pat@example.com>",
+      "authorName": "Sam Reed",
+      "authorEmail": "sam@example.com",
+      "expected": "human",
+      "provenanceBasis": "human co-author (not an AI) — must not false-positive"
+    },
+
+    {
+      "message": "Refactor login form\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+      "authorName": "Mac",
+      "authorEmail": "mac@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "carries an explicit AI co-author trailer — the trailered case the classifier should catch",
+      "untrailered": false
+    },
+    {
+      "message": "Generate API client\n\nCo-authored-by: GitHub Copilot <copilot@github.com>",
+      "authorName": "Dev",
+      "authorEmail": "dev@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "explicit Copilot trailer — trailered case",
+      "untrailered": false
+    },
+    {
+      "message": "Automated dependency upgrade",
+      "authorName": "Devin",
+      "authorEmail": "devin@cognition.ai",
+      "expected": "ai",
+      "provenanceBasis": "authored by the Devin autonomous-agent account (no human co-author) — agent-authored",
+      "untrailered": false
+    },
+    {
+      "message": "Regenerate API client and types",
+      "authorName": "Cursor Agent",
+      "authorEmail": "agent@cursor.com",
+      "expected": "ai",
+      "provenanceBasis": "authored by the Cursor agent account — agent-authored (evidence-grade identity, #78)",
+      "untrailered": false
+    },
+    {
+      "message": "Add pagination to the list endpoint\n\nGenerated-by: aider",
+      "authorName": "Devon Park",
+      "authorEmail": "devon@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "explicit Generated-by trailer naming the aider AI tool (#78) — identifiable, not untrailered",
+      "untrailered": false
+    },
+
+    {
+      "message": "Add dark mode toggle to settings",
+      "authorName": "Alex Kim",
+      "authorEmail": "alex@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "developer publicly documented this feature as generated by an AI assistant; commit carries NO trailer (the real-world blind spot)",
+      "untrailered": true
+    },
+    {
+      "message": "Implement CSV export endpoint",
+      "authorName": "Jordan Vega",
+      "authorEmail": "jordan@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "AI-generated via inline autocomplete (accepted + committed under the human's name); no trailer emitted",
+      "untrailered": true
+    },
+    {
+      "message": "Add rate limiting to the public API",
+      "authorName": "Chris Obi",
+      "authorEmail": "chris@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "built with an AI coding agent the developer credited in a blog post; commit has no trailer",
+      "untrailered": true
+    },
+    {
+      "message": "Wire up Stripe checkout",
+      "authorName": "Lena Vogt",
+      "authorEmail": "lena@example.de",
+      "expected": "with_ai",
+      "provenanceBasis": "vibe-coded with an AI IDE assistant; trailer stripped on squash-merge",
+      "untrailered": true
+    },
+    {
+      "message": "Scaffold the admin dashboard",
+      "authorName": "Omar Haddad",
+      "authorEmail": "omar@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "scaffold generated by an AI tool, documented in the PR description; no co-author trailer",
+      "untrailered": true
+    },
+    {
+      "message": "Add unit tests for the parser",
+      "authorName": "Sofia Marin",
+      "authorEmail": "sofia@example.com",
+      "expected": "with_ai",
+      "provenanceBasis": "tests generated by an AI assistant (tab-completion); committed under the human's name, no trailer",
+      "untrailered": true
+    },
+
+    {
+      "message": "zmalloc fix, return NULL or real malloc failure",
+      "authorName": "antirez",
+      "authorEmail": "antirez@gmail.com",
+      "expected": "human",
+      "provenanceBasis": "REAL cited commit: redis@8d196ebac255 (2009-04-30, Salvatore Sanfilippo) — predates LLM coding assistants; verifiable public history"
+    },
+    {
+      "message": "fix scaffolding template paths (Pathname does weird things)",
+      "authorName": "Leon Breedt",
+      "authorEmail": "bitserf@gmail.com",
+      "expected": "human",
+      "provenanceBasis": "REAL cited commit: rails/rails@46e68538c08d (2005-05-31) — pre-LLM era; verifiable public history"
+    },
+    {
+      "message": "Fixed #6820: flush no longer fails under PostgreSQL 8.3",
+      "authorName": "Jacob Kaplan-Moss",
+      "authorEmail": "jacob@jacobian.org",
+      "expected": "human",
+      "provenanceBasis": "REAL cited commit: django/django@3de70a10c066 (2008-05-31) — pre-LLM era; verifiable public history"
+    },
+    {
+      "message": "not needed",
+      "authorName": "Blake Mizerany",
+      "authorEmail": "blakemizerany@blake-mizeranys-computer.local",
+      "expected": "human",
+      "provenanceBasis": "REAL cited commit: sinatra/sinatra@95287a1b5514 (2007-12-03) — pre-LLM era; verifiable public history"
+    },
+
+    {
+      "message": "Fix magic-link sign-in: token_hash verify and confirm step\n\nCo-authored-by: ksg-spidy <ksg-spidy@users.noreply.github.com>",
+      "authorName": "Cursor Agent",
+      "authorEmail": "cursoragent@cursor.com",
+      "expected": "with_ai",
+      "provenanceBasis": "REAL cited commit: ksg-spidy/Bookmyslot@7a140859 — authored by the Cursor agent account with a human co-author trailer; agent-authored (identity is evidence-grade, #78). DETECTED via author identity.",
+      "untrailered": false
+    },
+    {
+      "message": "Add live DSC/HD95 metrics panel for full-3d-mask guidance",
+      "authorName": "Copilot",
+      "authorEmail": "198982749+Copilot@users.noreply.github.com",
+      "expected": "ai",
+      "provenanceBasis": "REAL cited commit: LMUK-RADONC-PHYS-RES/beacon@492668ba — authored by GitHub's Copilot coding agent, NO trailer of any kind. DETECTED anyway because the agent is the git AUTHOR (its identity is the signal) — proof that untrailered AI is not always invisible when the agent authors directly.",
+      "untrailered": false
+    },
+    {
+      "message": "feat(phase0): scaffold backend, dashboard, nginx, docker compose",
+      "authorName": "Devin AI",
+      "authorEmail": "158243242+devin-ai-integration[bot]@users.noreply.github.com",
+      "expected": "ai",
+      "provenanceBasis": "REAL cited commit: Moksha89/trade@627b2b5d — authored by the Devin autonomous-agent account, NO trailer; the GitHub noreply email embeds '[bot]'. DETECTED via the disclosed agent identity ('devin' is a known AI pattern): a [bot] identity that is itself a named AI agent classifies 'ai', not generic 'bot'. Previously lost to bot-precedence — recovered by the classify.ts precedence refinement (2026-08-13). The old representative Devin case (devin@cognition.ai) never exercised the [bot]-email path this real commit does.",
+      "untrailered": false
+    }
+  ]
+}

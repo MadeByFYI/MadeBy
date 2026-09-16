@@ -1,0 +1,51 @@
+// @madeby/analyzer — the curiosity mirror's engine: git history → classify → breakdown.
+// Node-only (reads git). Composes @madeby/classify; commit-level in v0.
+
+export { readGitLog } from "./git";
+export { analyzeCommits } from "./analyze";
+export type { AnalysisResult } from "./analyze";
+// Disclosure primitives as library functions — shared by the CLI (check) and the MCP
+// server, and importable by any third party's own runtime (ARCHITECTURE §12).
+export { readDisclosures, evaluateRepoDisclosure } from "./read-disclosures";
+export type { DisclosedCommit, RepoDisclosure } from "./read-disclosures";
+// The agent-context read: provenance on the record for a path/line-range (ARCH §12 — line range is
+// the universal contract; we never parse code). Composes witnessed spans + last-touch blame.
+export { provenanceOf, provenanceMap } from "./path-provenance";
+export type { PathProvenance, ProvenanceRecord, ProvenanceMap, WitnessedFile } from "./path-provenance";
+export { recordAiSpans } from "./record-spans";
+export type { RecordOptions, RecordResult } from "./record-spans";
+export { badgeSnippet } from "./badge";
+export { analyzeRepo, normalizeRepoUrl, isAnalyzeError } from "./clone";
+export type { AnalyzeRepoResult, AnalyzeRepoError, AnalyzeRepoOptions } from "./clone";
+export { readSpanManifestsFromDir, readSpanManifestsFromGit, summarizeSpanEvidence } from "./provenance";
+export type { SpanEvidence } from "./provenance";
+export { readDeclarationFromDir, readDeclarationFromGit, summarizeDeclaration } from "./declaration";
+export type { DeclarationEvidence } from "./declaration";
+export { detectTooling, readToolingFromGit, readToolingFromDir, AI_TOOL_CONFIGS } from "./tooling";
+export type { ToolingEvidence, DetectedTool, AiToolConfig } from "./tooling";
+export { resolveGitHubHandle, resolveIdentity } from "./identity";
+export type { ResolvedIdentity } from "./identity";
+export { enrichIdentity, enrichContributors, resolveHandles } from "./enrich";
+export type { EnrichOptions } from "./enrich";
+// Host-adapter seam (ARCHITECTURE §12): git-native core, host-adapted. GitHub is the reference impl;
+// third parties register siblings (Azure DevOps, GitLab, …) through the same registry.
+import "./host/azure"; // side-effect: register the Azure adapter (bare import survives bundling)
+import "./host/gitlab"; // side-effect: register the GitLab adapter
+export { registerHostAdapter, getHostAdapter, listHostAdapters, detectCiRange } from "./host/registry";
+export { githubAdapter } from "./host/github";
+export { azureAdapter } from "./host/azure";
+export { gitlabAdapter } from "./host/gitlab";
+export type { HostAdapter, RepoRef, HostApiOptions } from "./host/types";
+export type { IdentityProfile } from "./analyze";
+export { captureLocalSpans } from "./capture-local";
+export type { CaptureLocalInput, CaptureLocalResult } from "./capture-local";
+export { claudeCodeParser, aiderParser, specstoryParser, detectParser, registerToolParser, listToolParsers } from "./tool-parsers";
+export type { ToolParser, AiEdit } from "./tool-parsers";
+export { redactSample } from "./redact-sample";
+export { MATCH_THRESHOLD } from "./capture-local";
+// match-calibration (the #86 harness + labeled corpus) is intentionally NOT re-exported here: it is a
+// calibration/analysis artifact consumed by its own test (and MATCH-CALIBRATION.md), and keeping it
+// off the package index keeps the corpus code-snippets out of the offline CLI bundle. Import it via
+// "@madeby/analyzer/*" internals / the relative path in tests, not the package root.
+export { writeParserSample } from "./record-spans";
+export type { SampleResult } from "./record-spans";

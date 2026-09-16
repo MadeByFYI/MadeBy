@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+.pnpm-store/
+.pnp
+.pnp.js
+
+# builds / generated
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# python (services/ingestion)
+__pycache__/
+*.py[cod]
+.venv/
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*
+coverage/
+
+# mutation testing (Stryker)
+.stryker-tmp/
+reports/
+
+# local feedback/label store (durable store configured separately)
+var/

@@ -1,0 +1,181 @@
+{
+  "version": "0",
+  "jcs": [
+    { "name": "sorts object keys", "input": { "b": 1, "a": 2 }, "expected": "{\"a\":2,\"b\":1}" },
+    {
+      "name": "nested objects + arrays, order-independent",
+      "input": { "a": [1, true, null], "b": { "d": 4, "c": 3 } },
+      "expected": "{\"a\":[1,true,null],\"b\":{\"c\":3,\"d\":4}}"
+    },
+    { "name": "ADVERSARIAL: non-integer number must error", "input": 1.5, "expectError": true }
+  ],
+  "canonicalize": [
+    {
+      "name": "claim payload excludes id and signature",
+      "claim": {
+        "id": "ignored",
+        "subject": { "algorithm": "sha256", "target": "FILE", "value": "abc" },
+        "attribution": { "identityId": "alice", "role": "creator" },
+        "assertedTier": "asserted",
+        "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" },
+        "createdAt": "2026-01-01T00:00:00Z"
+      },
+      "expected": "{\"assertedTier\":\"asserted\",\"attribution\":{\"identityId\":\"alice\",\"role\":\"creator\"},\"createdAt\":\"2026-01-01T00:00:00Z\",\"subject\":{\"algorithm\":\"sha256\",\"target\":\"FILE\",\"value\":\"abc\"}}"
+    }
+  ],
+  "fingerprint": [
+    {
+      "name": "git-blob-sha1 of 'hello\\n' (== git hash-object)",
+      "algorithm": "git-blob-sha1",
+      "content": "hello\n",
+      "expected": "ce013625030ba8dba906f756967f9e9ca394464a"
+    },
+    {
+      "name": "sha256 of 'abc'",
+      "algorithm": "sha256",
+      "content": "abc",
+      "expected": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    }
+  ],
+  "tierResolution": [
+    {
+      "name": "asserted is the floor",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "verified: valid sig in known carrier + verified signer",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "verified"
+    },
+    {
+      "name": "bound: verified + exact fingerprint",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "bound", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "bound"
+    },
+    {
+      "name": "ADVERSARIAL: unknown carrier caps at asserted (even for bound)",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "bound", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "mystery", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: forged/invalid signature caps at asserted",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "bound", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": false, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: anonymous (unverified) signer caps at asserted",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": false },
+      "expected": "asserted"
+    },
+    {
+      "name": "bound over a fuzzy fingerprint degrades to verified",
+      "claim": { "id": "c", "subject": { "algorithm": "structural-v1", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "bound", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "verified"
+    },
+    {
+      "name": "sworn without an overlay degrades to asserted",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "sworn", "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: verified/bound with no signature caps at asserted",
+      "claim": { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "bound", "createdAt": "2026-01-01T00:00:00Z" },
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    }
+  ],
+  "edgeTierResolution": [
+    {
+      "name": "declared + valid sig + verified signer + known type → verified (the cap)",
+      "edge": { "type": "DERIVED_FROM", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF", "DERIVED_FROM", "DISPUTES", "IMPLEMENTS", "MOTIVATED_BY", "DECIDED_BY", "DISCUSSED_IN"], "verifySignature": true, "signerVerified": true },
+      "expected": "verified"
+    },
+    {
+      "name": "inferred edge caps at asserted (even signed + known)",
+      "edge": { "type": "IMPLEMENTS", "fromClaimId": "a", "toClaimId": "b", "method": "inferred", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["IMPLEMENTS"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: unrecognized edge type caps at asserted",
+      "edge": { "type": "TOTALLY_MADE_UP", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF", "DERIVED_FROM"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: declared but unsigned edge caps at asserted",
+      "edge": { "type": "PART_OF", "fromClaimId": "a", "toClaimId": "b", "method": "declared" },
+      "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": true, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: declared + forged signature caps at asserted",
+      "edge": { "type": "PART_OF", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": false, "signerVerified": true },
+      "expected": "asserted"
+    },
+    {
+      "name": "ADVERSARIAL: declared + anonymous signer caps at asserted",
+      "edge": { "type": "PART_OF", "fromClaimId": "a", "toClaimId": "b", "method": "declared", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" } },
+      "env": { "knownEdgeTypes": ["PART_OF"], "verifySignature": true, "signerVerified": false },
+      "expected": "asserted"
+    }
+  ],
+  "contention": [
+    {
+      "name": "single claim is the uncontested origin",
+      "claims": [
+        { "id": "c", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": false, "originIndex": 0, "divergence": false }
+    },
+    {
+      "name": "verified owner outranks an asserted squatter (index 1 wins)",
+      "claims": [
+        { "id": "sq", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "sq", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" },
+        { "id": "own", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "own", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-02-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": false, "originIndex": 1, "divergence": false }
+    },
+    {
+      "name": "ADVERSARIAL: earlier squatter does NOT override a later verified owner (priority ≠ proof)",
+      "claims": [
+        { "id": "sq", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "sq", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2020-01-01T00:00:00Z" },
+        { "id": "own", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "own", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": false, "originIndex": 1, "divergence": false }
+    },
+    {
+      "name": "ADVERSARIAL: signed copied bytes do not establish origin → open + divergence (invariant #10)",
+      "claims": [
+        { "id": "imp", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "imp", "role": "creator" }, "assertedTier": "bound", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" },
+        { "id": "org", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "org", "role": "creator" }, "assertedTier": "asserted", "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "inputs": [{ "isDerivative": true }, { "isDerivative": false }],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": true, "originIndex": null, "divergence": true }
+    },
+    {
+      "name": "ADVERSARIAL: priority alone never crowns — equal evidence, different timestamps stays open",
+      "claims": [
+        { "id": "a", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "a", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2024-01-01T00:00:00Z" }, "createdAt": "2024-01-01T00:00:00Z" },
+        { "id": "b", "subject": { "algorithm": "sha256", "target": "FILE", "value": "x" }, "attribution": { "identityId": "b", "role": "creator" }, "assertedTier": "verified", "signature": { "signerKeyId": "k", "value": "v", "carrierId": "in-toto", "signedAt": "2026-01-01T00:00:00Z" }, "createdAt": "2026-01-01T00:00:00Z" }
+      ],
+      "env": { "knownCarriers": ["in-toto"], "verifySignature": true, "signerVerified": true },
+      "expected": { "open": true, "originIndex": null, "divergence": false }
+    }
+  ]
+}
