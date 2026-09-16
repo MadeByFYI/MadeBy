@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
-import { affirmAuthorship } from "./me";
+import { affirmAuthorship, attestAiAuthorship } from "./me";
 
 const dirs: string[] = [];
 const git = (dir: string, ...a: string[]): string =>
@@ -55,5 +55,31 @@ describe("affirmAuthorship — the shared `me` / MCP `disclose` mechanic", () =>
     writeFileSync(join(d, "y.txt"), "staged\n");
     git(d, "add", "y.txt");
     expect(affirmAuthorship(d)).toMatchObject({ ok: false, reason: "staged-changes" });
+  });
+});
+
+describe("attestAiAuthorship — the log-free `ai` disclosure (Authored-by-ai)", () => {
+  it("adds Authored-by-ai, classifies ai, and does NOT claim human authorship", () => {
+    const d = tmpRepo();
+    const r = attestAiAuthorship(d, { tool: "Claude Code" });
+    expect(r).toMatchObject({ ok: true, changed: true, category: "ai" });
+    expect(r.added).toEqual(["Authored-by-ai"]);
+    const msg = git(d, "show", "-s", "--format=%B", "HEAD");
+    expect(msg).toMatch(/Authored-by-ai: Claude Code/);
+    expect(msg).not.toMatch(/Authored-by-human/);
+  });
+
+  it("defaults the tool to AI and is idempotent", () => {
+    const d = tmpRepo();
+    attestAiAuthorship(d);
+    expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/Authored-by-ai: AI/);
+    expect(attestAiAuthorship(d, { tool: "AI" })).toMatchObject({ ok: true, changed: false });
+  });
+
+  it("refuses when the index has staged changes", () => {
+    const d = tmpRepo();
+    writeFileSync(join(d, "z.txt"), "staged\n");
+    git(d, "add", "z.txt");
+    expect(attestAiAuthorship(d)).toMatchObject({ ok: false, reason: "staged-changes" });
   });
 });

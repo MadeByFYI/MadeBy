@@ -80,6 +80,12 @@ function genericAiDisclosure(who: string): AiContributor | null {
 // matchAi still gates AI vs. human per entry, so widening the keys never causes a false positive.
 const TRAILER_RE = /^[ \t]*(?:Co-authored-by|Generated-by|Assisted-by):[ \t]*(.+)$/gim;
 
+// The explicit AI-authorship trailer + its human counterpart. A bare `Authored-by-ai:` with no
+// `Authored-by-human:` affirmation is the `ai` category (an AI authored it; the committer is the
+// accountable human); the two together are collaboration ⇒ with_ai.
+const AI_AUTHOR_TRAILER = /^[ \t]*Authored-by-ai:[ \t]*(.+)$/gim;
+const HUMAN_ATTEST = /^[ \t]*(?:Authored-by-human|Human-authored(?:-by)?):/im;
+
 // Confidence model (honest about uncertainty):
 //  - an explicit AI trailer/author is STRONG evidence of AI involvement → high confidence
 //  - "human" rests on the ABSENCE of an AI signal — weak evidence → deliberately lower
@@ -131,6 +137,16 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
     return { class: "bot", confidence: CONF_BOT, signals: ["author:bot"], aiContributors };
   }
 
+  // Explicit AI authorship via `Authored-by-ai:`. With NO human-authorship affirmation it is the `ai`
+  // category (an AI authored it; the committer is the accountable human). If a human affirmation is
+  // ALSO present it is collaboration → with_ai, folded into the general logic below.
+  const aiAuthored = [...commit.message.matchAll(AI_AUTHOR_TRAILER)].map((m) => m[1]!.trim());
+  if (aiAuthored.length > 0 && !HUMAN_ATTEST.test(commit.message)) {
+    const who = aiAuthored[0]!;
+    const c = matchAi(who) ?? { provider: "unspecified", raw: who };
+    return { class: "ai", confidence: CONF_AI, signals: [`authored-by-ai:${c.provider}`], aiContributors: [c] };
+  }
+
   const trailers = [...commit.message.matchAll(TRAILER_RE)].map((m) => m[1]!.trim());
   let humanCoAuthors = 0;
   for (const who of trailers) {
@@ -141,6 +157,14 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
     } else {
       humanCoAuthors += 1;
     }
+  }
+
+  // Fold in any `Authored-by-ai:` trailers — reached only when a human affirmation is also present
+  // (collaboration ⇒ with_ai); the ai-only case returned above.
+  for (const who of aiAuthored) {
+    const ai = matchAi(who) ?? { provider: "unspecified", raw: who };
+    aiContributors.push(ai);
+    signals.push(`authored-by-ai:${ai.provider}`);
   }
 
   const authorText = `${commit.authorName ?? ""} ${commit.authorEmail ?? ""}`.trim();

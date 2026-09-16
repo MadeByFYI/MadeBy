@@ -134,6 +134,18 @@ export function hasHumanAttestation(message: string): boolean {
   return HUMAN_ATTEST_RE.test(message);
 }
 
+// The explicit AI-authorship trailer — the symmetric counterpart of `Authored-by-human`. Its KEY is
+// the disclosure ("an AI authored this"), independent of whether the value names a known tool; the
+// committer (git author) stays the accountable human. Asserted tier (a self-declared trailer), and it
+// climbs the same ladder. `madeby ai` writes it — the honest, log-free `ai` disclosure.
+const AI_AUTHOR_RE = /^[ \t]*Authored-by-ai[ \t]*:[ \t]*(.+?)[ \t]*$/gim;
+
+/** Cheap boolean: does this commit attest AI authorship via an `Authored-by-ai:` trailer? */
+export function hasAiAuthorship(message: string): boolean {
+  AI_AUTHOR_RE.lastIndex = 0;
+  return AI_AUTHOR_RE.test(message);
+}
+
 /** Recognize SPDX license/copyright metadata in a blob of text (a file header, a manifest). */
 export function recognizeSpdxIdentifiers(text: string): DisclosureSignal[] {
   const out: DisclosureSignal[] = [];
@@ -205,7 +217,7 @@ export function disclosureKindsPresent(signals: readonly DisclosureSignal[]): Di
  */
 export function commitDisclosureKinds(commit: { message: string; signed?: boolean }): DisclosureKind[] {
   const kinds: DisclosureKind[] = [];
-  if (hasAiTrailer(commit.message)) kinds.push("ai-trailer");
+  if (hasAiTrailer(commit.message) || hasAiAuthorship(commit.message)) kinds.push("ai-trailer");
   if (hasHumanAttestation(commit.message)) kinds.push("human-attestation");
   if (hasDcoSignoff(commit.message)) kinds.push("dco-signoff");
   if (commit.signed === true) kinds.push("commit-signature");
