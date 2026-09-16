@@ -261,11 +261,29 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     expect((res.get(1)!.result as { serverInfo: { name: string } }).serverInfo.name).toBe("madeby");
     // tools/list — the minimal "made by ___" surface, no more
     const names = (res.get(2)!.result as { tools: { name: string }[] }).tools.map((t) => t.name);
-    expect(names.sort()).toEqual(["ai", "check", "init", "who"]);
+    expect(names.sort()).toEqual(["ai", "check", "disclose", "init", "who"]);
     // check tool → the gate fires
     const chk = JSON.parse((res.get(4)!.result as { content: { text: string }[] }).content[0]!.text) as { mode: string; pass: boolean };
     expect(chk.mode).toBe("required");
     expect(chk.pass).toBe(false);
+  }, 30000);
+
+  it("the disclose tool affirms authorship on HEAD (the with_ai / human path)", async () => {
+    const drepo = tmpRepo();
+    git(drepo, "init", "-q", "-b", "main");
+    git(drepo, "config", "user.name", "Dev");
+    git(drepo, "config", "user.email", "dev@example.com");
+    git(drepo, "config", "commit.gpgsign", "false");
+    commit(drepo, "x.txt", "hi\n", "feat: work");
+    const res = await mcpCall(drepo, [
+      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "disclose", arguments: { with_ai: true, tool: "Cursor" } } },
+    ]);
+    const out = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { ok: boolean; changed: boolean; category: string; added: string[] };
+    expect(out).toMatchObject({ ok: true, changed: true, category: "with_ai" });
+    expect(out.added).toEqual(expect.arrayContaining(["Authored-by-human", "Assisted-by"]));
+    const msg = git(drepo, "show", "-s", "--format=%B", "HEAD");
+    expect(msg).toMatch(/Authored-by-human: Dev <dev@example.com>/);
+    expect(msg).toMatch(/Assisted-by: Cursor/);
   }, 30000);
 
   it("the ai tool records witnessed spans (the agent discloses its own work)", async () => {

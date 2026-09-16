@@ -8,6 +8,9 @@
 // category). Adds an `Assisted-by: <tool>` disclosure alongside the human affirmation, so the commit
 // classifies as `with_ai` (badge `hi + ai`) — a human is accountable AND the AI is disclosed, in one
 // action instead of the implicit `ai`+`me` pair. `<tool>` defaults to a generic "AI" if unnamed.
+//
+// The disclosure mechanic is the pure `affirmAuthorship()` below — shared with the MCP `disclose` tool,
+// so a human at the CLI and an agent over MCP disclose collaborative (with_ai / human) work identically.
 
 import { execFileSync } from "node:child_process";
 import { repoRoot } from "../scope";
@@ -28,6 +31,83 @@ function git(root: string, args: string[]): string {
 
 // Matches the affirmative human-authorship trailer (kept in sync with core's HUMAN_ATTEST_RE).
 const HUMAN_ATTEST = /^[ \t]*(?:Authored-by-human|Human-authored(?:-by)?)[ \t]*:/im;
+const ASSIST = /^[ \t]*Assisted-by[ \t]*:/im;
+
+export interface AffirmResult {
+  /** false ⇒ couldn't affirm (see `reason`); true ⇒ HEAD now discloses per ACO */
+  ok: boolean;
+  reason?: "no-identity" | "staged-changes" | "no-commit";
+  /** did we amend HEAD's message? (false ⇒ it already disclosed — nothing to do) */
+  changed: boolean;
+  withAi: boolean;
+  tool: string;
+  name?: string;
+  email?: string;
+  subject?: string;
+  /** trailers added this call: "Authored-by-human" and/or "Assisted-by" */
+  added: string[];
+  /** what HEAD discloses after this call */
+  category: "human" | "with_ai";
+}
+
+/**
+ * Disclose authorship on HEAD per ACO: affirm human authorship (`Authored-by-human`) and, with
+ * `withAi`, disclose AI assistance (`Assisted-by: <tool>`) so the commit classifies `with_ai`. Pure of
+ * console/exit — returns a result the CLI renders and the MCP `disclose` tool returns. Amends HEAD's
+ * MESSAGE only (never content), refuses when the index has staged changes, and is idempotent per trailer.
+ */
+export function affirmAuthorship(root: string, opts: { withAi?: boolean; tool?: string } = {}): AffirmResult {
+  const withAi = opts.withAi ?? false;
+  const tool = (opts.tool && opts.tool.trim()) || "AI";
+  const base: AffirmResult = { ok: false, changed: false, withAi, tool, added: [], category: withAi ? "with_ai" : "human" };
+
+  let name = "";
+  let email = "";
+  try {
+    name = git(root, ["config", "user.name"]);
+    email = git(root, ["config", "user.email"]);
+  } catch {
+    /* fall through to the identity check */
+  }
+  if (!name || !email) return { ...base, reason: "no-identity" };
+
+  // `me` affirms the last commit — it does not amend content. Refuse to silently fold in staged work.
+  try {
+    execFileSync("git", ["-C", root, "diff", "--cached", "--quiet"]);
+  } catch {
+    return { ...base, reason: "staged-changes", name, email };
+  }
+
+  let subject = "";
+  let message = "";
+  try {
+    subject = git(root, ["show", "-s", "--format=%s", "HEAD"]);
+    message = git(root, ["show", "-s", "--format=%B", "HEAD"]);
+  } catch {
+    return { ...base, reason: "no-commit" };
+  }
+
+  const hasHuman = HUMAN_ATTEST.test(message);
+  const hasAssist = ASSIST.test(message);
+
+  const trailers: string[] = [];
+  const added: string[] = [];
+  if (!hasHuman) {
+    trailers.push("--trailer", `Authored-by-human: ${name} <${email}>`);
+    added.push("Authored-by-human");
+  }
+  if (withAi && !hasAssist) {
+    trailers.push("--trailer", `Assisted-by: ${tool}`);
+    added.push("Assisted-by");
+  }
+
+  if (trailers.length > 0) {
+    execFileSync("git", ["-C", root, "commit", "--amend", "--no-edit", ...trailers]);
+  }
+
+  const category = hasAssist || added.includes("Assisted-by") ? "with_ai" : "human";
+  return { ok: true, changed: trailers.length > 0, withAi, tool, name, email, subject, added, category };
+}
 
 export function meCommand(args: string[]): void {
   const { withAi, tool } = parseWithAi(args);
@@ -38,60 +118,25 @@ export function meCommand(args: string[]): void {
     return;
   }
 
-  let name = "";
-  let email = "";
-  try {
-    name = git(root, ["config", "user.name"]);
-    email = git(root, ["config", "user.email"]);
-  } catch {
-    /* fall through to the identity check */
-  }
-  if (!name || !email) {
-    console.error("madeby me: set your git identity first (git config user.name / user.email).");
+  const r = affirmAuthorship(root, { withAi, tool });
+  if (!r.ok) {
+    if (r.reason === "no-identity") console.error("madeby me: set your git identity first (git config user.name / user.email).");
+    else if (r.reason === "staged-changes") console.error("madeby me: you have staged changes. Commit them first — `me` affirms HEAD, not your index.");
+    else console.error("madeby me: no commit to affirm — make a commit first.");
     process.exit(1);
     return;
   }
 
-  // `me` affirms the last commit — it does not amend content. Refuse to silently fold in staged work.
-  try {
-    execFileSync("git", ["-C", root, "diff", "--cached", "--quiet"]);
-  } catch {
-    console.error("madeby me: you have staged changes. Commit them first — `me` affirms HEAD, not your index.");
-    process.exit(1);
-    return;
-  }
-
-  let subject = "";
-  let message = "";
-  try {
-    subject = git(root, ["show", "-s", "--format=%s", "HEAD"]);
-    message = git(root, ["show", "-s", "--format=%B", "HEAD"]);
-  } catch {
-    console.error("madeby me: no commit to affirm — make a commit first.");
-    process.exit(1);
-    return;
-  }
-
-  // What's already on HEAD — so re-running is idempotent per trailer, and `--with-ai` can add the
-  // assistance disclosure to a commit that already affirms human authorship (and vice versa).
-  const hasHuman = HUMAN_ATTEST.test(message);
-  const hasAssist = /^[ \t]*Assisted-by[ \t]*:/im.test(message);
-
-  const trailers: string[] = [];
-  if (!hasHuman) trailers.push("--trailer", `Authored-by-human: ${name} <${email}>`);
-  if (withAi && !hasAssist) trailers.push("--trailer", `Assisted-by: ${tool}`);
-
-  if (trailers.length === 0) {
+  if (!r.changed) {
     const already = withAi ? "already affirms human authorship and discloses AI assistance" : "already affirms human authorship";
     console.log(`madeby me: HEAD ${already}. Nothing to do.`);
     process.exit(0);
     return;
   }
 
-  execFileSync("git", ["-C", root, "commit", "--amend", "--no-edit", ...trailers]);
   console.log(
     withAi
-      ? `madeby me: made by me, with AI — affirmed human authorship + disclosed AI assistance on HEAD — "${subject}" (Authored-by-human: ${name}; Assisted-by: ${tool}).`
-      : `madeby me: affirmed human authorship on HEAD — "${subject}" (Authored-by-human: ${name}).`,
+      ? `madeby me: made by me, with AI — affirmed human authorship + disclosed AI assistance on HEAD — "${r.subject}" (Authored-by-human: ${r.name}; Assisted-by: ${r.tool}).`
+      : `madeby me: affirmed human authorship on HEAD — "${r.subject}" (Authored-by-human: ${r.name}).`,
   );
 }
