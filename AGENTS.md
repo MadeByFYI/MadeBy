@@ -24,12 +24,12 @@ After you commit, run the matching command. It works with no install via `npx`:
 
 | Category  | Command                              | Adds to the commit                       |
 |-----------|--------------------------------------|------------------------------------------|
-| `human`   | `npx madeby me`                      | `Authored-by-human:`                     |
-| `with_ai` | `npx madeby me --with-ai <tool>`     | `Authored-by-human:` + `Assisted-by:`    |
-| `ai`      | `npx madeby ai [tool]`               | `Authored-by-ai:` (add `--witness <log>` for spans) |
+| `human`   | `npx madeby@latest me`                      | `Authored-by-human:`                     |
+| `with_ai` | `npx madeby@latest me --with-ai <tool>`     | `Authored-by-human:` + `Assisted-by:`    |
+| `ai`      | `npx madeby@latest ai [tool]`               | `Authored-by-ai:` (add `--witness <log>` for spans) |
 
 **This repo dogfoods it:** a commit an AI drafted under human direction and review is disclosed with
-`npx madeby me --with-ai "Claude Code"`, which classifies it `with_ai`.
+`npx madeby@latest me --with-ai "Claude Code"`, which classifies it `with_ai`.
 
 Higher tiers (`verified` / `sworn` / `bound`) layer on later as signatures and identity anchoring become
 available — they never invalidate the asserted claim, only corroborate it. See **[ACO.md](./ACO.md)**.
