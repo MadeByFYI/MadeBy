@@ -12,6 +12,7 @@ import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { evaluateRepoDisclosure, recordAiSpans, provenanceOf, provenanceMap } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
+import { affirmAuthorship } from "./commands/me";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
 const SERVER_INFO = { name: "madeby", version: "0.1.0" };
@@ -96,6 +97,25 @@ const TOOLS: Tool[] = [
             endLine: args.endLine as number | undefined,
           })
         : provenanceMap(rootFor(args.repo as string | undefined), { prefix: args.prefix as string | undefined, commitLimit: args.commitLimit as number | undefined }),
+  },
+  {
+    name: "disclose",
+    description:
+      "Disclose authorship on HEAD per ACO — the with_ai / human path, the agent-native disclosure of " +
+      "collaborative work you just did. Affirms human authorship (Authored-by-human) and, with " +
+      "with_ai:true, adds the AI-assistance disclosure (Assisted-by: <tool>) so the commit classifies " +
+      "with_ai. Amends HEAD's MESSAGE only (a testimony, never a content change) and refuses if there " +
+      "are staged changes. For fully AI-authored spans recovered from a session log, use `ai` instead. " +
+      "Read the standard: madeby://guide/aco.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "path to the repo (default: the server's working directory)" },
+        with_ai: { type: "boolean", description: "also disclose AI assistance (Assisted-by) → classifies the commit with_ai (default: false = human only)" },
+        tool: { type: "string", description: "the AI tool to name in the Assisted-by disclosure (default: AI)" },
+      },
+    },
+    handler: (args) => affirmAuthorship(rootFor(args.path as string | undefined), { withAi: args.with_ai as boolean | undefined, tool: args.tool as string | undefined }),
   },
   {
     name: "ai",
@@ -218,7 +238,31 @@ const POLICY_SCHEMA = {
   },
 };
 
+const ACO_GUIDE = `# ACO — the Authorship Certificate of Origin
+
+ACO is the open standard MadeBy implements and verifies: a signed, content-bound, tiered statement of
+which of {human, with_ai, ai} authored a unit of work. **Disclosure, not detection** — it records what a
+party PUT ON THE RECORD, never inferring authorship from source. Full spec:
+https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md
+
+## The three categories
+- **human** — a human authored it, no AI involvement.
+- **with_ai** — a human authored it with disclosed AI assistance.
+- **ai** — an AI agent authored it (a human remains accountable).
+
+## How an agent discloses its OWN work (asserted tier, no keys)
+- Collaborative / human-directed work you just did -> call **disclose** (with_ai: true, tool: "<your name>").
+  It affirms human authorship + discloses AI assistance on HEAD, classifying the commit with_ai.
+- Fully AI-authored spans recoverable from your session log -> call **ai** (records structurally-verified
+  spans, local-only).
+- Read what's already disclosed -> **who**. Align a whole repo -> **init** (also scaffolds an AGENTS.md
+  ACO convention so any agent working there discloses).
+
+Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed.
+`;
+
 const RESOURCES = [
+  { uri: "madeby://guide/aco", name: "ACO — the Authorship Certificate of Origin", description: "The open standard MadeBy implements + verifies: verifiable authorship disclosure (human/with_ai/ai), and how an agent discloses its own work.", mimeType: "text/markdown", text: ACO_GUIDE },
   { uri: "madeby://guide/align", name: "Aligning a repo with MadeBy", description: "The step-by-step workflow to align a repository (for humans and agents).", mimeType: "text/markdown", text: ALIGN_GUIDE },
   { uri: "madeby://guide/enforce", name: "Enforcing the disclosure check", description: "How to make the check required on a protected branch (GitHub / Azure DevOps) — the host's control plane, exact commands.", mimeType: "text/markdown", text: ENFORCE_GUIDE },
   { uri: "madeby://guide/backfill", name: "Honest backfill for existing repos", description: "How to account for pre-adoption history honestly — recognize, attach evidence, set a boundary; never fabricate.", mimeType: "text/markdown", text: BACKFILL_GUIDE },
@@ -304,5 +348,5 @@ export function startMcpServer(): void {
     }
     handle(msg);
   });
-  process.stderr.write("madeby mcp: ready (stdio; tools: init, check, who, ai; resources: align/enforce/backfill guides, policy schema)\n");
+  process.stderr.write("madeby mcp: ready (stdio; tools: init, check, who, disclose, ai; resources: aco/align/enforce/backfill guides, policy schema)\n");
 }
