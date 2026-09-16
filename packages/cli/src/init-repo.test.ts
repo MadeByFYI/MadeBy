@@ -22,7 +22,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(existsSync(join(root, "AGENTS.md"))).toBe(true);
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("Authorship Certificate of Origin");
-    expect(md).toContain("npx madeby me --with-ai");
+    expect(md).toContain("npx madeby@latest me --with-ai");
     expect(md).toMatch(/with_ai/);
     expect(r.created).toContain(".madeby/policy.json");
     expect(r.created).toContain(".github/workflows/disclosure.yml");

@@ -60,9 +60,9 @@ After you commit, run the matching command (works with no install via \`npx\`):
 
 | Category  | Command                          |
 |-----------|----------------------------------|
-| \`human\`   | \`npx madeby me\`                  |
-| \`with_ai\` | \`npx madeby me --with-ai <tool>\` |
-| \`ai\`      | \`npx madeby ai [tool]\`           |
+| \`human\`   | \`npx madeby@latest me\`                  |
+| \`with_ai\` | \`npx madeby@latest me --with-ai <tool>\` |
+| \`ai\`      | \`npx madeby@latest ai [tool]\`           |
 
 Undisclosed content stays *unknown*, never guessed. See ACO for the standard.
 `;
@@ -91,7 +91,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
 
   const nextSteps: string[] = ["Commit the created files."];
   if (created.includes("AGENTS.md")) {
-    nextSteps.push("An AGENTS.md ACO convention was added — agents that read it disclose authorship (e.g. 'npx madeby me --with-ai <tool>'). Tune it to your repo's tools.");
+    nextSteps.push("An AGENTS.md ACO convention was added — agents that read it disclose authorship (e.g. 'npx madeby@latest me --with-ai <tool>'). Tune it to your repo's tools.");
   } else if (skipped.includes("AGENTS.md")) {
     nextSteps.push("You already have an AGENTS.md — add the ACO disclosure rule to it (reference: https://github.com/MadeByFYI/MadeBy/blob/main/AGENTS.md).");
   }
