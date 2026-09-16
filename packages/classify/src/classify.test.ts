@@ -2,6 +2,23 @@ import { describe, it, expect } from "vitest";
 import { classifyCommit, summarize, isBotIdentity } from "./index";
 import type { CommitMeta } from "./index";
 
+describe("Authored-by-ai — the honest `ai` disclosure (AI authored, human committer accountable)", () => {
+  it("Authored-by-ai with no human affirmation → ai", () => {
+    const r = classifyCommit({ message: "feat: x\n\nAuthored-by-ai: Claude Code", authorName: "Mac", authorEmail: "mac@x.org" });
+    expect(r.class).toBe("ai");
+    expect(r.aiContributors[0]?.provider).toBe("anthropic");
+  });
+  it("Authored-by-ai naming an unknown tool still classifies ai (the key is the disclosure)", () => {
+    expect(classifyCommit({ message: "feat\n\nAuthored-by-ai: SomeNewAgent", authorName: "Mac", authorEmail: "m@x" }).class).toBe("ai");
+  });
+  it("Authored-by-ai + Authored-by-human together → with_ai (collaboration)", () => {
+    expect(classifyCommit({ message: "feat\n\nAuthored-by-human: Mac <m@x>\nAuthored-by-ai: Claude", authorName: "Mac", authorEmail: "m@x" }).class).toBe("with_ai");
+  });
+  it("Authored-by-human alone is still human (unchanged)", () => {
+    expect(classifyCommit({ message: "feat\n\nAuthored-by-human: Mac <m@x>", authorName: "Mac", authorEmail: "m@x" }).class).toBe("human");
+  });
+});
+
 describe("bot / automation recognition (a disclosed machine committer, not inferred, not AI)", () => {
   it("classifies a [bot] committer as bot, not human", () => {
     expect(

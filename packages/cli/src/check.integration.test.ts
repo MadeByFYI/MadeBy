@@ -197,6 +197,22 @@ describe("madeby me — made by me (affirm human authorship of HEAD)", () => {
   });
 });
 
+describe("madeby ai — attest AI authorship of HEAD (Authored-by-ai, asserted, no session log)", () => {
+  it("amends HEAD with an Authored-by-ai trailer and does not claim human authorship", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    git(d, "config", "user.name", "Mac");
+    git(d, "config", "user.email", "mac@x.org");
+    git(d, "config", "commit.gpgsign", "false");
+    commit(d, "x.txt", "hi\n", "feat: ai work");
+    const r = runCmd("ai", d, "Claude Code");
+    expect(r.code).toBe(0);
+    const msg = git(d, "show", "-s", "--format=%B", "HEAD");
+    expect(msg).toMatch(/Authored-by-ai: Claude Code/);
+    expect(msg).not.toMatch(/Authored-by-human/);
+  });
+});
+
 describe("madeby init — align a repo (create policy + CI check), idempotently", () => {
   it("creates .madeby/policy.json + the workflow, and leaves them as-is on re-run", () => {
     const d = tmpRepo();
@@ -284,6 +300,24 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     const msg = git(drepo, "show", "-s", "--format=%B", "HEAD");
     expect(msg).toMatch(/Authored-by-human: Dev <dev@example.com>/);
     expect(msg).toMatch(/Assisted-by: Cursor/);
+  }, 30000);
+
+  it("the disclose tool with category:ai attests AI authorship (Authored-by-ai, no human claim)", async () => {
+    const drepo = tmpRepo();
+    git(drepo, "init", "-q", "-b", "main");
+    git(drepo, "config", "user.name", "Mac");
+    git(drepo, "config", "user.email", "mac@x.org");
+    git(drepo, "config", "commit.gpgsign", "false");
+    commit(drepo, "x.txt", "hi\n", "feat: ai work");
+    const res = await mcpCall(drepo, [
+      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "disclose", arguments: { category: "ai", tool: "Cursor" } } },
+    ]);
+    const out = JSON.parse((res.get(1)!.result as { content: { text: string }[] }).content[0]!.text) as { ok: boolean; category: string; added: string[] };
+    expect(out).toMatchObject({ ok: true, category: "ai" });
+    expect(out.added).toEqual(["Authored-by-ai"]);
+    const msg = git(drepo, "show", "-s", "--format=%B", "HEAD");
+    expect(msg).toMatch(/Authored-by-ai: Cursor/);
+    expect(msg).not.toMatch(/Authored-by-human/);
   }, 30000);
 
   it("the ai tool records witnessed spans (the agent discloses its own work)", async () => {

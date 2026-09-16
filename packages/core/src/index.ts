@@ -92,6 +92,7 @@ export {
   recognizeAiTrailers,
   hasAiTrailer,
   hasHumanAttestation,
+  hasAiAuthorship,
   recognizeSpdxIdentifiers,
   recognizeSpdxAiDisclosures,
   hasSpdxAiDisclosure,

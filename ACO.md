@@ -113,7 +113,8 @@ governed lightly (media-type-registry style: who may claim a binding identifier)
 - **Emit (asserted tier)** — the floor is a commit trailer, and requires no keys or infrastructure:
   - `human`: `Authored-by-human: <name> <email>`
   - `with_ai`: `Authored-by-human: <name> <email>` **and** `Assisted-by: <tool>`
-  - `ai`: witnessed AI-span evidence, or a disclosed `Assisted-by: AI` with AI accountability.
+  - `ai`: an `Authored-by-ai: <tool>` trailer (`madeby ai`) — an AI authored it, the committer is the
+    accountable human — optionally upgraded with witnessed AI-span evidence (`madeby ai --witness`).
   A producer is ACO-conformant at the asserted tier if it emits a recognized carrier (§5) that expresses
   a §2 category over a §3 subject.
 - **Verify** — a verifier is conformant if it resolves claims through the tier and degradation rules of

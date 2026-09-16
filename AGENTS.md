@@ -26,7 +26,7 @@ After you commit, run the matching command. It works with no install via `npx`:
 |-----------|--------------------------------------|------------------------------------------|
 | `human`   | `npx madeby me`                      | `Authored-by-human:`                     |
 | `with_ai` | `npx madeby me --with-ai <tool>`     | `Authored-by-human:` + `Assisted-by:`    |
-| `ai`      | `npx madeby ai <session-log>`        | witnessed AI-span evidence               |
+| `ai`      | `npx madeby ai [tool]`               | `Authored-by-ai:` (add `--witness <log>` for spans) |
 
 **This repo dogfoods it:** a commit an AI drafted under human direction and review is disclosed with
 `npx madeby me --with-ai "Claude Code"`, which classifies it `with_ai`.

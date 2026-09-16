@@ -44,10 +44,52 @@ export interface AffirmResult {
   name?: string;
   email?: string;
   subject?: string;
-  /** trailers added this call: "Authored-by-human" and/or "Assisted-by" */
+  /** trailers added this call: "Authored-by-human" / "Assisted-by" / "Authored-by-ai" */
   added: string[];
   /** what HEAD discloses after this call */
-  category: "human" | "with_ai";
+  category: "human" | "with_ai" | "ai";
+}
+
+// The AI-authorship trailer — the symmetric counterpart of `Authored-by-human`. It states an AI
+// authored the change while the committer (the git author) remains the accountable human. Asserted
+// tier, no session log — the honest, log-free `ai` disclosure. Kept in sync with core's recognizer.
+const AI_AUTHOR = /^[ \t]*Authored-by-ai[ \t]*:/im;
+
+/**
+ * Attest AI authorship on HEAD per ACO: add an `Authored-by-ai: <tool>` trailer so the commit
+ * classifies `ai`. Same mechanics as {@link affirmAuthorship} but no git identity is read — the git
+ * author/committer is the accountable party, recorded by git itself. Amends HEAD's MESSAGE only,
+ * refuses staged changes, idempotent.
+ */
+export function attestAiAuthorship(root: string, opts: { tool?: string } = {}): AffirmResult {
+  const tool = (opts.tool && opts.tool.trim()) || "AI";
+  const base: AffirmResult = { ok: false, changed: false, withAi: false, tool, added: [], category: "ai" };
+
+  try {
+    execFileSync("git", ["-C", root, "diff", "--cached", "--quiet"]);
+  } catch {
+    return { ...base, reason: "staged-changes" };
+  }
+
+  let subject = "";
+  let message = "";
+  try {
+    subject = git(root, ["show", "-s", "--format=%s", "HEAD"]);
+    message = git(root, ["show", "-s", "--format=%B", "HEAD"]);
+  } catch {
+    return { ...base, reason: "no-commit" };
+  }
+
+  const added: string[] = [];
+  const trailers: string[] = [];
+  if (!AI_AUTHOR.test(message)) {
+    trailers.push("--trailer", `Authored-by-ai: ${tool}`);
+    added.push("Authored-by-ai");
+  }
+  if (trailers.length > 0) {
+    execFileSync("git", ["-C", root, "commit", "--amend", "--no-edit", ...trailers]);
+  }
+  return { ok: true, changed: trailers.length > 0, withAi: false, tool, subject, added, category: "ai" };
 }
 
 /**

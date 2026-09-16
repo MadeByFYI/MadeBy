@@ -5,6 +5,7 @@ import {
   hasDcoSignoff,
   hasAiTrailer,
   hasHumanAttestation,
+  hasAiAuthorship,
   recognizeSpdxIdentifiers,
   recognizeSpdxAiDisclosures,
   hasSpdxAiDisclosure,
@@ -91,6 +92,16 @@ describe("recognizeSpdxAiDisclosures — the ggfevans/ai-disclosure convention (
 
   it("registers the kind as recognized (external, asserted ceiling)", () => {
     expect(DISCLOSURE_KINDS["spdx-ai-disclosure"]).toMatchObject({ parser: "recognized", ceiling: "asserted", nativeness: "external" });
+  });
+});
+
+describe("hasAiAuthorship — the Authored-by-ai trailer (honest log-free `ai` disclosure)", () => {
+  it("recognizes Authored-by-ai and counts it as an ai-trailer disclosure", () => {
+    expect(hasAiAuthorship("feat\n\nAuthored-by-ai: Claude Code")).toBe(true);
+    expect(hasAiAuthorship("feat\n\nAuthored-by-ai: SomeAgent")).toBe(true); // key is the disclosure, not the tool name
+    expect(hasAiAuthorship("feat\n\nAuthored-by-human: Mac")).toBe(false);
+    expect(hasAiAuthorship("plain commit")).toBe(false);
+    expect(commitDisclosureKinds({ message: "feat\n\nAuthored-by-ai: Claude Code", signed: false })).toEqual(["ai-trailer"]);
   });
 });
 
