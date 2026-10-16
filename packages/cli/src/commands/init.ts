@@ -20,6 +20,7 @@ export function initCommand(args: string[]): void {
   const r = initRepo(root, { mode, host });
 
   for (const f of r.created) console.log(`  + ${f}`);
+  for (const f of r.merged) console.log(`  ~ ${f} (merged in the ACO rule)`);
   for (const f of r.skipped) console.log(`  · ${f} (exists — left as-is)`);
   console.log(`\nmadeby init — policy: ${r.policyMode}, host: ${r.host}`);
   console.log("Next:");
