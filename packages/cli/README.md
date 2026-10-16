@@ -44,6 +44,8 @@ npm i -g madeby
 madeby init                    Set MadeBy up: write .madeby/policy.json + the CI disclosure check.
 madeby check  [<range>]        The gate: do commits meet .madeby/policy.json? (a verdict — exit code
                                gates). <range> e.g. origin/main..HEAD — a PR's own commits. --json too.
+madeby coverage [<range>]      The scoreboard: how much of the repo's authorship is disclosed (known)
+                               vs unknown, the human/with_ai/ai mix, and the asserted/verified split.
 madeby who    [<path>]         Made by whom? What's on the record about who made this — one file's
   (alias: whom)                origin, or the whole repo with no path. --lines=A-B to scope. --json too.
 madeby ai     [tool]           Made by AI: attest AI authorship of HEAD (an Authored-by-ai trailer).
@@ -76,6 +78,33 @@ before you decide to enforce anything.
 In CI, omit `<range>` — on a pull-request build `madeby check` **auto-scopes to the PR's own
 commits** from the CI environment (GitHub today; other hosts via their adapter). Pass an explicit
 `<range>` to override.
+
+### `madeby coverage` — the authorship scoreboard
+
+`check` is the gate; `coverage` is the picture. Run it in any repo to see how much of your
+history's authorship is **on the record** — no policy, no config:
+
+```sh
+madeby coverage                 # scores recent history
+madeby coverage origin/main..HEAD   # or a range
+```
+
+```
+authorship coverage — last 500 commits  (estimate · disclosure, not detection)
+  known     62%  ████████████░░░░░░░░  disclosed — on the record
+  unknown   38%  ███████░░░░░░░░░░░░░  no disclosure — origin unknown, never guessed
+
+  of the 310 known:  human 41% · with_ai 38% · ai 21%
+  trust:  asserted 88% · verified 12%  — self-reported; sign commits to verify
+
+  → 38% unknown. Require disclosure going forward:  madeby init --required
+```
+
+It is a **labeled estimate**, honest by construction: an undisclosed commit is **unknown**, never
+inferred as human — disclosure, not detection. The human/with_ai/ai mix is reported *of the known*,
+never of the whole repo, and the asserted-vs-verified split shows how much is signed. `--json` emits
+counts only (percentages are derived at the edge, never stored). Use it to see your gap, then
+`madeby init --required` to close it going forward.
 
 ### `madeby me` — affirm human authorship
 
