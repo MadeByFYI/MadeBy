@@ -277,7 +277,7 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     expect((res.get(1)!.result as { serverInfo: { name: string } }).serverInfo.name).toBe("madeby");
     // tools/list — the minimal "made by ___" surface, no more
     const names = (res.get(2)!.result as { tools: { name: string }[] }).tools.map((t) => t.name);
-    expect(names.sort()).toEqual(["ai", "check", "disclose", "init", "who"]);
+    expect(names.sort()).toEqual(["ai", "check", "coverage", "disclose", "init", "who"]);
     // check tool → the gate fires
     const chk = JSON.parse((res.get(4)!.result as { content: { text: string }[] }).content[0]!.text) as { mode: string; pass: boolean };
     expect(chk.mode).toBe("required");

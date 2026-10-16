@@ -16,6 +16,7 @@ import { checkCommand } from "./commands/check";
 import { aiCommand } from "./commands/ai";
 import { meCommand } from "./commands/me";
 import { whoCommand } from "./commands/who";
+import { coverageCommand } from "./commands/coverage";
 import { initCommand } from "./commands/init";
 import { startMcpServer } from "./mcp";
 
@@ -31,6 +32,9 @@ Usage:
                                  --json for a machine-readable result.
   madeby who [<path>]            Made by whom? Read what's on the record about who made this — one
    (alias: whom)                 file's origin, or the whole repo with no path. --lines=A-B to scope.
+  madeby coverage [<range>]      The scoreboard: how much of your repo's authorship is disclosed (known)
+                                 vs unknown, the human/with_ai/ai mix, and the asserted/verified split.
+                                 --json for a machine-readable result.
   madeby ai [<log>] [<ref>]      Made by AI: record your AI session's witnessed spans into .madeby/spans.
                                  <log> defaults to the auto-discovered Claude Code transcript.
   madeby me                      Made by me: affirm you authored HEAD yourself (an Authored-by-human
@@ -56,6 +60,9 @@ switch (cmd) {
   case "who":
   case "whom":
     whoCommand(rest);
+    break;
+  case "coverage":
+    coverageCommand(rest);
     break;
   case "ai":
     aiCommand(rest);
