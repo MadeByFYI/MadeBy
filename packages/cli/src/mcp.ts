@@ -49,16 +49,19 @@ const TOOLS: Tool[] = [
       "guided). Idempotent — never clobbers an existing policy or workflow. Returns the files " +
       "created/skipped and the recommended next steps. Read the resources: madeby://guide/align (full " +
       "workflow), madeby://guide/enforce (make the check required — the host's control plane, exact " +
-      "commands), madeby://guide/backfill (account for existing history honestly — never fabricate).",
+      "commands), madeby://guide/backfill (account for existing history honestly — never fabricate). The " +
+      "ACO convention block is versioned: the result flags an `outdated` AGENTS.md/CLAUDE.md (drift); call " +
+      "again with update:true to refresh just that block in place — how an agent keeps the convention current.",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "path to the repo (default: the server's working directory)" },
         mode: { enum: ["advisory", "required"], description: "policy mode to seed (default: advisory)" },
         host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
+        update: { type: "boolean", description: "refresh an outdated ACO convention block in place (drift update); default false (report only)" },
       },
     },
-    handler: (args) => initRepo(rootFor(args.path as string | undefined), { mode: args.mode as InitMode | undefined, host: args.host as string | undefined }),
+    handler: (args) => initRepo(rootFor(args.path as string | undefined), { mode: args.mode as InitMode | undefined, host: args.host as string | undefined, update: args.update as boolean | undefined }),
   },
   {
     name: "check",
