@@ -1,7 +1,7 @@
 {
   "name": "madeby",
-  "version": "0.3.0",
-  "description": "MadeBy — verifiable content provenance. Disclose your AI use (madeby ai) and gate PRs on disclosure (madeby check).",
+  "version": "0.3.1",
+  "description": "Disclose AI authorship of code. `npx madeby ai` adds an Authored-by-ai git trailer; AI coding agents disclose per the ACO standard (human/with_ai/ai) from an AGENTS.md convention. Disclosure, not detection. Gate PRs with `madeby check`.",
   "license": "MIT",
   "type": "module",
   "author": {
@@ -17,14 +17,24 @@
     "directory": "packages/cli"
   },
   "keywords": [
+    "ai-authorship",
+    "ai-disclosure",
+    "authored-by-ai",
+    "ai-attribution",
+    "ai-provenance",
+    "ai-generated-code",
+    "coding-agent",
+    "agents",
+    "agents-md",
+    "aco",
+    "co-authored-by",
     "provenance",
-    "ai",
     "disclosure",
+    "attestation",
     "dco",
     "pull-request",
     "ci",
-    "attestation",
-    "code-provenance"
+    "mcp"
   ],
   "engines": {
     "node": ">=20"
