@@ -1,0 +1,41 @@
+name: Publish MCP server
+
+# Publishes packages/cli/server.json to the official MCP Registry under the
+# org namespace io.github.madebyfyi/*. Uses GitHub Actions OIDC — the workflow
+# runs as the MadeByFYI org, which is how the registry authorizes an org
+# namespace (device-login only grants a personal namespace). Metadata-only:
+# the registry references the published `madeby` npm package; nothing is hosted.
+#
+# Trigger manually (Actions tab → Run workflow, or `gh workflow run mcp-publish.yml`),
+# or automatically when a vX.Y.Z tag is pushed. The npm package at server.json's
+# version must already be published (the registry verifies against it).
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    name: publish to MCP registry
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for OIDC (maps to io.github.madebyfyi/*)
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+          mcp-publisher --help >/dev/null
+
+      - name: Authenticate (GitHub Actions OIDC → org namespace)
+        working-directory: packages/cli
+        run: mcp-publisher login github-oidc
+
+      - name: Publish server.json
+        working-directory: packages/cli
+        run: mcp-publisher publish
