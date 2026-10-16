@@ -9,6 +9,25 @@ This is the v2 build. The design lives in the spec docs at the repo root:
 
 The first attempt is archived under [`archive/v1/`](./archive/v1/) — reference only.
 
+## The CLI — `madeby`
+
+The product ships as a zero-infra CLI that runs against your local git history. Disclosure, not
+detection: it reports what contributors put **on the record** and never guesses whether code is AI.
+
+```sh
+npx madeby coverage   # the scoreboard: how much of your repo's authorship is disclosed
+npx madeby init       # drop the ACO AGENTS.md convention + a CI disclosure check into your repo
+npx madeby check      # the gate: do commits meet .madeby/policy.json? (advisory by default)
+npx madeby who        # made by whom? what's on the record for a file or the whole repo
+npx madeby ai         # an AI agent discloses it authored HEAD  (Authored-by-ai:)
+npx madeby me         # affirm you authored HEAD yourself (--with-ai [tool] for assisted)
+```
+
+`madeby coverage` is the maintainer's scoreboard — known (disclosed) vs unknown authorship, the
+human/with_ai/ai mix of the known, and the asserted-vs-verified trust split, as a labeled estimate.
+Built on **ACO**, the open [Authorship Certificate of Origin](./ACO.md) standard. Full docs:
+[`packages/cli`](./packages/cli#readme) · on npm: [`madeby`](https://www.npmjs.com/package/madeby).
+
 ## Repo layout
 
 ```
