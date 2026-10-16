@@ -23,8 +23,9 @@ function help(): void {
   console.log(`madeby — verifiable content provenance ("made by whom?")
 
 Usage:
-  madeby init                    Set MadeBy up: write .madeby/policy.json + the CI disclosure check.
-                                 --required to enforce now; --host azure-devops for Azure Pipelines.
+  madeby init                    Set MadeBy up: write .madeby/policy.json + the ACO AGENTS.md convention
+                                 + the CI disclosure check. --update refreshes an outdated ACO block in
+                                 place; --required to enforce now; --host azure-devops for Azure Pipelines.
   madeby check [<range>]         The gate: do commits meet .madeby/policy.json? (a verdict — exit
                                  code gates). <range> e.g. origin/main..HEAD; in CI it's auto-detected.
                                  --json for a machine-readable result.

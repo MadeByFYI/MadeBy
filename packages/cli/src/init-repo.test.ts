@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
-import { initRepo } from "./init-repo";
+import { initRepo, acoStatus } from "./init-repo";
 
 const dirs: string[] = [];
 const tmp = (): string => {
@@ -80,5 +80,68 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(existsSync(join(b, "CLAUDE.md"))).toBe(false);
     expect(r2.created).not.toContain("CLAUDE.md");
     expect(r2.merged).not.toContain("CLAUDE.md");
+  });
+});
+
+describe("initRepo — ACO convention drift detection + update", () => {
+  // a legacy (pre-versioning) block: the old unversioned sentinel, run to end of file
+  const LEGACY = "# AGENTS.md\n\n<!-- madeby:aco -->\n## The rule\n\nrun `npx madeby ai <session-log>`\n";
+  // a versioned-but-older block (simulates a future bump): v0 fenced block
+  const OLDER = "# AGENTS.md\n\n<!-- madeby:aco v0 -->\n## Authorship disclosure (ACO)\n\nold text\n<!-- /madeby:aco -->\n";
+
+  it("acoStatus classifies absent / current / outdated / newer", () => {
+    expect(acoStatus("# just a readme\n")).toBe("absent");
+    expect(acoStatus(LEGACY)).toBe("outdated"); // legacy unversioned
+    expect(acoStatus(OLDER)).toBe("outdated"); // v0 < current
+    const fresh = tmp();
+    initRepo(fresh);
+    expect(acoStatus(readFileSync(join(fresh, "AGENTS.md"), "utf8"))).toBe("current");
+    expect(acoStatus("<!-- madeby:aco v999 -->\nx\n<!-- /madeby:aco -->\n")).toBe("newer");
+  });
+
+  it("flags an outdated AGENTS.md but does NOT modify it without --update", () => {
+    const root = tmp();
+    writeFileSync(join(root, "AGENTS.md"), LEGACY);
+    const r = initRepo(root);
+    expect(r.outdated).toContain("AGENTS.md");
+    expect(r.updated).not.toContain("AGENTS.md");
+    expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toBe(LEGACY); // untouched
+    expect(r.nextSteps.some((s) => s.includes("OUTDATED") && s.includes("--update"))).toBe(true);
+  });
+
+  it("refreshes an outdated block in place with update:true, preserving surrounding content", () => {
+    const root = tmp();
+    const before = "# My AGENTS\n\nBuild: make.\n\n";
+    const after = "\n## My own notes\n\nKeep this.\n";
+    // a fenced v0 block between the user's own content
+    writeFileSync(join(root, "AGENTS.md"), before + "<!-- madeby:aco v0 -->\n## old ACO\n\nold\n<!-- /madeby:aco -->\n" + after);
+    const r = initRepo(root, { update: true });
+    expect(r.updated).toContain("AGENTS.md");
+    const md = readFileSync(join(root, "AGENTS.md"), "utf8");
+    expect(md).toContain("# My AGENTS"); // content before preserved
+    expect(md).toContain("Build: make.");
+    expect(md).toContain("## My own notes"); // content AFTER the fenced block preserved
+    expect(md).toContain("Keep this.");
+    expect(md).toContain("<!-- madeby:aco v1 -->"); // refreshed to current version
+    expect(md).toContain("npx madeby@latest ai [tool]"); // current commands
+    expect(md).not.toContain("old ACO");
+    // and it's now current + idempotent
+    expect(acoStatus(md)).toBe("current");
+    const r2 = initRepo(root, { update: true });
+    expect(r2.skipped).toContain("AGENTS.md");
+    expect(r2.updated).not.toContain("AGENTS.md");
+  });
+
+  it("migrates a legacy unfenced block (replaces to end of file)", () => {
+    const root = tmp();
+    writeFileSync(join(root, "AGENTS.md"), LEGACY);
+    const r = initRepo(root, { update: true });
+    expect(r.updated).toContain("AGENTS.md");
+    const md = readFileSync(join(root, "AGENTS.md"), "utf8");
+    expect(md).toContain("# AGENTS.md"); // original title kept
+    expect(md).toContain("<!-- madeby:aco v1 -->");
+    expect(md).toContain("<!-- /madeby:aco -->");
+    expect(md).not.toContain("madeby ai <session-log>"); // stale command gone
+    expect(acoStatus(md)).toBe("current");
   });
 });

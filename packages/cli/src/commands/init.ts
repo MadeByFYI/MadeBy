@@ -14,13 +14,16 @@ export function initCommand(args: string[]): void {
   }
 
   const mode = args.includes("--required") ? "required" : "advisory";
+  const update = args.includes("--update");
   const hostIdx = args.indexOf("--host");
   const host = hostIdx >= 0 ? args[hostIdx + 1] : undefined;
 
-  const r = initRepo(root, { mode, host });
+  const r = initRepo(root, { mode, host, update });
 
   for (const f of r.created) console.log(`  + ${f}`);
   for (const f of r.merged) console.log(`  ~ ${f} (merged in the ACO rule)`);
+  for (const f of r.updated) console.log(`  ↑ ${f} (ACO convention refreshed to the current version)`);
+  for (const f of r.outdated) console.log(`  ! ${f} (ACO convention OUTDATED — run 'madeby init --update')`);
   for (const f of r.skipped) console.log(`  · ${f} (exists — left as-is)`);
   console.log(`\nmadeby init — policy: ${r.policyMode}, host: ${r.host}`);
   console.log("Next:");
