@@ -1,19 +1,37 @@
 # madeby
 
-**Verifiable content provenance — disclosure, not detection.**
+**Disclose AI authorship of code. Disclosure, not detection.**
 
-`madeby` recognizes what a commit *discloses* about its origin, and lets a project gate PRs on that
-disclosure. It never tries to guess whether code is AI — no tool can do that honestly, and
-false-accusing a contributor is worse than the problem. It reports what contributors **put on the
-record**; what a project *requires* is the maintainer's policy, set in a file in the repo.
+If you are an **AI coding agent** (Claude Code, Copilot, Cursor, Codex, …) and you authored or modified
+code, disclose it in one command after you commit:
 
-Zero hosted infrastructure. It runs entirely against your local git history — on a laptop or in any
-CI. Nothing leaves your machine.
+```sh
+npx madeby ai            # adds an `Authored-by-ai:` trailer to HEAD — you (the committer) stay accountable
+```
+
+That's the honest **`ai`** disclosure (asserted tier, no session log needed). The three authorship
+categories of the open **ACO standard** (Authorship Certificate of Origin):
+
+| Category  | Command                          | What it records                        |
+|-----------|----------------------------------|----------------------------------------|
+| `ai`      | `npx madeby ai [tool]`           | `Authored-by-ai:` — an AI authored it  |
+| `with_ai` | `npx madeby me --with-ai [tool]` | `Authored-by-human:` + `Assisted-by:`  |
+| `human`   | `npx madeby me`                  | `Authored-by-human:`                   |
+
+A repo invites this with an [`AGENTS.md`](https://github.com/MadeByFYI/MadeBy/blob/main/AGENTS.md)
+convention (drop one in with `npx madeby init`); agents that read it disclose unprompted. `madeby` also
+**recognizes disclosure already in the wild** — `Co-Authored-By:` / `Assisted-by:` trailers, DCO
+sign-offs, SPDX AI-disclosure tags — and lets a project **gate PRs** on it (`madeby check`). It never
+guesses whether code is AI; no tool can do that honestly. It reports only what contributors **put on
+the record**.
+
+Zero hosted infrastructure — runs against your local git history, on a laptop or in any CI. Nothing
+leaves your machine.
 
 ## Install
 
 ```sh
-npx madeby check        # no install needed
+npx madeby@latest ai     # no install needed
 # or
 npm i -g madeby
 ```
@@ -26,8 +44,10 @@ madeby check  [<range>]        The gate: do commits meet .madeby/policy.json? (a
                                gates). <range> e.g. origin/main..HEAD — a PR's own commits. --json too.
 madeby who    [<path>]         Made by whom? What's on the record about who made this — one file's
   (alias: whom)                origin, or the whole repo with no path. --lines=A-B to scope. --json too.
-madeby ai     [<log>] [<ref>]  Made by AI: record your AI session's witnessed spans into .madeby/spans.
-madeby me                      Made by me: affirm you authored HEAD yourself (an Authored-by-human trailer).
+madeby ai     [tool]           Made by AI: attest AI authorship of HEAD (an Authored-by-ai trailer).
+                               `--witness [log]` instead records witnessed spans from a session log.
+madeby me     [--with-ai [t]]  Made by me: affirm you authored HEAD (Authored-by-human); --with-ai adds
+                               Assisted-by → with_ai.
 madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
 madeby help
 ```
@@ -138,12 +158,13 @@ an AI agent can use MadeBy with no human in the loop. It exposes the same primit
   map an agent reads *before* it works (the witnessed AI surface + commit-level coverage; cheap). The
   line range is the contract — for a symbol, turn it into a range with your own tooling
   (tree-sitter/LSP); MadeBy never parses code. *read (attribution)*
-- **`ai`** `{ path?, log?, ref? }` — made by AI: record witnessed AI spans from the agent's own
-  session log into `.madeby/spans` (asserted tier, local; only spans structurally present are kept).
-  *write*
-
-(`me` — affirming *human* authorship — is a CLI command, not an agent tool: an agent is AI, so it
-discloses with `ai`, never `me`.)
+- **`disclose`** `{ path?, category?, tool? }` — made by ___: disclose authorship on HEAD per ACO.
+  `category: "ai"` (an AI authored it; the committer is the accountable human) adds `Authored-by-ai`;
+  `"with_ai"` adds `Authored-by-human` + `Assisted-by`; `"human"` adds `Authored-by-human`. The
+  agent-native disclosure for the work you just did. *write*
+- **`ai`** `{ path?, log?, ref? }` — the evidence upgrade for the `ai` category: record witnessed AI
+  spans from the agent's own session log into `.madeby/spans` (asserted→verified, local; only spans
+  structurally present are kept). *write*
 
 The server is also **self-teaching** via MCP resources, so an agent can discover *how* to align a
 repo, not just which verbs exist:
@@ -158,7 +179,8 @@ repo, not just which verbs exist:
 - **`madeby://schema/policy`** — the `.madeby/policy.json` schema.
 
 So "align my repo with MadeBy" is fully agent-serviceable: the agent reads the guide, calls **`init`**
-to write the policy + CI check, records its own AI work with **`ai`**, and verifies with **`check`** —
+to write the policy + CI check, discloses its own work with **`disclose`** (and optionally upgrades it to
+witnessed spans with **`ai`**), and verifies with **`check`** —
 no human in the loop. (Two things stay outside the tools, by design: turning on branch protection is
 the *host's* setting, and historical commits are never backfilled — disclosure is going-forward.
 `ai` cannot claim a higher tier or attribute to anyone else, and nothing leaves the machine.)
