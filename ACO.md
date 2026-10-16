@@ -10,6 +10,12 @@ work. It is the authorship-era companion to the [Developer Certificate of Origin
 *right* to contribute, ACO attests *who — and what — authored* the contribution, in a form a machine can
 verify.
 
+> **Agents adopt it on their own.** In a [reproducible experiment](./experiments/aco-adoption/), three
+> independent AI coding agents — Claude Code, GitHub Copilot, and Cursor — each given an ordinary coding
+> task with no mention of disclosure, read an `AGENTS.md` ACO convention and disclosed their authorship
+> unprompted in **12 of 12 trials; 0 of 14 without the convention.** See
+> [experiments/aco-adoption/RESULTS.md](./experiments/aco-adoption/RESULTS.md).
+
 The standard is deliberately separate from any one tool. MadeBy is its reference implementation and
 canonical verifier, but ACO is a spec anyone may implement, and its claims are verifiable by anyone —
 that independence is the point.

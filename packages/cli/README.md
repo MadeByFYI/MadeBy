@@ -19,7 +19,9 @@ categories of the open **ACO standard** (Authorship Certificate of Origin):
 | `human`   | `npx madeby me`                  | `Authored-by-human:`                   |
 
 A repo invites this with an [`AGENTS.md`](https://github.com/MadeByFYI/MadeBy/blob/main/AGENTS.md)
-convention (drop one in with `npx madeby init`); agents that read it disclose unprompted. `madeby` also
+convention (drop one in with `npx madeby init`); agents that read it disclose unprompted — in a
+[reproducible experiment](https://github.com/MadeByFYI/MadeBy/tree/main/experiments/aco-adoption), three
+AI coding agents did so in **12 of 12 trials, 0 of 14 without the convention.** `madeby` also
 **recognizes disclosure already in the wild** — `Co-Authored-By:` / `Assisted-by:` trailers, DCO
 sign-offs, SPDX AI-disclosure tags — and lets a project **gate PRs** on it (`madeby check`). It never
 guesses whether code is AI; no tool can do that honestly. It reports only what contributors **put on
