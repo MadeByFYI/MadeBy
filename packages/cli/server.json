@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.madebyfyi/madeby",
+  "name": "io.github.MadeByFYI/madeby",
   "description": "Disclose AI authorship of code per the ACO standard — tools for AI coding agents.",
   "repository": {
     "url": "https://github.com/MadeByFYI/MadeBy",
     "source": "github"
   },
-  "version": "0.3.2",
+  "version": "0.3.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "madeby",
-      "version": "0.3.2",
+      "version": "0.3.3",
       "transport": {
         "type": "stdio"
       },
