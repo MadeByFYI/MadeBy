@@ -15,7 +15,7 @@ import { initRepo } from "./init-repo";
 import { affirmAuthorship, attestAiAuthorship } from "./commands/me";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
-const SERVER_INFO = { name: "madeby", version: "0.3.5" };
+const SERVER_INFO = { name: "madeby", version: "0.3.6" };
 
 /** Resolve a repo root from a path arg (default: the server's cwd). Throws if not a git repo. */
 function rootFor(path?: string): string {
