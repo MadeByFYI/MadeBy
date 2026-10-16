@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.madebyfyi/madeby",
+  "description": "Disclose AI authorship of code. Tools for an AI coding agent to record who authored its work per the ACO standard (human/with_ai/ai): disclose (Authored-by-ai trailer), who (read what a repo discloses), check (gate PRs), init (add the AGENTS.md convention). Disclosure, not detection — reads only what commits put on the record, never the code.",
+  "repository": {
+    "url": "https://github.com/MadeByFYI/MadeBy",
+    "source": "github"
+  },
+  "version": "0.3.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "madeby",
+      "version": "0.3.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ]
+    }
+  ]
+}
