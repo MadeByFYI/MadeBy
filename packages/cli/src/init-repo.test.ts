@@ -145,3 +145,48 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(acoStatus(md)).toBe("current");
   });
 });
+
+describe("initRepo — the policy file honors an explicit --required (and never lowers one)", () => {
+  const policy = (root: string) => JSON.parse(readFileSync(join(root, ".madeby", "policy.json"), "utf8"));
+
+  it("raises an existing advisory policy to required, keeping its other fields", () => {
+    const root = tmp();
+    initRepo(root);
+    writeFileSync(join(root, ".madeby", "policy.json"), JSON.stringify({ version: 0, mode: "advisory", accept: ["dco-signoff"] }));
+    const r = initRepo(root, { mode: "required" });
+    expect(r.raised).toEqual([".madeby/policy.json"]);
+    expect(r.policyMode).toBe("required");
+    expect(policy(root)).toEqual({ version: 0, mode: "required", accept: ["dco-signoff"] });
+    expect(r.nextSteps.some((s) => s.includes('Raised .madeby/policy.json to "required"'))).toBe(true);
+  });
+
+  it("never lowers: plain init on a required repo leaves it required and reports it truthfully", () => {
+    const root = tmp();
+    initRepo(root, { mode: "required" });
+    const r = initRepo(root);
+    expect(r.raised).toEqual([]);
+    expect(r.skipped).toContain(".madeby/policy.json");
+    expect(r.policyMode).toBe("required");
+    expect(policy(root).mode).toBe("required");
+    expect(r.nextSteps.some((s) => s.startsWith("When ready to enforce"))).toBe(false);
+  });
+
+  it("reports the file's actual mode, not the requested one, when it leaves the policy alone", () => {
+    const root = tmp();
+    initRepo(root);
+    const r = initRepo(root);
+    expect(r.policyMode).toBe("advisory");
+    expect(r.nextSteps.some((s) => s.includes("madeby init --required"))).toBe(true);
+  });
+
+  it("never rewrites a malformed policy — leaves it, reports advisory, and says how to fix it", () => {
+    const root = tmp();
+    initRepo(root);
+    writeFileSync(join(root, ".madeby", "policy.json"), "{ not json");
+    const r = initRepo(root, { mode: "required" });
+    expect(r.raised).toEqual([]);
+    expect(r.policyMode).toBe("advisory");
+    expect(readFileSync(join(root, ".madeby", "policy.json"), "utf8")).toBe("{ not json");
+    expect(r.nextSteps.some((s) => s.includes("is not a valid policy"))).toBe(true);
+  });
+});

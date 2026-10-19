@@ -7,6 +7,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { parseDisclosurePolicy } from "@madeby/core";
 
 // The ACO block is versioned and fenced by an open+close marker. Bump ACO_VERSION whenever ACO_BODY
 // changes; repos seeded with an older version then report as outdated until `madeby init --update`.
@@ -57,6 +58,9 @@ export interface InitResult {
   updated: string[];
   /** files carrying an outdated ACO block, when not updating — the caller should prompt to refresh */
   outdated: string[];
+  /** an existing policy whose mode was raised to "required" (only ever on an explicit required request) */
+  raised: string[];
+  /** the mode the repo's policy file actually carries after init (not merely the mode requested) */
   policyMode: string;
   host: string;
   nextSteps: string[];
@@ -108,6 +112,41 @@ function writeIfAbsent(abs: string, rel: string, content: string, created: strin
   created.push(rel);
 }
 
+// Ensure the policy file exists and honors an explicit request to enforce. Absent ⇒ write it with the
+// requested mode (created). Present ⇒ leave it, except that a "required" request raises an advisory
+// policy to required, keeping every other field (raised). Never lowers a policy: plain init on a
+// required repo changes nothing. A malformed file is never rewritten — `check` already degrades it to
+// advisory, and fixing it is the maintainer's call (malformed). Returns the mode the file now carries.
+function ensurePolicy(
+  abs: string,
+  rel: string,
+  mode: "advisory" | "required",
+  res: Pick<InitResult, "created" | "skipped" | "raised">,
+): { mode: string; malformed: boolean } {
+  if (!existsSync(abs)) {
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, JSON.stringify({ version: 0, mode }, null, 2) + "\n");
+    res.created.push(rel);
+    return { mode, malformed: false };
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(abs, "utf8"));
+  } catch {
+    res.skipped.push(rel);
+    return { mode: "advisory", malformed: true };
+  }
+  const isObject = !!raw && typeof raw === "object" && !Array.isArray(raw);
+  const current = parseDisclosurePolicy(raw).mode;
+  if (mode === "required" && current !== "required" && isObject) {
+    writeFileSync(abs, JSON.stringify({ ...(raw as Record<string, unknown>), mode: "required" }, null, 2) + "\n");
+    res.raised.push(rel);
+    return { mode: "required", malformed: false };
+  }
+  res.skipped.push(rel);
+  return { mode: current, malformed: !isObject };
+}
+
 // Ensure an agent file carries a current ACO rule. Absent file + createIfAbsent ⇒ write the full
 // convention (created). No ACO block yet ⇒ append the section (merged). Outdated block ⇒ refresh it in
 // place when `update`, else flag it (outdated). Current/newer ⇒ leave it (skipped).
@@ -151,9 +190,10 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   const merged: string[] = [];
   const updated: string[] = [];
   const outdated: string[] = [];
-  const res = { created, skipped, merged, updated, outdated };
+  const raised: string[] = [];
+  const res = { created, skipped, merged, updated, outdated, raised };
 
-  writeIfAbsent(join(root, ".madeby", "policy.json"), ".madeby/policy.json", JSON.stringify({ version: 0, mode }, null, 2) + "\n", created, skipped);
+  const policy = ensurePolicy(join(root, ".madeby", "policy.json"), ".madeby/policy.json", mode, res);
   // AGENTS.md — the cross-tool convention: create it, merge the rule in, or refresh a drifted block.
   ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, update });
   // CLAUDE.md — Claude Code reads this preferentially; merge/refresh if the repo has one (never create).
@@ -163,6 +203,12 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   }
 
   const nextSteps: string[] = ["Commit the created files."];
+  if (raised.length > 0) {
+    nextSteps.push('Raised .madeby/policy.json to "required" — undisclosed commits now fail the check. To make it block merges, also mark the check required on the protected branch (see madeby://guide/enforce).');
+  }
+  if (policy.malformed) {
+    nextSteps.push(".madeby/policy.json is not a valid policy, so the check treats it as advisory. It was left untouched — fix it (e.g. { \"version\": 0, \"mode\": \"required\" }) to enforce.");
+  }
   if (created.includes("AGENTS.md")) {
     nextSteps.push("An AGENTS.md ACO convention was added — agents that read it disclose authorship (e.g. 'npx madeby@latest ai [tool]'). Tune it to your repo's tools.");
   }
@@ -180,13 +226,13 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   } else if (host !== "github") {
     nextSteps.push(`Add a CI step that runs 'npx madeby check' on pull requests for ${host}.`);
   }
-  if (mode !== "required") {
-    nextSteps.push('When ready to enforce: set mode to "required", then make the check required on the protected branch — the host\'s control plane (GitHub: gh api branch protection; Azure: a build-validation policy). See the MCP resource madeby://guide/enforce for exact commands.');
+  if (policy.mode !== "required") {
+    nextSteps.push('When ready to enforce: run \'madeby init --required\' (or set "mode": "required" in .madeby/policy.json), then make the check required on the protected branch — the host\'s control plane (GitHub: gh api branch protection; Azure: a build-validation policy). See the MCP resource madeby://guide/enforce for exact commands.');
   }
   nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), an Authored-by-ai trailer ('madeby ai' — AI authored, committer accountable), a DCO Signed-off-by, or a signed commit. Evidence upgrade: 'madeby ai --witness' records your own AI session's witnessed spans.");
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
-  return { created, skipped, merged, updated, outdated, policyMode: mode, host, nextSteps };
+  return { created, skipped, merged, updated, outdated, raised, policyMode: policy.mode, host, nextSteps };
 }
 
 // The GitHub Actions workflow (mirrors the quickstart; pinned action tag; fetch-depth:0 so the gate
