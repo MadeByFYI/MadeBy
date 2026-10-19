@@ -46,7 +46,8 @@ const TOOLS: Tool[] = [
     description:
       "Align a repository with MadeBy in one call: create .madeby/policy.json (advisory by default — " +
       "reports, never fails) and the CI disclosure check for the host (github default; azure-devops " +
-      "guided). Idempotent — never clobbers an existing policy or workflow. Returns the files " +
+      "guided). Idempotent — never clobbers an existing policy or workflow; the one change it makes is " +
+      "mode: \"required\" raising an existing advisory policy to required (it never lowers one). Returns the files " +
       "created/skipped and the recommended next steps. Read the resources: madeby://guide/align (full " +
       "workflow), madeby://guide/enforce (make the check required — the host's control plane, exact " +
       "commands), madeby://guide/backfill (account for existing history honestly — never fabricate). The " +
@@ -170,7 +171,8 @@ guesses whether code is AI. To align a repo:
 
 1. **Assess** — call \`check\` (or \`who\` with no path for a repo-wide map) to see current coverage.
 2. **Set up** — call \`init\`: it writes \`.madeby/policy.json\` (advisory) and the CI disclosure check.
-   Idempotent; it never clobbers an existing policy or workflow. Then commit the created files.
+   Idempotent; it never clobbers an existing policy or workflow (\`mode: "required"\` only ever raises an
+   advisory policy to required). Then commit the created files.
 3. **Disclose going forward** — contributors disclose origin with a Co-Authored-By / Generated-by
    trailer (AI), an \`Authored-by-human\` trailer (work they wrote themselves — the symmetric human
    claim; \`madeby me\` adds it), a DCO Signed-off-by, a signed commit, or \`ai\` (record your own AI

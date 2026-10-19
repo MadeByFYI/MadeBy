@@ -1,5 +1,6 @@
 // `madeby init [--required] [--host <id>]` — align this repo with MadeBy: write .madeby/policy.json
-// (advisory by default) and the CI disclosure check. Idempotent (never clobbers existing files). A
+// (advisory by default) and the CI disclosure check. Idempotent (never clobbers existing files; the
+// one deliberate change is --required raising an existing advisory policy to required). A
 // thin renderer over the shared `initRepo` — the same one the MCP `init` tool calls.
 
 import { initRepo } from "../init-repo";
@@ -23,6 +24,7 @@ export function initCommand(args: string[]): void {
   for (const f of r.created) console.log(`  + ${f}`);
   for (const f of r.merged) console.log(`  ~ ${f} (merged in the ACO rule)`);
   for (const f of r.updated) console.log(`  ↑ ${f} (ACO convention refreshed to the current version)`);
+  for (const f of r.raised) console.log(`  ↑ ${f} (mode raised to required)`);
   for (const f of r.outdated) console.log(`  ! ${f} (ACO convention OUTDATED — run 'madeby init --update')`);
   for (const f of r.skipped) console.log(`  · ${f} (exists — left as-is)`);
   console.log(`\nmadeby init — policy: ${r.policyMode}, host: ${r.host}`);

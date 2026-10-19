@@ -4,14 +4,28 @@
 // over the shared `repoCoverage` primitive. The maintainer's scoreboard: it shows the gap, and points
 // at `madeby check` to close it.
 
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { repoCoverage, type CoverageReport } from "@madeby/analyzer";
+import { parseDisclosurePolicy } from "@madeby/core";
 import { repoRoot } from "../scope";
+
+/** Is this repo's policy already enforcing? Fail-safe: missing or unreadable ⇒ not required. */
+function policyIsRequired(root: string): boolean {
+  const p = join(root, ".madeby", "policy.json");
+  if (!existsSync(p)) return false;
+  try {
+    return parseDisclosurePolicy(JSON.parse(readFileSync(p, "utf8"))).mode === "required";
+  } catch {
+    return false;
+  }
+}
 
 const pct = (n: number, d: number): number => (d > 0 ? Math.round((n / d) * 100) : 0);
 /** a 20-cell bar for a 0..100 percentage */
 const bar = (p: number): string => "█".repeat(Math.round(p / 5)) + "░".repeat(20 - Math.round(p / 5));
 
-function render(r: CoverageReport): void {
+function render(r: CoverageReport, required: boolean): void {
   const knownPct = pct(r.known, r.total);
   const unknownPct = 100 - knownPct;
   console.log(`authorship coverage — ${r.scope}  (estimate · disclosure, not detection)`);
@@ -31,7 +45,11 @@ function render(r: CoverageReport): void {
   }
 
   if (r.unknown > 0) {
-    console.log(`\n  → ${unknownPct}% unknown. Require disclosure going forward:  madeby init --required`);
+    console.log(
+      required
+        ? `\n  → ${unknownPct}% unknown. Disclosure is already required on pull requests — the unknown is history the gate didn’t cover (e.g. from before it was on).`
+        : `\n  → ${unknownPct}% unknown. Require disclosure going forward:  madeby init --required`,
+    );
   }
 }
 
@@ -49,5 +67,5 @@ export function coverageCommand(args: string[]): void {
     console.log(JSON.stringify(r, null, 2));
     return;
   }
-  render(r);
+  render(r, policyIsRequired(root));
 }
