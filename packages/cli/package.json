@@ -41,7 +41,7 @@
     "node": ">=20"
   },
   "bin": {
-    "madeby": "./dist/madeby.mjs"
+    "madeby": "dist/madeby.mjs"
   },
   "files": [
     "dist",
