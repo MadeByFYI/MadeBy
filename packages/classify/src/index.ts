@@ -2,7 +2,7 @@
 // Evaluated by benchmark + calibration (#20), not conformance vectors. Kept separate from
 // @madeby/core (the deterministic, verifiable trust logic) by design (TESTING.md §1).
 
-export { classifyCommit, isBotIdentity } from "./classify";
+export { classifyCommit, isBotIdentity, splitToolModel } from "./classify";
 export type { AuthorClass, CommitMeta, CommitClassification, AiContributor } from "./classify";
 
 export { summarize } from "./aggregate";

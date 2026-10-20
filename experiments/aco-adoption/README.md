@@ -43,7 +43,7 @@ node run-batch.mjs 5                          # 5 per condition, Claude Code (de
 AGENT=cursor node run-batch.mjs 5             # Cursor (needs `cursor-agent login`)
 node run-batch.mjs 5 control 45               # one condition, 45s between runs (avoids rate limits)
 ```
-`AGENT` selects the agent (`claude` | `cursor`); add a per-run delay to stay under rate limits. GitHub
+`AGENT` selects the agent (`claude` | `cursor` | `copilot` — the Copilot CLI), `AGENT_MODEL` pins its model; add a per-run delay to stay under rate limits. The `with-model` condition (`node run-batch.mjs 3 with-model`) uses the `init --record-model` convention and scores whether the disclosure names the model. GitHub
 Copilot's coding agent runs via `gh agent-task create` against a real repo (see RESULTS.md).
 
 ### What the scorer measures

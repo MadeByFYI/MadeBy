@@ -190,3 +190,43 @@ describe("initRepo — the policy file honors an explicit --required (and never 
     expect(r.nextSteps.some((s) => s.includes("is not a valid policy"))).toBe(true);
   });
 });
+
+describe("initRepo --record-model — opt-in: ask agents to name the model version", () => {
+  it("default init does NOT ask for the model (naming models is the project's choice)", () => {
+    const root = tmp();
+    const r = initRepo(root);
+    expect(r.recordModel).toBe(false);
+    expect(readFileSync(join(root, "AGENTS.md"), "utf8")).not.toContain("--model");
+    expect(JSON.parse(readFileSync(join(root, ".madeby/policy.json"), "utf8")).recordModel).toBeUndefined();
+  });
+
+  it("a fresh --record-model init writes the policy field and the AGENTS.md model line", () => {
+    const root = tmp();
+    const r = initRepo(root, { recordModel: true });
+    expect(r.recordModel).toBe(true);
+    expect(JSON.parse(readFileSync(join(root, ".madeby/policy.json"), "utf8"))).toEqual({ version: 0, mode: "advisory", recordModel: true });
+    const md = readFileSync(join(root, "AGENTS.md"), "utf8");
+    expect(md).toContain("--model <version>");
+    expect(md).toContain("never guess");
+    expect(acoStatus(md)).toBe("current");
+  });
+
+  it("turns it on in an already-initialized repo: policy keeps its fields, AGENTS.md block refreshed in place", () => {
+    const root = tmp();
+    initRepo(root, { mode: "required" });
+    writeFileSync(join(root, "AGENTS.md"), "# Team notes\n\nkeep me\n\n" + readFileSync(join(root, "AGENTS.md"), "utf8").replace("# AGENTS.md\n\n", ""));
+    const r = initRepo(root, { recordModel: true });
+    expect(r.modelOn).toEqual([".madeby/policy.json"]);
+    expect(r.updated).toContain("AGENTS.md");
+    expect(JSON.parse(readFileSync(join(root, ".madeby/policy.json"), "utf8"))).toEqual({ version: 0, mode: "required", recordModel: true });
+    const md = readFileSync(join(root, "AGENTS.md"), "utf8");
+    expect(md).toContain("keep me");
+    expect(md).toContain("--model <version>");
+    expect(md.match(/madeby:aco v/g)!.length).toBe(1);
+    // idempotent, and a plain init never turns it off or strips the line
+    const again = initRepo(root);
+    expect(again.modelOn).toEqual([]);
+    expect(again.recordModel).toBe(true);
+    expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toBe(md);
+  });
+});

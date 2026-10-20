@@ -21,6 +21,9 @@ function policyIsRequired(root: string): boolean {
   }
 }
 
+/** agent/model rows shown before "… and N more" */
+const AGENT_ROWS = 8;
+
 const pct = (n: number, d: number): number => (d > 0 ? Math.round((n / d) * 100) : 0);
 /** a 20-cell bar for a 0..100 percentage */
 const bar = (p: number): string => "█".repeat(Math.round(p / 5)) + "░".repeat(20 - Math.round(p / 5));
@@ -42,6 +45,17 @@ function render(r: CoverageReport, required: boolean): void {
     if (c.bot > 0) parts.push(`bot ${pct(c.bot, r.known)}%`);
     console.log(`\n  of the ${r.known} known:  ${parts.join(" · ")}`);
     console.log(`  trust:  asserted ${pct(r.byTier.asserted, r.known)}% · verified ${pct(r.byTier.verified, r.known)}%  — self-reported; sign commits to verify`);
+  }
+
+  const withAi = r.byCategory.with_ai + r.byCategory.ai;
+  if (r.byAgent.length > 0) {
+    // As disclosed: a commit naming a tool and its model counts under both, so these can sum past 100%.
+    console.log(`\n  agents & models named in the ${withAi} AI commits:`);
+    const width = Math.max(...r.byAgent.slice(0, AGENT_ROWS).map((a) => a.name.length));
+    for (const a of r.byAgent.slice(0, AGENT_ROWS)) {
+      console.log(`    ${a.name.padEnd(width)}  ${String(a.commits).padStart(4)}  ${String(pct(a.commits, withAi)).padStart(3)}%`);
+    }
+    if (r.byAgent.length > AGENT_ROWS) console.log(`    … and ${r.byAgent.length - AGENT_ROWS} more (--json for all)`);
   }
 
   if (r.unknown > 0) {

@@ -61,6 +61,10 @@ Every ACO claim, in any carrier (§5), carries the same semantic core:
   a re-hash of content into an ACO-specific envelope (see §6, invariant 1).
 - **Attribution** — the **category** (§2) plus, for AI, the **provider / model / version as open fields**
   (never a closed enum), plus the **operator**: the human or org whose key stands behind the claim.
+  In a commit trailer the agent and model version are two fields, `tool:model` — e.g.
+  `Assisted-by: Cursor:gpt-5.3-codex` — the form the Linux kernel used for `AGENT_NAME:MODEL_VERSION`.
+  Naming the model is the project's choice (`recordModel` in the policy); the tool alone is a complete
+  disclosure.
 - **Evidence + tier** — the corroboration level (§4) and its source (self-report, tool session log,
   signed commit, Sigstore, C2PA, sworn declaration).
 - **Signature** — the operator key and timestamp, computed over the **canonical form of the claim**

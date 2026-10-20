@@ -42,6 +42,7 @@ npm i -g madeby
 
 ```
 madeby init                    Set MadeBy up: write .madeby/policy.json + the CI disclosure check.
+                               --record-model (opt-in) also asks agents to name the model version.
 madeby check  [<range>]        The gate: do commits meet .madeby/policy.json? (a verdict — exit code
                                gates). <range> e.g. origin/main..HEAD — a PR's own commits. --json too.
 madeby coverage [<range>]      The scoreboard: how much of the repo's authorship is disclosed (known)
@@ -49,9 +50,10 @@ madeby coverage [<range>]      The scoreboard: how much of the repo's authorship
 madeby who    [<path>]         Made by whom? What's on the record about who made this — one file's
   (alias: whom)                origin, or the whole repo with no path. --lines=A-B to scope. --json too.
 madeby ai     [tool]           Made by AI: attest AI authorship of HEAD (an Authored-by-ai trailer).
+                               --model <version> names the model too (Authored-by-ai: <tool>:<version>).
                                `--witness [log]` instead records witnessed spans from a session log.
 madeby me     [--with-ai [t]]  Made by me: affirm you authored HEAD (Authored-by-human); --with-ai adds
-                               Assisted-by → with_ai.
+                               Assisted-by → with_ai. --model <version> names the model too.
 madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
 madeby help
 ```
@@ -97,12 +99,20 @@ authorship coverage — last 500 commits  (estimate · disclosure, not detection
   of the 310 known:  human 41% · with_ai 38% · ai 21%
   trust:  asserted 88% · verified 12%  — self-reported; sign commits to verify
 
+  agents & models named in the 183 AI commits:
+    Claude Code        121   66%
+    Claude Opus 5.5     98   54%
+    Cursor              62   34%
+
   → 38% unknown. Require disclosure going forward:  madeby init --required
 ```
 
 It is a **labeled estimate**, honest by construction: an undisclosed commit is **unknown**, never
 inferred as human — disclosure, not detection. The human/with_ai/ai mix is reported *of the known*,
-never of the whole repo, and the asserted-vs-verified split shows how much is signed. `--json` emits
+never of the whole repo, and the asserted-vs-verified split shows how much is signed. The agents and
+model versions are listed exactly as the AI commits name them — a commit naming a tool and its model
+(`Assisted-by: Claude Code` + `Co-Authored-By: Claude Opus 5.5`) counts under both, so those rows can
+sum past 100%. `--json` emits
 counts only (percentages are derived at the edge, never stored). A plain merge authors nothing and
 isn't scored; a merge that changes content of its own (a conflict resolution) is, like any other
 commit — chosen by what it changes, never by whether it discloses. Use it to see your gap, then
@@ -140,6 +150,15 @@ Two modes, nothing more:
 - `required` — fail on any commit that discloses nothing your policy accepts.
 - optional `"accept": ["dco-signoff", "ai-trailer", …]` — restrict what satisfies the policy
   (omit ⇒ any recognized disclosure counts).
+- optional `"recordModel": true` — written by `madeby init --record-model`: the repo asks AI
+  disclosures to name the model version as well as the tool. It adds one line to the AGENTS.md rule,
+  and `me --with-ai` / `ai` then read the model from the **tool's own record of the session** — Cursor's
+  `CURSOR_MODEL`, the Copilot CLI and Claude Code session logs (locally; only the model id is read) —
+  which wins over an agent's `--model`, since an agent routed by "Auto" may not know which model served
+  it. Elsewhere `--model <version>` is used, never guessed. So `coverage` can list each **agent · model** pairing
+  (`Cursor · gpt-5.3-codex` vs `Claude Code · claude-sonnet-5`). A request, not a gate — an AI
+  disclosure without a model still satisfies the policy. Opt-in because naming models is a project's
+  call: the Linux kernel, for one, asks only that an LLM was used, not which.
 
 (There's no "off" — that's just not running the check. Advisory is the floor.)
 

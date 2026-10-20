@@ -60,9 +60,16 @@ const TOOLS: Tool[] = [
         mode: { enum: ["advisory", "required"], description: "policy mode to seed (default: advisory)" },
         host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
         update: { type: "boolean", description: "refresh an outdated ACO convention block in place (drift update); default false (report only)" },
+        record_model: { type: "boolean", description: "opt in: ask AI disclosures to also name the model version (tool:model) — policy recordModel + an AGENTS.md line. Never turned off by init; default false." },
       },
     },
-    handler: (args) => initRepo(rootFor(args.path as string | undefined), { mode: args.mode as InitMode | undefined, host: args.host as string | undefined, update: args.update as boolean | undefined }),
+    handler: (args) =>
+      initRepo(rootFor(args.path as string | undefined), {
+        mode: args.mode as InitMode | undefined,
+        host: args.host as string | undefined,
+        update: args.update as boolean | undefined,
+        recordModel: args.record_model as boolean | undefined,
+      }),
   },
   {
     name: "check",
@@ -78,8 +85,9 @@ const TOOLS: Tool[] = [
     description:
       "Authorship coverage scoreboard for a repo — the honest estimate of how much of the code's " +
       "authorship is ON THE RECORD (known) vs undisclosed (unknown — origin unknown, NEVER guessed), the " +
-      "human/with_ai/ai mix OF THE KNOWN (never of the whole repo), and the asserted-vs-verified trust " +
-      "split. Disclosure, not detection; the report is a labeled estimate (counts only — derive percents " +
+      "human/with_ai/ai mix OF THE KNOWN (never of the whole repo), the asserted-vs-verified trust " +
+      "split, and byAgent: the agents and model versions named in the AI commits, exactly as disclosed " +
+      "(a commit naming a tool and its model counts under both). Disclosure, not detection; the report is a labeled estimate (counts only — derive percents " +
       "at the edge). Use it to show a maintainer their provenance picture and motivate requiring disclosure.",
     inputSchema: repoInput,
     handler: (args) => repoCoverage(rootFor(args.path as string | undefined), { range: args.range as string | undefined }),
@@ -131,14 +139,17 @@ const TOOLS: Tool[] = [
         category: { enum: ["human", "with_ai", "ai"], description: "the honest authorship category (see the description). Defaults from with_ai if omitted." },
         with_ai: { type: "boolean", description: "legacy shorthand: true ⇒ category with_ai, false ⇒ human. Prefer `category`." },
         tool: { type: "string", description: "the AI tool to name (Assisted-by for with_ai, Authored-by-ai for ai). Default: AI." },
+        model: { type: "string", description: "the model version you are running as, e.g. claude-sonnet-5 — written as tool:model. Give it when the repo's AGENTS.md asks; omit it rather than guess." },
       },
     },
     handler: (args) => {
       const root = rootFor(args.path as string | undefined);
       const tool = args.tool as string | undefined;
+      const model = args.model as string | undefined;
       const category = args.category as string | undefined;
-      if (category === "ai") return attestAiAuthorship(root, { tool });
-      return affirmAuthorship(root, { withAi: category === "with_ai" || args.with_ai === true, tool });
+      if (category === "ai") return attestAiAuthorship(root, { tool, model });
+      const withAi = category === "with_ai" || args.with_ai === true;
+      return affirmAuthorship(root, { withAi, tool, model: withAi ? model : undefined });
     },
   },
   {

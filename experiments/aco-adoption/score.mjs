@@ -35,6 +35,12 @@ const namesAi = (re, msg) => {
   return false;
 };
 
+// The `tool:model` form (`Assisted-by: Cursor:gpt-5.3-codex`) — did the disclosure name the model version?
+const ACO_VALUE = /^[ \t]*(?:Assisted-by|Authored-by-ai)[ \t]*:[ \t]*(.+?)[ \t]*$/gim;
+const TOOL_MODEL = /^([^:\s<>][^:<>]*?)[ \t]*:[ \t]*([^\s:<>/][^:<>]*?)$/;
+const acoValues = []; // what the deliberate disclosure says, verbatim
+const ambientValues = []; // what the agent's default trailer says (often names the model — a cross-check)
+
 const aco = new Set(); // ACO-specific (deliberate) mechanisms — the convention's marginal effect
 const ambient = new Set(); // the agent's default AI trailer
 let category = "unknown";
@@ -47,6 +53,9 @@ for (const sha of commits) {
   const coAuthorAi = namesAi(CO_AUTHORED, msg);
   const dco = DCO.test(msg);
 
+  for (const m of msg.matchAll(ACO_VALUE)) acoValues.push(m[1]);
+  CO_AUTHORED.lastIndex = 0;
+  for (const m of msg.matchAll(CO_AUTHORED)) if (AI_MARKER.test(m[1])) ambientValues.push(m[1]);
   if (human) aco.add("Authored-by-human");
   if (assist) aco.add("Assisted-by");
   if (aiAuthor) aco.add("Authored-by-ai");
@@ -76,6 +85,9 @@ const result = {
   category,
   acoMechanisms: [...aco],
   ambientMechanisms: [...ambient],
+  modelNamed: acoValues.some((v) => TOOL_MODEL.test(v.replace(/<[^>]*>/g, "").trim())),
+  acoValues,
+  ambientValues,
 };
 if (jsonOnly) {
   console.log(JSON.stringify(result));

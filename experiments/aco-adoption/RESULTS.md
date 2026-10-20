@@ -70,3 +70,51 @@ recognized signal on the record.
 
 See [README.md](./README.md). Add an agent, vary the task, or run more trials, and open a PR updating this
 table. The harness is designed so a third party can verify the result independently.
+
+## Follow-up (2026-10-19): naming the model version — `init --record-model`
+
+The `with-model` condition uses the convention exactly as `madeby init --record-model` writes it: the
+standard ACO block plus one line asking AI disclosures to add `--model <version>` — *"If you don't
+know your model version, leave it off — never guess."* Same task, same no-mention protocol. Pre-release
+run: the fixture's AGENTS.md points at a local build of the CLI (the published one predates `--model`).
+
+| Agent | Model (truth) | ACO-disclosed | Model named | What it wrote |
+|-------|---------------|---------------|-------------|---------------|
+| Claude Code (v2.1.304) | `--model sonnet` → Claude Sonnet 5.5 | **3 / 3** | **3 / 3**, all correct | `Authored-by-ai: Claude Code:claude-sonnet-5-5` |
+| Cursor (`cursor-agent`) | Auto (Cursor picks; not reported) | **4 / 4** | **1 / 4** | `Authored-by-ai: Cursor` ×3; `Cursor:composer-2` ×1 |
+
+- **The disclosure itself held: 7 / 7**, every one the honest `ai` category.
+- **Claude Code knows its model and named it every time**, matching its own ambient
+  `Co-Authored-By: Claude Sonnet 5.5` trailer.
+- **Cursor on Auto mostly left the model off — the instruction working as written.** An agent routed
+  by "Auto" often doesn't know which model served it; omitting beats guessing. The one value it gave,
+  `composer-2`, can't be checked under Auto (Cursor's list shows `composer-2.5`), so treat Auto-era
+  model names as low-confidence. Named-model Cursor runs weren't possible on the account used (free
+  plan: Auto only) — a gap to close.
+- **Implication:** model-level provenance is reliable where the agent is pinned to a model, and
+  honestly absent where a router chooses. `coverage` reports exactly what was written, so the gap shows
+  up as rows without a model rather than as wrong ones.
+
+Reproduce: `MADEBY_BIN=<path to madeby.mjs> AGENT=claude AGENT_MODEL=sonnet node run-batch.mjs 3 with-model`
+(omit `MADEBY_BIN` once the published CLI has `--model`).
+
+### Round 2 — the model from the tool's own record (`madeby` reads it; the agent needn't know)
+
+`me --with-ai` / `ai` now read the model from the running tool's record when the repo records models:
+Cursor's `CURSOR_MODEL` (set in its agent shell, even under Auto), the Copilot CLI's session log, Claude
+Code's transcript. The AGENTS.md line now says so. The harness also gained the **Copilot CLI**
+(`AGENT=copilot`) and stops leaking the launching shell's agent variables into each trial.
+
+| Agent | Model (truth) | ACO-disclosed | Model named | What it wrote |
+|-------|---------------|---------------|-------------|---------------|
+| Copilot CLI 1.0.100 | default → Claude Sonnet 5.5 (session log) | **4 / 4** | **4 / 4**, all correct | `Authored-by-ai: Copilot CLI:claude-sonnet-5.5` |
+| Claude Code 2.1.304 | `--model sonnet` → Claude Sonnet 5.5 | **2 / 2** | **2 / 2**, correct | `Authored-by-ai: Claude Code:claude-sonnet-5-5` |
+| Cursor (Auto) | not reported | **3 / 4** (1 run error) | **0 / 4** | `Authored-by-ai: Cursor` |
+
+- **Copilot CLI**, untested until now, followed the convention every time. (A first batch was blocked by
+  its own permission prompt: the pre-release CLI lived outside the trial repo. The harness now passes
+  `--allow-all-paths` for pre-release runs; the published `npx madeby` doesn't need it.)
+- **Cursor: unresolved.** The agent ran `madeby ai Cursor`, and the CLI fills the model from
+  `CURSOR_MODEL` when it's set (verified by simulating Cursor's shell), yet no trial recorded one — so in
+  those runs the variable likely wasn't in the shell that ran madeby. Diagnosing it hit the account's
+  free-plan usage limit. Next: re-run on a Cursor plan with quota, logging the shell's `CURSOR_*` vars.
