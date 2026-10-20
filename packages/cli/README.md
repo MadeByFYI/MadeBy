@@ -97,12 +97,20 @@ authorship coverage — last 500 commits  (estimate · disclosure, not detection
   of the 310 known:  human 41% · with_ai 38% · ai 21%
   trust:  asserted 88% · verified 12%  — self-reported; sign commits to verify
 
+  agents & models named in the 183 AI commits:
+    Claude Code        121   66%
+    Claude Opus 5.5     98   54%
+    Cursor              62   34%
+
   → 38% unknown. Require disclosure going forward:  madeby init --required
 ```
 
 It is a **labeled estimate**, honest by construction: an undisclosed commit is **unknown**, never
 inferred as human — disclosure, not detection. The human/with_ai/ai mix is reported *of the known*,
-never of the whole repo, and the asserted-vs-verified split shows how much is signed. `--json` emits
+never of the whole repo, and the asserted-vs-verified split shows how much is signed. The agents and
+model versions are listed exactly as the AI commits name them — a commit naming a tool and its model
+(`Assisted-by: Claude Code` + `Co-Authored-By: Claude Opus 5.5`) counts under both, so those rows can
+sum past 100%. `--json` emits
 counts only (percentages are derived at the edge, never stored). A plain merge authors nothing and
 isn't scored; a merge that changes content of its own (a conflict resolution) is, like any other
 commit — chosen by what it changes, never by whether it discloses. Use it to see your gap, then

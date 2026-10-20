@@ -78,8 +78,9 @@ const TOOLS: Tool[] = [
     description:
       "Authorship coverage scoreboard for a repo — the honest estimate of how much of the code's " +
       "authorship is ON THE RECORD (known) vs undisclosed (unknown — origin unknown, NEVER guessed), the " +
-      "human/with_ai/ai mix OF THE KNOWN (never of the whole repo), and the asserted-vs-verified trust " +
-      "split. Disclosure, not detection; the report is a labeled estimate (counts only — derive percents " +
+      "human/with_ai/ai mix OF THE KNOWN (never of the whole repo), the asserted-vs-verified trust " +
+      "split, and byAgent: the agents and model versions named in the AI commits, exactly as disclosed " +
+      "(a commit naming a tool and its model counts under both). Disclosure, not detection; the report is a labeled estimate (counts only — derive percents " +
       "at the edge). Use it to show a maintainer their provenance picture and motivate requiring disclosure.",
     inputSchema: repoInput,
     handler: (args) => repoCoverage(rootFor(args.path as string | undefined), { range: args.range as string | undefined }),

@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
-import { repoCoverage } from "./coverage";
+import { agentName, repoCoverage } from "./coverage";
 
 const dirs: string[] = [];
 const git = (dir: string, ...a: string[]): string =>
@@ -131,6 +131,33 @@ describe("repoCoverage — the honest authorship scoreboard", () => {
     later("q.ts");
     expect(repoCoverage(d, { limit: 2 }).total).toBe(2); // window = p, q; the older merge is outside it
     expect(repoCoverage(d).total).toBe(6); // a, x, m, p, q + the merge (window not full ⇒ all history)
+  });
+
+  it("names the agents and model versions disclosed in AI commits — as written, never inferred", () => {
+    const d = repo();
+    commit(d, "a.ts", "feat: a\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>");
+    commit(d, "b.ts", "feat: b\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>");
+    // a tool and its model on one commit count under each — once, even if repeated
+    commit(d, "c.ts", "feat: c\n\nAuthored-by-human: Dev <dev@example.com>\nAssisted-by: Claude Code\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>");
+    commit(d, "d.ts", "feat: d\n\nAuthored-by-human: Dev <dev@example.com>\nAssisted-by: Cursor");
+    commit(d, "e.ts", "feat: e\n\nAuthored-by-human: Dev <dev@example.com>"); // human — no agent row
+    commit(d, "f.ts", "feat: f"); // unknown — no agent row
+
+    const r = repoCoverage(d);
+    expect(r.byCategory.with_ai).toBe(4);
+    expect(r.byAgent).toEqual([
+      { name: "Claude Opus 5", provider: "anthropic", commits: 2 }, // "(1M context)" groups with plain
+      { name: "Claude Code", provider: "anthropic", commits: 1 },
+      { name: "Claude Sonnet 5", provider: "anthropic", commits: 1 },
+      { name: "Cursor", provider: "cursor", commits: 1 },
+    ]);
+  });
+
+  it("agentName drops the email and trailing parentheticals, keeps the version", () => {
+    expect(agentName("Claude Opus 4.8 (1M context) <noreply@anthropic.com>")).toBe("Claude Opus 4.8");
+    expect(agentName("Claude Haiku 4.5 <noreply@anthropic.com>")).toBe("Claude Haiku 4.5");
+    expect(agentName("copilot-swe-agent[bot] 198982749+Copilot@users.noreply.github.com")).toBe("copilot-swe-agent[bot]");
+    expect(agentName("AI")).toBe("AI");
   });
 
   it("never throws outside a git repo (degrades to an empty report)", () => {

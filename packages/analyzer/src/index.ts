@@ -12,8 +12,8 @@ export type { DisclosedCommit, RepoDisclosure } from "./read-disclosures";
 // the universal contract; we never parse code). Composes witnessed spans + last-touch blame.
 export { provenanceOf, provenanceMap } from "./path-provenance";
 export type { PathProvenance, ProvenanceRecord, ProvenanceMap, WitnessedFile } from "./path-provenance";
-export { repoCoverage } from "./coverage";
-export type { CoverageReport, CoverageCategory } from "./coverage";
+export { agentName, repoCoverage } from "./coverage";
+export type { AgentCount, CoverageReport, CoverageCategory } from "./coverage";
 export { recordAiSpans } from "./record-spans";
 export type { RecordOptions, RecordResult } from "./record-spans";
 export { badgeSnippet } from "./badge";
