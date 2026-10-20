@@ -151,8 +151,11 @@ Two modes, nothing more:
 - optional `"accept": ["dco-signoff", "ai-trailer", …]` — restrict what satisfies the policy
   (omit ⇒ any recognized disclosure counts).
 - optional `"recordModel": true` — written by `madeby init --record-model`: the repo asks AI
-  disclosures to name the model version as well as the tool. It adds one line to the AGENTS.md rule
-  (`--model <version>`, never guessed), so `coverage` can list each **agent · model** pairing
+  disclosures to name the model version as well as the tool. It adds one line to the AGENTS.md rule,
+  and `me --with-ai` / `ai` then read the model from the **tool's own record of the session** — Cursor's
+  `CURSOR_MODEL`, the Copilot CLI and Claude Code session logs (locally; only the model id is read) —
+  which wins over an agent's `--model`, since an agent routed by "Auto" may not know which model served
+  it. Elsewhere `--model <version>` is used, never guessed. So `coverage` can list each **agent · model** pairing
   (`Cursor · gpt-5.3-codex` vs `Claude Code · claude-sonnet-5`). A request, not a gate — an AI
   disclosure without a model still satisfies the policy. Opt-in because naming models is a project's
   call: the Linux kernel, for one, asks only that an LLM was used, not which.

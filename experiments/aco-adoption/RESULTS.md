@@ -97,3 +97,24 @@ run: the fixture's AGENTS.md points at a local build of the CLI (the published o
 
 Reproduce: `MADEBY_BIN=<path to madeby.mjs> AGENT=claude AGENT_MODEL=sonnet node run-batch.mjs 3 with-model`
 (omit `MADEBY_BIN` once the published CLI has `--model`).
+
+### Round 2 — the model from the tool's own record (`madeby` reads it; the agent needn't know)
+
+`me --with-ai` / `ai` now read the model from the running tool's record when the repo records models:
+Cursor's `CURSOR_MODEL` (set in its agent shell, even under Auto), the Copilot CLI's session log, Claude
+Code's transcript. The AGENTS.md line now says so. The harness also gained the **Copilot CLI**
+(`AGENT=copilot`) and stops leaking the launching shell's agent variables into each trial.
+
+| Agent | Model (truth) | ACO-disclosed | Model named | What it wrote |
+|-------|---------------|---------------|-------------|---------------|
+| Copilot CLI 1.0.100 | default → Claude Sonnet 5.5 (session log) | **4 / 4** | **4 / 4**, all correct | `Authored-by-ai: Copilot CLI:claude-sonnet-5.5` |
+| Claude Code 2.1.304 | `--model sonnet` → Claude Sonnet 5.5 | **2 / 2** | **2 / 2**, correct | `Authored-by-ai: Claude Code:claude-sonnet-5-5` |
+| Cursor (Auto) | not reported | **3 / 4** (1 run error) | **0 / 4** | `Authored-by-ai: Cursor` |
+
+- **Copilot CLI**, untested until now, followed the convention every time. (A first batch was blocked by
+  its own permission prompt: the pre-release CLI lived outside the trial repo. The harness now passes
+  `--allow-all-paths` for pre-release runs; the published `npx madeby` doesn't need it.)
+- **Cursor: unresolved.** The agent ran `madeby ai Cursor`, and the CLI fills the model from
+  `CURSOR_MODEL` when it's set (verified by simulating Cursor's shell), yet no trial recorded one — so in
+  those runs the variable likely wasn't in the shell that ran madeby. Diagnosing it hit the account's
+  free-plan usage limit. Next: re-run on a Cursor plan with quota, logging the shell's `CURSOR_*` vars.

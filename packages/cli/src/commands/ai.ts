@@ -97,6 +97,7 @@ export function aiCommand(args: string[]): void {
   }
   console.log(
     `madeby ai: attested AI authorship on HEAD — "${r.subject}" (Authored-by-ai: ${r.tool}).\n` +
+      (r.modelSource && r.modelSource !== "as given (--model)" ? `  model from ${r.modelSource}.\n` : "") +
       "  → asserted tier. For evidence-backed spans from your session log: madeby ai --witness [log].",
   );
 }

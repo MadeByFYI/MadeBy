@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
@@ -113,5 +113,50 @@ describe("--model — the agent AND the model version it ran (tool:model)", () =
     expect(parseModel(["--with-ai", "Cursor", "--model", "claude-sonnet-5"])).toBe("claude-sonnet-5");
     expect(parseModel(["--model=gpt-5"])).toBe("gpt-5");
     expect(parseModel(["--with-ai", "Cursor"])).toBeUndefined();
+  });
+});
+
+describe("the model in a repo that records it — the tool's record wins over the agent's own --model", () => {
+  const cursorEnv = { CURSOR_AGENT: "1", CURSOR_MODEL: "composer-2-fast" };
+  const recording = (): string => {
+    const d = tmpRepo();
+    mkdirSync(join(d, ".madeby"), { recursive: true });
+    writeFileSync(join(d, ".madeby", "policy.json"), JSON.stringify({ version: 0, mode: "advisory", recordModel: true }));
+    return d;
+  };
+
+  it("fills the model from Cursor's environment when the agent names only the tool", () => {
+    const d = recording();
+    const r = affirmAuthorship(d, { withAi: true, tool: "Cursor", env: cursorEnv });
+    expect(r).toMatchObject({ model: "composer-2-fast", modelSource: "Cursor's CURSOR_MODEL" });
+    expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/^Assisted-by: Cursor:composer-2-fast$/m);
+  });
+
+  it("overrides an agent's guessed --model with the tool's record", () => {
+    const d = recording();
+    attestAiAuthorship(d, { tool: "Cursor", model: "composer-2", env: cursorEnv });
+    expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/^Authored-by-ai: Cursor:composer-2-fast$/m);
+  });
+
+  it("reads nothing in a repo that doesn't record the model — the project's choice", () => {
+    const d = tmpRepo();
+    const r = affirmAuthorship(d, { withAi: true, tool: "Cursor", env: cursorEnv });
+    expect(r.model).toBeUndefined();
+    expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/^Assisted-by: Cursor$/m);
+  });
+
+  it("falls back to the agent's --model where the tool keeps no record", () => {
+    const d = recording();
+    const r = attestAiAuthorship(d, { tool: "Aider", model: "gpt-5.2", env: {} });
+    expect(r).toMatchObject({ model: "gpt-5.2", modelSource: "as given (--model)" });
+  });
+});
+
+describe("an empty commit can be disclosed too", () => {
+  it("amends an --allow-empty commit's message without failing", () => {
+    const d = tmpRepo();
+    git(d, "commit", "--allow-empty", "--no-verify", "-q", "-m", "chore: empty");
+    expect(attestAiAuthorship(d, { tool: "Cursor" }).ok).toBe(true);
+    expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/^Authored-by-ai: Cursor$/m);
   });
 });

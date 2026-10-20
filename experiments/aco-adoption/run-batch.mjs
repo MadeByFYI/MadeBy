@@ -56,7 +56,11 @@ const MODEL = process.env.AGENT_MODEL ? ["--model", process.env.AGENT_MODEL] : [
 const AGENTS = {
   claude: { bin: "claude", args: (task) => ["-p", task, "--permission-mode", "bypassPermissions", ...MODEL], label: "Claude Code" },
   cursor: { bin: "cursor-agent", args: (task) => ["-p", task, "--force", ...MODEL], label: "Cursor" },
+  copilot: { bin: "npx", args: (task) => ["-y", "@github/copilot@1.0.100", "-p", task, "--allow-all-tools", ...(process.env.MADEBY_BIN ? ["--allow-all-paths"] : []), ...MODEL], label: "GitHub Copilot CLI" },
 };
+// Each agent sets its own session variables; never let the launching shell's leak in (running this
+// harness from inside Claude Code would otherwise hand every agent CLAUDECODE / AI_AGENT).
+const AGENT_ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(CLAUDE|AI_AGENT|CURSOR_|COPILOT_)/.test(k)));
 // `with-model`: the convention exactly as `madeby init --record-model` writes it (AGENTS.md + policy).
 // MADEBY_BIN points it at a local build (a pre-release run); default is the published CLI.
 const MADEBY = process.env.MADEBY_BIN ? ["node", process.env.MADEBY_BIN] : ["npx", "-y", "madeby@latest"];
@@ -98,6 +102,7 @@ for (const cond of CONDITIONS) {
     try {
       execFileSync(AG.bin, AG.args(TASK), {
         cwd: dir,
+        env: AGENT_ENV,
         timeout: 360000,
         stdio: ["ignore", "ignore", "ignore"],
       });

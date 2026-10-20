@@ -34,9 +34,10 @@ Disclose per commit, honestly. Undisclosed content stays *unknown*, never guesse
 // The opt-in model line (`init --record-model`): this repo also records which model version did the
 // work. Opt-in, not default — naming models is a project's choice (the Linux kernel chose not to).
 const MODEL_LINE = `
-**This repo also records the model.** For \`ai\` and \`with_ai\`, add \`--model <version>\` with the
-exact model you are running as, e.g. \`npx madeby@latest me --with-ai Cursor --model claude-sonnet-5\`
-(writes \`Assisted-by: Cursor:claude-sonnet-5\`). If you don't know your model version, leave it off —
+**This repo also records the model.** Name your tool as usual — madeby reads the model from the
+tool's own record of the session where it can (Cursor, Copilot CLI, Claude Code), e.g.
+\`npx madeby@latest me --with-ai Cursor\` writes \`Assisted-by: Cursor:<model>\`. Elsewhere add
+\`--model <version>\` with the exact model you are running as. If you don't know it, leave it off —
 never guess.
 `;
 
