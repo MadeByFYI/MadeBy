@@ -26,7 +26,8 @@ function help(): void {
 Usage:
   madeby init                    Set MadeBy up: write .madeby/policy.json + the ACO AGENTS.md convention
                                  + the CI disclosure check. --update refreshes an outdated ACO block in
-                                 place; --required to enforce now; --host azure-devops for Azure Pipelines.
+                                 place; --required to enforce now; --host azure-devops for Azure Pipelines;
+                                 --record-model to also ask agents for the model version (opt-in).
   madeby check [<range>]         The gate: do commits meet .madeby/policy.json? (a verdict — exit
                                  code gates). <range> e.g. origin/main..HEAD; in CI it's auto-detected.
                                  --json for a machine-readable result.
@@ -41,6 +42,7 @@ Usage:
                                  trailer — the symmetric human claim to \`ai\`).
   madeby me --with-ai [tool]     Made by me, with AI: also disclose AI assistance (Assisted-by:
                                  <tool>, default "AI") — the assisted middle state, classified with_ai.
+                                 --model <version> names the model too (Assisted-by: <tool>:<version>).
   madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
   madeby help                    Show this help.
 

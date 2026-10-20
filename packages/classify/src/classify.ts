@@ -24,6 +24,10 @@ export interface AiContributor {
   model?: string;
   /** the raw matched text (trailer or author) */
   raw: string;
+  /** from the `tool:model` form (e.g. `Assisted-by: Cursor:claude-sonnet-5`): the agent or tool named */
+  tool?: string;
+  /** from the `tool:model` form: the model version, exactly as disclosed — never matched to a list */
+  modelVersion?: string;
 }
 
 export interface CommitClassification {
@@ -63,6 +67,28 @@ function matchAi(text: string): AiContributor | null {
     if (p.re.test(text)) return { provider: p.provider, ...(p.model ? { model: p.model } : {}), raw: text.trim() };
   }
   return null;
+}
+
+// The `tool:model` form — `Assisted-by: Cursor:claude-sonnet-5` — which names the agent AND the model
+// version it ran, as two fields (the Linux kernel's 2026 format; `madeby me/ai --model` writes it).
+// The email, if any, is dropped first; a URL-like value (`https://…`) is not this form.
+const TOOL_MODEL = /^([^:\s<>][^:<>]*?)[ \t]*:[ \t]*([^\s:<>/][^:<>]*?)$/;
+export function splitToolModel(value: string): { tool: string; model: string } | null {
+  const v = value.replace(/<[^>]*>/g, "").trim();
+  const m = TOOL_MODEL.exec(v);
+  return m ? { tool: m[1]!.trim(), model: m[2]!.trim() } : null;
+}
+
+// Gate a trailer value as an AI disclosure. A `tool:model` value is AI when either half names an AI
+// (the tool's provider wins: Cursor running Claude is a Cursor disclosure), or when the tool is the
+// generic "AI". Otherwise the whole value is matched as before.
+function matchAiTrailer(who: string): AiContributor | null {
+  const tm = splitToolModel(who);
+  if (tm) {
+    const p = matchAi(tm.tool) ?? matchAi(tm.model) ?? genericAiDisclosure(tm.tool);
+    if (p) return { ...p, raw: who.trim(), tool: tm.tool, modelVersion: tm.model };
+  }
+  return matchAi(who) ?? genericAiDisclosure(who);
 }
 
 // An explicit but UNNAMED AI-assistance disclosure in a trailer — e.g. `Assisted-by: AI`, which
@@ -143,14 +169,14 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
   const aiAuthored = [...commit.message.matchAll(AI_AUTHOR_TRAILER)].map((m) => m[1]!.trim());
   if (aiAuthored.length > 0 && !HUMAN_ATTEST.test(commit.message)) {
     const who = aiAuthored[0]!;
-    const c = matchAi(who) ?? { provider: "unspecified", raw: who };
+    const c = matchAiTrailer(who) ?? { provider: "unspecified", raw: who };
     return { class: "ai", confidence: CONF_AI, signals: [`authored-by-ai:${c.provider}`], aiContributors: [c] };
   }
 
   const trailers = [...commit.message.matchAll(TRAILER_RE)].map((m) => m[1]!.trim());
   let humanCoAuthors = 0;
   for (const who of trailers) {
-    const ai = matchAi(who) ?? genericAiDisclosure(who);
+    const ai = matchAiTrailer(who);
     if (ai) {
       aiContributors.push(ai);
       signals.push(`co-authored-by:${ai.provider}`);
@@ -162,7 +188,7 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
   // Fold in any `Authored-by-ai:` trailers — reached only when a human affirmation is also present
   // (collaboration ⇒ with_ai); the ai-only case returned above.
   for (const who of aiAuthored) {
-    const ai = matchAi(who) ?? { provider: "unspecified", raw: who };
+    const ai = matchAiTrailer(who) ?? { provider: "unspecified", raw: who };
     aiContributors.push(ai);
     signals.push(`authored-by-ai:${ai.provider}`);
   }

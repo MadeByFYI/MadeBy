@@ -35,8 +35,16 @@ export interface CoverageReport {
 }
 
 export interface AgentCount {
-  /** the disclosed name, normalized: e.g. "Claude Opus 5", "Claude Code", "Cursor" */
+  /**
+   * the disclosed name, normalized: e.g. "Claude Opus 5", "Claude Code", "Cursor" — or, for a
+   * `tool:model` disclosure, the pairing "Cursor · claude-sonnet-5" (so the same model under two
+   * agents stays two rows)
+   */
   readonly name: string;
+  /** set for a `tool:model` disclosure: the agent or tool */
+  readonly tool?: string;
+  /** set for a `tool:model` disclosure: the model version, exactly as disclosed */
+  readonly model?: string;
   /** the vendor family it belongs to (open field), e.g. "anthropic", "cursor", "unspecified" */
   readonly provider: string;
   /** AI-involved commits naming it */
@@ -77,7 +85,7 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
   const byCategory: Record<CoverageCategory, number> = { human: 0, with_ai: 0, ai: 0, bot: 0 };
   const byTier = { asserted: 0, verified: 0 };
   let known = 0;
-  const agents = new Map<string, { name: string; provider: string; commits: number }>();
+  const agents = new Map<string, { name: string; provider: string; tool?: string; model?: string; commits: number }>();
 
   for (const c of commits) {
     const kinds = commitDisclosureKinds({ message: c.message, signed: c.signed });
@@ -96,11 +104,12 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
     if (category === "with_ai" || category === "ai") {
       const named = new Set<string>();
       for (const a of aiContributors) {
-        const name = agentName(a.raw);
+        const paired = a.tool && a.modelVersion ? { tool: a.tool, model: a.modelVersion } : undefined;
+        const name = paired ? `${paired.tool} · ${paired.model}` : agentName(a.raw);
         const key = name.toLowerCase();
         if (named.has(key)) continue; // one count per commit per name
         named.add(key);
-        const e = agents.get(key) ?? { name, provider: a.provider, commits: 0 };
+        const e = agents.get(key) ?? { name, provider: a.provider, ...paired, commits: 0 };
         e.commits += 1;
         agents.set(key, e);
       }

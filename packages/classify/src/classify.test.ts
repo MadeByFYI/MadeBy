@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyCommit, summarize, isBotIdentity } from "./index";
+import { classifyCommit, summarize, isBotIdentity, splitToolModel } from "./index";
 import type { CommitMeta } from "./index";
 
 describe("Authored-by-ai — the honest `ai` disclosure (AI authored, human committer accountable)", () => {
@@ -163,5 +163,32 @@ describe("summarize", () => {
 
   it("empty input yields zero mean confidence, not NaN", () => {
     expect(summarize([]).meanConfidence).toBe(0);
+  });
+});
+
+describe("tool:model disclosures — the agent AND the model version it ran", () => {
+  it("splits Assisted-by: Cursor:claude-sonnet-5 into tool + model, provider from the tool", () => {
+    const r = classifyCommit({ message: "x\n\nAuthored-by-human: Dev <d@x.io>\nAssisted-by: Cursor:claude-sonnet-5" });
+    expect(r.class).toBe("with_ai");
+    expect(r.aiContributors[0]).toMatchObject({ provider: "cursor", tool: "Cursor", modelVersion: "claude-sonnet-5" });
+  });
+  it("reads the kernel's AGENT_NAME:MODEL_VERSION example and Authored-by-ai", () => {
+    expect(classifyCommit({ message: "x\n\nAssisted-by: Claude:claude-3-opus" }).aiContributors[0]).toMatchObject({ provider: "anthropic", tool: "Claude", modelVersion: "claude-3-opus" });
+    const r = classifyCommit({ message: "x\n\nAuthored-by-ai: Claude Code:Claude Opus 5.5" });
+    expect(r.class).toBe("ai");
+    expect(r.aiContributors[0]).toMatchObject({ tool: "Claude Code", modelVersion: "Claude Opus 5.5" });
+  });
+  it("a generic AI tool with a named model is still an AI disclosure", () => {
+    expect(classifyCommit({ message: "x\n\nAssisted-by: AI:gemini-3-pro" }).aiContributors[0]).toMatchObject({ provider: "google", tool: "AI", modelVersion: "gemini-3-pro" });
+  });
+  it("never turns a human co-author or a URL into an AI disclosure", () => {
+    expect(classifyCommit({ message: "x\n\nCo-authored-by: Jane Doe <jane@x.io>" }).class).toBe("human");
+    expect(classifyCommit({ message: "x\n\nCo-authored-by: Team:Platform <p@x.io>" }).class).toBe("human");
+    expect(splitToolModel("https://example.com")).toBeNull();
+  });
+  it("plain values are unchanged — no tool/model fields invented", () => {
+    const c = classifyCommit({ message: "x\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>" }).aiContributors[0]!;
+    expect(c.tool).toBeUndefined();
+    expect(c.modelVersion).toBeUndefined();
   });
 });

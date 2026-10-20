@@ -60,9 +60,16 @@ const TOOLS: Tool[] = [
         mode: { enum: ["advisory", "required"], description: "policy mode to seed (default: advisory)" },
         host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
         update: { type: "boolean", description: "refresh an outdated ACO convention block in place (drift update); default false (report only)" },
+        record_model: { type: "boolean", description: "opt in: ask AI disclosures to also name the model version (tool:model) — policy recordModel + an AGENTS.md line. Never turned off by init; default false." },
       },
     },
-    handler: (args) => initRepo(rootFor(args.path as string | undefined), { mode: args.mode as InitMode | undefined, host: args.host as string | undefined, update: args.update as boolean | undefined }),
+    handler: (args) =>
+      initRepo(rootFor(args.path as string | undefined), {
+        mode: args.mode as InitMode | undefined,
+        host: args.host as string | undefined,
+        update: args.update as boolean | undefined,
+        recordModel: args.record_model as boolean | undefined,
+      }),
   },
   {
     name: "check",
@@ -132,14 +139,17 @@ const TOOLS: Tool[] = [
         category: { enum: ["human", "with_ai", "ai"], description: "the honest authorship category (see the description). Defaults from with_ai if omitted." },
         with_ai: { type: "boolean", description: "legacy shorthand: true ⇒ category with_ai, false ⇒ human. Prefer `category`." },
         tool: { type: "string", description: "the AI tool to name (Assisted-by for with_ai, Authored-by-ai for ai). Default: AI." },
+        model: { type: "string", description: "the model version you are running as, e.g. claude-sonnet-5 — written as tool:model. Give it when the repo's AGENTS.md asks; omit it rather than guess." },
       },
     },
     handler: (args) => {
       const root = rootFor(args.path as string | undefined);
       const tool = args.tool as string | undefined;
+      const model = args.model as string | undefined;
       const category = args.category as string | undefined;
-      if (category === "ai") return attestAiAuthorship(root, { tool });
-      return affirmAuthorship(root, { withAi: category === "with_ai" || args.with_ai === true, tool });
+      if (category === "ai") return attestAiAuthorship(root, { tool, model });
+      const withAi = category === "with_ai" || args.with_ai === true;
+      return affirmAuthorship(root, { withAi, tool, model: withAi ? model : undefined });
     },
   },
   {

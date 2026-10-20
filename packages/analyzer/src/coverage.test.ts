@@ -153,6 +153,17 @@ describe("repoCoverage — the honest authorship scoreboard", () => {
     ]);
   });
 
+  it("a tool:model disclosure is one row per pairing — the same model under two agents stays two", () => {
+    const d = repo();
+    commit(d, "a.ts", "feat: a\n\nAuthored-by-human: Dev <dev@example.com>\nAssisted-by: Cursor:claude-sonnet-5");
+    commit(d, "b.ts", "feat: b\n\nAuthored-by-human: Dev <dev@example.com>\nAssisted-by: Cursor:claude-sonnet-5");
+    commit(d, "c.ts", "feat: c\n\nAuthored-by-ai: Claude Code:claude-sonnet-5");
+    expect(repoCoverage(d).byAgent).toEqual([
+      { name: "Cursor · claude-sonnet-5", provider: "cursor", tool: "Cursor", model: "claude-sonnet-5", commits: 2 },
+      { name: "Claude Code · claude-sonnet-5", provider: "anthropic", tool: "Claude Code", model: "claude-sonnet-5", commits: 1 },
+    ]);
+  });
+
   it("agentName drops the email and trailing parentheticals, keeps the version", () => {
     expect(agentName("Claude Opus 4.8 (1M context) <noreply@anthropic.com>")).toBe("Claude Opus 4.8");
     expect(agentName("Claude Haiku 4.5 <noreply@anthropic.com>")).toBe("Claude Haiku 4.5");

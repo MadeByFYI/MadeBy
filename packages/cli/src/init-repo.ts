@@ -31,12 +31,18 @@ After you commit, run the command for the honest category (no install, no setup)
 Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed.
 `;
 
+// The opt-in model line (`init --record-model`): this repo also records which model version did the
+// work. Opt-in, not default — naming models is a project's choice (the Linux kernel chose not to).
+const MODEL_LINE = `
+**This repo also records the model.** For \`ai\` and \`with_ai\`, add \`--model <version>\` with the
+exact model you are running as, e.g. \`npx madeby@latest me --with-ai Cursor --model claude-sonnet-5\`
+(writes \`Assisted-by: Cursor:claude-sonnet-5\`). If you don't know your model version, leave it off —
+never guess.
+`;
+
 /** The delimited, versioned ACO block — the unit init inserts and `--update` replaces. */
-const ACO_BLOCK = `${ACO_OPEN}\n${ACO_BODY}${ACO_CLOSE}\n`;
-// A fresh AGENTS.md: minimal header + the ACO block (so the whole convention is the updatable block).
-const AGENTS_CONVENTION = `# AGENTS.md\n\n${ACO_BLOCK}`;
-// Appended into an existing agent file (leading blank line separates it from prior content).
-const ACO_SECTION = `\n${ACO_BLOCK}`;
+const acoBlock = (recordModel: boolean): string =>
+  `${ACO_OPEN}\n${ACO_BODY}${recordModel ? MODEL_LINE : ""}${ACO_CLOSE}\n`;
 
 export interface InitOptions {
   /** policy mode to seed (default "advisory" — reports, never fails) */
@@ -45,6 +51,8 @@ export interface InitOptions {
   host?: string;
   /** refresh an outdated ACO convention block in place (drift update) rather than just report it */
   update?: boolean;
+  /** ask AI disclosures to name the model version too (policy `recordModel` + the AGENTS.md line) */
+  recordModel?: boolean;
 }
 
 export interface InitResult {
@@ -60,8 +68,12 @@ export interface InitResult {
   outdated: string[];
   /** an existing policy whose mode was raised to "required" (only ever on an explicit required request) */
   raised: string[];
+  /** a policy that started recording the model this call (only ever on an explicit request) */
+  modelOn: string[];
   /** the mode the repo's policy file actually carries after init (not merely the mode requested) */
   policyMode: string;
+  /** does the repo's policy now ask AI disclosures to name the model version? */
+  recordModel: boolean;
   host: string;
   nextSteps: string[];
 }
@@ -97,9 +109,9 @@ export function acoStatus(content: string): AcoStatus {
   return "current";
 }
 
-/** Replace the located ACO block with the current one, preserving everything else. */
-function replaceAcoBlock(content: string, loc: AcoBlockLoc): string {
-  return content.slice(0, loc.start) + ACO_BLOCK + content.slice(loc.end);
+/** Replace the located ACO block with the given one, preserving everything else. */
+function replaceAcoBlock(content: string, loc: AcoBlockLoc, block: string): string {
+  return content.slice(0, loc.start) + block + content.slice(loc.end);
 }
 
 function writeIfAbsent(abs: string, rel: string, content: string, created: string[], skipped: string[]): void {
@@ -117,61 +129,75 @@ function writeIfAbsent(abs: string, rel: string, content: string, created: strin
 // policy to required, keeping every other field (raised). Never lowers a policy: plain init on a
 // required repo changes nothing. A malformed file is never rewritten — `check` already degrades it to
 // advisory, and fixing it is the maintainer's call (malformed). Returns the mode the file now carries.
+// The same holds for recordModel: an explicit request turns it on (modelOn); nothing turns it off.
 function ensurePolicy(
   abs: string,
   rel: string,
-  mode: "advisory" | "required",
-  res: Pick<InitResult, "created" | "skipped" | "raised">,
-): { mode: string; malformed: boolean } {
+  want: { mode: "advisory" | "required"; recordModel: boolean },
+  res: Pick<InitResult, "created" | "skipped" | "raised" | "modelOn">,
+): { mode: string; recordModel: boolean; malformed: boolean } {
   if (!existsSync(abs)) {
     mkdirSync(dirname(abs), { recursive: true });
-    writeFileSync(abs, JSON.stringify({ version: 0, mode }, null, 2) + "\n");
+    const fresh = { version: 0, mode: want.mode, ...(want.recordModel ? { recordModel: true } : {}) };
+    writeFileSync(abs, JSON.stringify(fresh, null, 2) + "\n");
     res.created.push(rel);
-    return { mode, malformed: false };
+    return { mode: want.mode, recordModel: want.recordModel, malformed: false };
   }
   let raw: unknown;
   try {
     raw = JSON.parse(readFileSync(abs, "utf8"));
   } catch {
     res.skipped.push(rel);
-    return { mode: "advisory", malformed: true };
+    return { mode: "advisory", recordModel: false, malformed: true };
   }
   const isObject = !!raw && typeof raw === "object" && !Array.isArray(raw);
-  const current = parseDisclosurePolicy(raw).mode;
-  if (mode === "required" && current !== "required" && isObject) {
-    writeFileSync(abs, JSON.stringify({ ...(raw as Record<string, unknown>), mode: "required" }, null, 2) + "\n");
-    res.raised.push(rel);
-    return { mode: "required", malformed: false };
+  const current = parseDisclosurePolicy(raw);
+  const raise = want.mode === "required" && current.mode !== "required" && isObject;
+  const modelOn = want.recordModel && !current.recordModel && isObject;
+  if (raise || modelOn) {
+    const next = { ...(raw as Record<string, unknown>), ...(raise ? { mode: "required" } : {}), ...(modelOn ? { recordModel: true } : {}) };
+    writeFileSync(abs, JSON.stringify(next, null, 2) + "\n");
+    if (raise) res.raised.push(rel);
+    if (modelOn) res.modelOn.push(rel);
+  } else {
+    res.skipped.push(rel);
   }
-  res.skipped.push(rel);
-  return { mode: current, malformed: !isObject };
+  return { mode: raise ? "required" : current.mode, recordModel: modelOn || current.recordModel === true, malformed: !isObject };
 }
 
 // Ensure an agent file carries a current ACO rule. Absent file + createIfAbsent ⇒ write the full
 // convention (created). No ACO block yet ⇒ append the section (merged). Outdated block ⇒ refresh it in
-// place when `update`, else flag it (outdated). Current/newer ⇒ leave it (skipped).
+// place when `update`, else flag it (outdated). Current/newer ⇒ leave it (skipped) — except that a
+// current block missing the model line is refreshed when the model was explicitly asked for this call.
 function ensureAco(
   abs: string,
   rel: string,
   res: Pick<InitResult, "created" | "skipped" | "merged" | "updated" | "outdated">,
-  opts: { createIfAbsent: boolean; update: boolean },
+  opts: { createIfAbsent: boolean; update: boolean; recordModel: boolean; modelRequested: boolean },
 ): void {
+  const block = acoBlock(opts.recordModel);
   if (!existsSync(abs)) {
     if (!opts.createIfAbsent) return;
     mkdirSync(dirname(abs), { recursive: true });
-    writeFileSync(abs, AGENTS_CONVENTION);
+    // A fresh AGENTS.md: minimal header + the ACO block (so the whole convention is the updatable block).
+    writeFileSync(abs, `# AGENTS.md\n\n${block}`);
     res.created.push(rel);
     return;
   }
   const content = readFileSync(abs, "utf8");
   const status = acoStatus(content);
+  const loc = findAcoBlock(content);
   if (status === "absent") {
     const sep = content.endsWith("\n") ? "" : "\n";
-    writeFileSync(abs, content + sep + ACO_SECTION);
+    // leading blank line separates it from prior content
+    writeFileSync(abs, content + sep + `\n${block}`);
     res.merged.push(rel);
+  } else if (status === "current" && opts.modelRequested && loc && content.slice(loc.start, loc.end) !== block) {
+    writeFileSync(abs, replaceAcoBlock(content, loc, block));
+    res.updated.push(rel);
   } else if (status === "outdated") {
     if (opts.update) {
-      writeFileSync(abs, replaceAcoBlock(content, findAcoBlock(content)!));
+      writeFileSync(abs, replaceAcoBlock(content, loc!, block));
       res.updated.push(rel);
     } else {
       res.outdated.push(rel);
@@ -191,13 +217,17 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   const updated: string[] = [];
   const outdated: string[] = [];
   const raised: string[] = [];
-  const res = { created, skipped, merged, updated, outdated, raised };
+  const modelOn: string[] = [];
+  const res = { created, skipped, merged, updated, outdated, raised, modelOn };
+  const modelRequested = opts.recordModel ?? false;
 
-  const policy = ensurePolicy(join(root, ".madeby", "policy.json"), ".madeby/policy.json", mode, res);
+  const policy = ensurePolicy(join(root, ".madeby", "policy.json"), ".madeby/policy.json", { mode, recordModel: modelRequested }, res);
+  // The convention follows the policy file, so a later plain `init --update` keeps the model line.
+  const aco = { update, recordModel: policy.recordModel, modelRequested };
   // AGENTS.md — the cross-tool convention: create it, merge the rule in, or refresh a drifted block.
-  ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, update });
+  ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, ...aco });
   // CLAUDE.md — Claude Code reads this preferentially; merge/refresh if the repo has one (never create).
-  ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, update });
+  ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, ...aco });
   if (host === "github") {
     writeIfAbsent(join(root, ".github", "workflows", "disclosure.yml"), ".github/workflows/disclosure.yml", GH_WORKFLOW, created, skipped);
   }
@@ -205,6 +235,9 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   const nextSteps: string[] = ["Commit the created files."];
   if (raised.length > 0) {
     nextSteps.push('Raised .madeby/policy.json to "required" — undisclosed commits now fail the check. To make it block merges, also mark the check required on the protected branch (see madeby://guide/enforce).');
+  }
+  if (modelOn.length > 0 || (modelRequested && created.includes(".madeby/policy.json"))) {
+    nextSteps.push("This repo now asks AI disclosures to name the model version (recordModel in .madeby/policy.json; the AGENTS.md rule says how: --model <version>). `madeby coverage` lists each agent · model pairing. It never changes the gate.");
   }
   if (policy.malformed) {
     nextSteps.push(".madeby/policy.json is not a valid policy, so the check treats it as advisory. It was left untouched — fix it (e.g. { \"version\": 0, \"mode\": \"required\" }) to enforce.");
@@ -232,7 +265,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), an Authored-by-ai trailer ('madeby ai' — AI authored, committer accountable), a DCO Signed-off-by, or a signed commit. Evidence upgrade: 'madeby ai --witness' records your own AI session's witnessed spans.");
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
-  return { created, skipped, merged, updated, outdated, raised, policyMode: policy.mode, host, nextSteps };
+  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, host, nextSteps };
 }
 
 // The GitHub Actions workflow (mirrors the quickstart; pinned action tag; fetch-depth:0 so the gate

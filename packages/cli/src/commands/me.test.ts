@@ -3,7 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
-import { affirmAuthorship, attestAiAuthorship } from "./me";
+import { repoCoverage } from "@madeby/analyzer";
+import { affirmAuthorship, aiValue, attestAiAuthorship, parseModel } from "./me";
 
 const dirs: string[] = [];
 const git = (dir: string, ...a: string[]): string =>
@@ -81,5 +82,36 @@ describe("attestAiAuthorship — the log-free `ai` disclosure (Authored-by-ai)",
     writeFileSync(join(d, "z.txt"), "staged\n");
     git(d, "add", "z.txt");
     expect(attestAiAuthorship(d)).toMatchObject({ ok: false, reason: "staged-changes" });
+  });
+});
+
+describe("--model — the agent AND the model version it ran (tool:model)", () => {
+  it("with_ai + model writes Assisted-by: <tool>:<model>, which classifies with the pairing", () => {
+    const d = tmpRepo();
+    affirmAuthorship(d, { withAi: true, tool: "Cursor", model: "claude-sonnet-5" });
+    const msg = git(d, "show", "-s", "--format=%B", "HEAD");
+    expect(msg).toMatch(/^Assisted-by: Cursor:claude-sonnet-5$/m);
+    const r = repoCoverage(d);
+    expect(r.byCategory.with_ai).toBe(1);
+    expect(r.byAgent).toEqual([{ name: "Cursor · claude-sonnet-5", provider: "cursor", tool: "Cursor", model: "claude-sonnet-5", commits: 1 }]);
+  });
+
+  it("ai + model writes Authored-by-ai: <tool>:<model>", () => {
+    const d = tmpRepo();
+    attestAiAuthorship(d, { tool: "Claude Code", model: "Claude Opus 5.5" });
+    expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/^Authored-by-ai: Claude Code:Claude Opus 5\.5$/m);
+  });
+
+  it("a newline can't forge another trailer, and a colon in the tool can't mis-split it", () => {
+    expect(aiValue("Cursor\nAuthored-by-human: Someone", "x")).toBe("Cursor Authored-by-human Someone:x");
+    expect(aiValue("Cursor", "a\nb")).toBe("Cursor:a b");
+    expect(aiValue("", "claude-sonnet-5")).toBe("AI:claude-sonnet-5");
+    expect(aiValue("Cursor")).toBe("Cursor");
+  });
+
+  it("parseModel reads --model <v> and --model=<v>", () => {
+    expect(parseModel(["--with-ai", "Cursor", "--model", "claude-sonnet-5"])).toBe("claude-sonnet-5");
+    expect(parseModel(["--model=gpt-5"])).toBe("gpt-5");
+    expect(parseModel(["--with-ai", "Cursor"])).toBeUndefined();
   });
 });

@@ -8,12 +8,35 @@
 // category). Adds an `Assisted-by: <tool>` disclosure alongside the human affirmation, so the commit
 // classifies as `with_ai` (badge `hi + ai`) — a human is accountable AND the AI is disclosed, in one
 // action instead of the implicit `ai`+`me` pair. `<tool>` defaults to a generic "AI" if unnamed.
+// `--model <version>` also names the model it ran (`Assisted-by: <tool>:<version>`) — for repos that
+// record it (`madeby init --record-model`).
 //
 // The disclosure mechanic is the pure `affirmAuthorship()` below — shared with the MCP `disclose` tool,
 // so a human at the CLI and an agent over MCP disclose collaborative (with_ai / human) work identically.
 
 import { execFileSync } from "node:child_process";
 import { repoRoot } from "../scope";
+
+/** Parse `--model <version>` or `--model=<version>`; undefined if unset. */
+export function parseModel(args: string[]): string | undefined {
+  const i = args.findIndex((a) => a === "--model" || a.startsWith("--model="));
+  if (i === -1) return undefined;
+  const a = args[i]!;
+  const v = a.startsWith("--model=") ? a.slice("--model=".length) : args[i + 1];
+  return v && !v.startsWith("-") ? v : undefined;
+}
+
+/**
+ * The disclosed AI value for a trailer: the tool, or `tool:model` when the model version is given —
+ * the two-field form the classifier splits (`Assisted-by: Cursor:claude-sonnet-5`). Each part is one
+ * line (a newline would forge another trailer) and the tool carries no colon (it would mis-split).
+ */
+export function aiValue(tool: string, model?: string): string {
+  const line = (s: string): string => s.replace(/\s+/g, " ").trim();
+  const t = line(tool.replace(/:/g, " ")) || "AI";
+  const m = model ? line(model) : "";
+  return m ? `${t}:${m}` : t;
+}
 
 /** Parse `--with-ai`, `--with-ai <tool>`, or `--with-ai=<tool>`; returns the tool or null if unset. */
 function parseWithAi(args: string[]): { withAi: boolean; tool: string } {
@@ -61,8 +84,8 @@ const AI_AUTHOR = /^[ \t]*Authored-by-ai[ \t]*:/im;
  * author/committer is the accountable party, recorded by git itself. Amends HEAD's MESSAGE only,
  * refuses staged changes, idempotent.
  */
-export function attestAiAuthorship(root: string, opts: { tool?: string } = {}): AffirmResult {
-  const tool = (opts.tool && opts.tool.trim()) || "AI";
+export function attestAiAuthorship(root: string, opts: { tool?: string; model?: string } = {}): AffirmResult {
+  const tool = aiValue(opts.tool ?? "AI", opts.model);
   const base: AffirmResult = { ok: false, changed: false, withAi: false, tool, added: [], category: "ai" };
 
   try {
@@ -98,9 +121,9 @@ export function attestAiAuthorship(root: string, opts: { tool?: string } = {}): 
  * console/exit — returns a result the CLI renders and the MCP `disclose` tool returns. Amends HEAD's
  * MESSAGE only (never content), refuses when the index has staged changes, and is idempotent per trailer.
  */
-export function affirmAuthorship(root: string, opts: { withAi?: boolean; tool?: string } = {}): AffirmResult {
+export function affirmAuthorship(root: string, opts: { withAi?: boolean; tool?: string; model?: string } = {}): AffirmResult {
   const withAi = opts.withAi ?? false;
-  const tool = (opts.tool && opts.tool.trim()) || "AI";
+  const tool = aiValue(opts.tool ?? "AI", opts.model);
   const base: AffirmResult = { ok: false, changed: false, withAi, tool, added: [], category: withAi ? "with_ai" : "human" };
 
   let name = "";
@@ -153,6 +176,12 @@ export function affirmAuthorship(root: string, opts: { withAi?: boolean; tool?: 
 
 export function meCommand(args: string[]): void {
   const { withAi, tool } = parseWithAi(args);
+  const model = parseModel(args);
+  if (model && !withAi) {
+    console.error("madeby me: --model names the AI's model, so it goes with --with-ai (e.g. madeby me --with-ai Cursor --model claude-sonnet-5).");
+    process.exit(1);
+    return;
+  }
   const root = repoRoot();
   if (!root) {
     console.error("madeby me: not a git repository.");
@@ -160,7 +189,7 @@ export function meCommand(args: string[]): void {
     return;
   }
 
-  const r = affirmAuthorship(root, { withAi, tool });
+  const r = affirmAuthorship(root, { withAi, tool, model });
   if (!r.ok) {
     if (r.reason === "no-identity") console.error("madeby me: set your git identity first (git config user.name / user.email).");
     else if (r.reason === "staged-changes") console.error("madeby me: you have staged changes. Commit them first — `me` affirms HEAD, not your index.");

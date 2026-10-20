@@ -24,6 +24,12 @@ export interface DisclosurePolicy {
    * counts (the maintainer just wants origin disclosed, by whatever means).
    */
   accept?: DisclosureKind[];
+  /**
+   * The repo asks AI disclosures to name the model version too (`Assisted-by: <tool>:<model>`) — set
+   * by `madeby init --record-model`. A request to contributors, recorded so the choice is visible; it
+   * never changes the gate (an AI disclosure without a model still satisfies it).
+   */
+  recordModel?: boolean;
 }
 
 /** The safe default: report-only. A missing or malformed policy degrades to this (never blocks on our bug). */
@@ -44,7 +50,12 @@ export function parseDisclosurePolicy(input: unknown): DisclosurePolicy {
   const accept = Array.isArray(o.accept)
     ? (o.accept.filter((k) => typeof k === "string") as DisclosureKind[])
     : undefined;
-  return accept && accept.length > 0 ? { version, mode, accept } : { version, mode };
+  return {
+    version,
+    mode,
+    ...(accept && accept.length > 0 ? { accept } : {}),
+    ...(o.recordModel === true ? { recordModel: true } : {}),
+  };
 }
 
 /** A contribution under evaluation: a ref (sha/short id) + the disclosure kinds it carries. */
