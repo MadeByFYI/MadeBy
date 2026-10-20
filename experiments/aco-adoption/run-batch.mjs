@@ -3,7 +3,7 @@
 // Each trial = a fresh fixture + `claude -p <task> --permission-mode bypassPermissions` + score.mjs.
 // Faithful (real Claude Code, real task, no mention of disclosure) but hands-off. Usage: node run-batch.mjs [N=5]
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, appendFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,7 +12,7 @@ const N = Number(process.argv[2] || 5);
 // Optional: condition filter ("with-convention" | "control" | "both") + inter-run delay seconds.
 const CONDITIONS = (() => {
   const c = process.argv[3];
-  return c === "with-convention" || c === "control" ? [c] : ["with-convention", "control"];
+  return c === "with-convention" || c === "control" || c === "with-model" ? [c] : ["with-convention", "control"];
 })();
 const DELAY_S = Number(process.argv[4] || 0);
 const sleep = (s) => new Promise((r) => setTimeout(r, s * 1000));
@@ -20,7 +20,7 @@ const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 const OUT = join(HERE, "runs", `batch-${stamp}`);
 mkdirSync(OUT, { recursive: true });
 const LOG = join(OUT, "results.tsv");
-writeFileSync(LOG, "condition\ttrial\tacoSpecific\tcategory\tmechanisms\tnote\n");
+writeFileSync(LOG, "condition\ttrial\tacoSpecific\tcategory\tmechanisms\tmodelNamed\tacoValues\tambientValues\tnote\n");
 
 const AGENTS_MD = `# AGENTS.md — Authorship disclosure convention (ACO)
 
@@ -50,11 +50,16 @@ const TASK =
 
 // The agent invocation is parameterized so the same harness drives any headless coding agent.
 // Default: Claude Code. Set AGENT=cursor for Cursor (needs `cursor-agent login` first).
+// AGENT_MODEL pins the agent's model, so a `with-model` disclosure can be checked against the truth.
 const AGENT = process.env.AGENT || "claude";
+const MODEL = process.env.AGENT_MODEL ? ["--model", process.env.AGENT_MODEL] : [];
 const AGENTS = {
-  claude: { bin: "claude", args: (task) => ["-p", task, "--permission-mode", "bypassPermissions"], label: "Claude Code" },
-  cursor: { bin: "cursor-agent", args: (task) => ["-p", task, "--force"], label: "Cursor" },
+  claude: { bin: "claude", args: (task) => ["-p", task, "--permission-mode", "bypassPermissions", ...MODEL], label: "Claude Code" },
+  cursor: { bin: "cursor-agent", args: (task) => ["-p", task, "--force", ...MODEL], label: "Cursor" },
 };
+// `with-model`: the convention exactly as `madeby init --record-model` writes it (AGENTS.md + policy).
+// MADEBY_BIN points it at a local build (a pre-release run); default is the published CLI.
+const MADEBY = process.env.MADEBY_BIN ? ["node", process.env.MADEBY_BIN] : ["npx", "-y", "madeby@latest"];
 const AG = AGENTS[AGENT] || AGENTS.claude;
 
 const git = (dir, ...a) =>
@@ -67,6 +72,13 @@ function scaffold(cond, i) {
   writeFileSync(join(dir, "README.md"), "# fixture — a small utility library\n");
   if (cond === "with-convention") writeFileSync(join(dir, "AGENTS.md"), AGENTS_MD);
   git(dir, "init", "-q", "-b", "main");
+  if (cond === "with-model") {
+    execFileSync(MADEBY[0], [...MADEBY.slice(1), "init", "--record-model", "--host", "none"], { cwd: dir, stdio: "ignore" });
+    if (process.env.MADEBY_BIN) {
+      const p = join(dir, "AGENTS.md");
+      writeFileSync(p, readFileSync(p, "utf8").replaceAll("npx madeby@latest", `node ${process.env.MADEBY_BIN}`));
+    }
+  }
   git(dir, "add", "-A");
   git(dir, "commit", "-q", "--no-verify", "-m", "chore: initial scaffold");
   return dir;
@@ -75,6 +87,7 @@ function scaffold(cond, i) {
 const summary = {
   "with-convention": { aco: 0, total: 0, cats: {} },
   control: { aco: 0, total: 0, cats: {} },
+  "with-model": { aco: 0, total: 0, cats: {}, model: 0 },
 };
 
 for (const cond of CONDITIONS) {
@@ -101,18 +114,21 @@ for (const cond of CONDITIONS) {
     const s = summary[cond];
     s.total++;
     if (r.acoSpecific) s.aco++;
+    if (r.modelNamed) s.model = (s.model || 0) + 1;
     s.cats[r.category] = (s.cats[r.category] || 0) + 1;
-    appendFileSync(LOG, `${cond}\t${i}\t${r.acoSpecific}\t${r.category}\t${(r.acoMechanisms || []).join("|")}\t${note}\n`);
-    process.stderr.write(`  [${cond} ${i}/${N}] acoSpecific=${r.acoSpecific} category=${r.category}${note ? " (" + note + ")" : ""}\n`);
+    appendFileSync(LOG, `${cond}\t${i}\t${r.acoSpecific}\t${r.category}\t${(r.acoMechanisms || []).join("|")}\t${!!r.modelNamed}\t${(r.acoValues || []).join("|")}\t${(r.ambientValues || []).join("|")}\t${note}\n`);
+    process.stderr.write(`  [${cond} ${i}/${N}] acoSpecific=${r.acoSpecific} category=${r.category} model=${!!r.modelNamed} ${JSON.stringify(r.acoValues || [])}${note ? " (" + note + ")" : ""}\n`);
   }
 }
 
 const pct = (a, t) => (t ? Math.round((a / t) * 100) : 0);
 const wc = summary["with-convention"];
 const cc = summary.control;
+const wm = summary["with-model"];
 const report = [
-  `ACO adoption — automated batch — ${AG.label} — ${stamp} — N=${N} per condition`,
+  `ACO adoption — automated batch — ${AG.label}${process.env.AGENT_MODEL ? ` (${process.env.AGENT_MODEL})` : ""} — ${stamp} — N=${N} per condition`,
   ``,
+  ...(wm.total ? [`with-model:       ACO-disclosed ${wm.aco}/${wm.total}   model named ${wm.model}/${wm.total}   categories: ${JSON.stringify(wm.cats)}`] : []),
   `with-convention:  ACO-disclosed ${wc.aco}/${wc.total} (${pct(wc.aco, wc.total)}%)   categories: ${JSON.stringify(wc.cats)}`,
   `control:          ACO-disclosed ${cc.aco}/${cc.total} (${pct(cc.aco, cc.total)}%)   categories: ${JSON.stringify(cc.cats)}`,
   ``,

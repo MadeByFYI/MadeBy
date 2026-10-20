@@ -70,3 +70,30 @@ recognized signal on the record.
 
 See [README.md](./README.md). Add an agent, vary the task, or run more trials, and open a PR updating this
 table. The harness is designed so a third party can verify the result independently.
+
+## Follow-up (2026-10-19): naming the model version — `init --record-model`
+
+The `with-model` condition uses the convention exactly as `madeby init --record-model` writes it: the
+standard ACO block plus one line asking AI disclosures to add `--model <version>` — *"If you don't
+know your model version, leave it off — never guess."* Same task, same no-mention protocol. Pre-release
+run: the fixture's AGENTS.md points at a local build of the CLI (the published one predates `--model`).
+
+| Agent | Model (truth) | ACO-disclosed | Model named | What it wrote |
+|-------|---------------|---------------|-------------|---------------|
+| Claude Code (v2.1.304) | `--model sonnet` → Claude Sonnet 5.5 | **3 / 3** | **3 / 3**, all correct | `Authored-by-ai: Claude Code:claude-sonnet-5-5` |
+| Cursor (`cursor-agent`) | Auto (Cursor picks; not reported) | **4 / 4** | **1 / 4** | `Authored-by-ai: Cursor` ×3; `Cursor:composer-2` ×1 |
+
+- **The disclosure itself held: 7 / 7**, every one the honest `ai` category.
+- **Claude Code knows its model and named it every time**, matching its own ambient
+  `Co-Authored-By: Claude Sonnet 5.5` trailer.
+- **Cursor on Auto mostly left the model off — the instruction working as written.** An agent routed
+  by "Auto" often doesn't know which model served it; omitting beats guessing. The one value it gave,
+  `composer-2`, can't be checked under Auto (Cursor's list shows `composer-2.5`), so treat Auto-era
+  model names as low-confidence. Named-model Cursor runs weren't possible on the account used (free
+  plan: Auto only) — a gap to close.
+- **Implication:** model-level provenance is reliable where the agent is pinned to a model, and
+  honestly absent where a router chooses. `coverage` reports exactly what was written, so the gap shows
+  up as rows without a model rather than as wrong ones.
+
+Reproduce: `MADEBY_BIN=<path to madeby.mjs> AGENT=claude AGENT_MODEL=sonnet node run-batch.mjs 3 with-model`
+(omit `MADEBY_BIN` once the published CLI has `--model`).
