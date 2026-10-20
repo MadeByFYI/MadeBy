@@ -1,6 +1,6 @@
 {
   "name": "madeby",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "mcpName": "io.github.MadeByFYI/madeby",
   "description": "Disclose AI authorship of code. `npx madeby ai` adds an Authored-by-ai git trailer; AI coding agents disclose per the ACO standard (human/with_ai/ai) from an AGENTS.md convention. Disclosure, not detection. Gate PRs with `madeby check`.",
   "license": "MIT",
