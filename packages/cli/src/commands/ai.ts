@@ -1,6 +1,7 @@
 // `madeby ai [tool]` — made by AI: attest that an AI authored HEAD, by adding an `Authored-by-ai:
 // <tool>` trailer (asserted tier — no session log, works anywhere). `--model <version>` also names the
-// model it ran (`Authored-by-ai: <tool>:<version>`). The AI-authorship counterpart of
+// model it ran (`Authored-by-ai: <tool>:<version>`). `--print` prints the trailer instead of amending
+// HEAD, for platforms that make the commit themselves. The AI-authorship counterpart of
 // `madeby me`; the committer stays the accountable human. This is the honest, log-free `ai` disclosure.
 //
 // `madeby ai --witness [<log>] [<ref>]` — the EVIDENCE upgrade: read your OWN AI-tool session log
@@ -12,7 +13,7 @@
 // add a parser for an unsupported tool, without any code or prompts leaving the machine.
 
 import { recordAiSpans, writeParserSample } from "@madeby/analyzer";
-import { attestAiAuthorship, parseModel } from "./me";
+import { attestAiAuthorship, disclosureTrailers, parseModel } from "./me";
 import { repoRoot } from "../scope";
 
 const ISSUE_URL = "https://github.com/MadeByFYI/MadeBy/issues/new";
@@ -80,6 +81,11 @@ export function aiCommand(args: string[]): void {
 
   // Default: assert AI authorship via a trailer (asserted tier — no session log needed).
   const tool = positional[0] || "AI";
+  if (args.includes("--print")) {
+    // the trailer line only, for the commit message itself: git commit -m "<msg>" -m "$(madeby ai <tool> --print)"
+    console.log(disclosureTrailers(root, { category: "ai", tool, model }).lines.join("\n"));
+    return;
+  }
   const r = attestAiAuthorship(root, { tool, model });
   if (!r.ok) {
     if (r.reason === "staged-changes") {

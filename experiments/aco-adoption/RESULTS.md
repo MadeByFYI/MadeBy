@@ -118,3 +118,18 @@ Code's transcript. The AGENTS.md line now says so. The harness also gained the *
   `CURSOR_MODEL` when it's set (verified by simulating Cursor's shell), yet no trial recorded one — so in
   those runs the variable likely wasn't in the shell that ran madeby. Diagnosing it hit the account's
   free-plan usage limit. Next: re-run on a Cursor plan with quota, logging the shell's `CURSOR_*` vars.
+
+### Round 3 — madeby 0.3.9 published; Copilot on both surfaces
+
+| Agent | ACO-disclosed | Model named | On the pushed commit |
+|-------|---------------|-------------|----------------------|
+| Copilot CLI 1.0.100 (local, `npx madeby@latest`) | **3 / 3** | **3 / 3**, correct (`claude-sonnet-5.5`) | yes |
+| Copilot coding agent (cloud, `gh agent-task`) | **1 / 1** | **1 / 1** (`gpt-6-luna`, from its session log) | **no** |
+
+The cloud agent read AGENTS.md, ran `npx madeby@latest ai "GitHub Copilot"`, and madeby filled the
+model from the session log (the cloud agent runs the Copilot CLI) — `Authored-by-ai: GitHub
+Copilot:gpt-6-luna` on its local commit. But the platform pushed its own rebuild of the commit,
+without the amended trailer. (The September trial's amendment did survive — timing.) The commit still
+classifies `ai` from its `copilot-swe-agent[bot]` identity, but loses the deliberate disclosure and the
+model. Fix (0.3.10): `--print` emits the trailer lines for the commit message itself, and the ACO block
+(v2) tells agents whose platform makes the commit to use it.

@@ -54,6 +54,9 @@ madeby ai     [tool]           Made by AI: attest AI authorship of HEAD (an Auth
                                `--witness [log]` instead records witnessed spans from a session log.
 madeby me     [--with-ai [t]]  Made by me: affirm you authored HEAD (Authored-by-human); --with-ai adds
                                Assisted-by → with_ai. --model <version> names the model too.
+              --print          (me / ai) print the trailer lines instead of amending HEAD — for a
+                               platform that makes the commit itself (a cloud coding agent):
+                               git commit -m "<msg>" -m "$(madeby ai <tool> --print)".
 madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
 madeby help
 ```

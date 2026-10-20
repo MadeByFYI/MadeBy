@@ -61,7 +61,7 @@ export const MODEL_SOURCES: ModelSource[] = [
       const id = env.COPILOT_AGENT_SESSION_ID;
       if (env.COPILOT_CLI !== "1" || !id || !SESSION_ID.test(id)) return null;
       const model = lastModelIn(join(home, ".copilot", "session-state", id, "events.jsonl"));
-      return model ? { model, source: "Copilot CLI's session log" } : null;
+      return model ? { model, source: "Copilot's session log" } : null;
     },
   },
   {

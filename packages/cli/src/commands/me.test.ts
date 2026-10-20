@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { repoCoverage } from "@madeby/analyzer";
-import { affirmAuthorship, aiValue, attestAiAuthorship, parseModel } from "./me";
+import { affirmAuthorship, aiValue, attestAiAuthorship, disclosureTrailers, parseModel } from "./me";
 
 const dirs: string[] = [];
 const git = (dir: string, ...a: string[]): string =>
@@ -158,5 +158,34 @@ describe("an empty commit can be disclosed too", () => {
     git(d, "commit", "--allow-empty", "--no-verify", "-q", "-m", "chore: empty");
     expect(attestAiAuthorship(d, { tool: "Cursor" }).ok).toBe(true);
     expect(git(d, "show", "-s", "--format=%B", "HEAD")).toMatch(/^Authored-by-ai: Cursor$/m);
+  });
+});
+
+describe("--print — the disclosure for the commit message itself (platforms that make the commit)", () => {
+  it("returns trailer lines and leaves HEAD untouched", () => {
+    const d = tmpRepo();
+    const before = git(d, "rev-parse", "HEAD");
+    expect(disclosureTrailers(d, { category: "ai", tool: "GitHub Copilot", model: "gpt-6-luna" }).lines).toEqual(["Authored-by-ai: GitHub Copilot:gpt-6-luna"]);
+    expect(disclosureTrailers(d, { category: "with_ai", tool: "Cursor" }).lines).toEqual(["Authored-by-human: Dev <dev@example.com>", "Assisted-by: Cursor"]);
+    expect(disclosureTrailers(d, { category: "human" }).lines).toEqual(["Authored-by-human: Dev <dev@example.com>"]);
+    expect(git(d, "rev-parse", "HEAD")).toBe(before);
+  });
+
+  it("uses the tool's record for the model, like the amending path", () => {
+    const d = tmpRepo();
+    mkdirSync(join(d, ".madeby"), { recursive: true });
+    writeFileSync(join(d, ".madeby", "policy.json"), JSON.stringify({ version: 0, mode: "advisory", recordModel: true }));
+    const t = disclosureTrailers(d, { category: "ai", tool: "Cursor", env: { CURSOR_AGENT: "1", CURSOR_MODEL: "composer-2-fast" } });
+    expect(t).toMatchObject({ lines: ["Authored-by-ai: Cursor:composer-2-fast"], modelSource: "Cursor's CURSOR_MODEL" });
+  });
+
+  it("as a commit message's last paragraph, git and coverage read it", () => {
+    const d = tmpRepo();
+    writeFileSync(join(d, "y.txt"), "y\n");
+    git(d, "add", "-A");
+    const lines = disclosureTrailers(d, { category: "ai", tool: "GitHub Copilot", model: "gpt-6-luna" }).lines.join("\n");
+    git(d, "commit", "--no-verify", "-q", "-m", "feat: y", "-m", lines);
+    expect(git(d, "log", "-1", "--format=%(trailers:key=Authored-by-ai,valueonly)").trim()).toBe("GitHub Copilot:gpt-6-luna");
+    expect(repoCoverage(d).byAgent).toEqual([{ name: "GitHub Copilot · gpt-6-luna", provider: "github-copilot", tool: "GitHub Copilot", model: "gpt-6-luna", commits: 1 }]);
   });
 });

@@ -122,7 +122,7 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(md).toContain("Build: make.");
     expect(md).toContain("## My own notes"); // content AFTER the fenced block preserved
     expect(md).toContain("Keep this.");
-    expect(md).toContain("<!-- madeby:aco v1 -->"); // refreshed to current version
+    expect(md).toContain("<!-- madeby:aco v2 -->"); // refreshed to current version
     expect(md).toContain("npx madeby@latest ai [tool]"); // current commands
     expect(md).not.toContain("old ACO");
     // and it's now current + idempotent
@@ -139,7 +139,7 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(r.updated).toContain("AGENTS.md");
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("# AGENTS.md"); // original title kept
-    expect(md).toContain("<!-- madeby:aco v1 -->");
+    expect(md).toContain("<!-- madeby:aco v2 -->");
     expect(md).toContain("<!-- /madeby:aco -->");
     expect(md).not.toContain("madeby ai <session-log>"); // stale command gone
     expect(acoStatus(md)).toBe("current");

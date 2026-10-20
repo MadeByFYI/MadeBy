@@ -12,7 +12,7 @@ import { parseDisclosurePolicy } from "@madeby/core";
 // The ACO block is versioned and fenced by an open+close marker. Bump ACO_VERSION whenever ACO_BODY
 // changes; repos seeded with an older version then report as outdated until `madeby init --update`.
 // The legacy (pre-versioning) marker `<!-- madeby:aco -->` is recognized too and migrated on update.
-const ACO_VERSION = 1;
+const ACO_VERSION = 2;
 const ACO_OPEN = `<!-- madeby:aco v${ACO_VERSION} -->`;
 const ACO_CLOSE = `<!-- /madeby:aco -->`;
 // Matches any ACO open marker: the versioned form (capturing the version) or the legacy unversioned one.
@@ -27,6 +27,10 @@ After you commit, run the command for the honest category (no install, no setup)
 - **ai** — an AI authored it (the committer stays accountable): \`npx madeby@latest ai [tool]\`
 - **with_ai** — a human authored it with AI assistance: \`npx madeby@latest me --with-ai [tool]\`
 - **human** — a human authored it: \`npx madeby@latest me\`
+
+If your platform makes the commit for you (a cloud coding agent that pushes through its own tool),
+amending afterwards can be lost — put the disclosure in the message instead, with \`--print\`:
+\`git commit -m "<message>" -m "$(npx madeby@latest ai [tool] --print)"\`.
 
 Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed.
 `;
