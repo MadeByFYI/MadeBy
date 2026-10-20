@@ -6,7 +6,7 @@
 
 import { commitDisclosureKinds } from "@madeby/core";
 import { classifyCommit } from "@madeby/classify";
-import { readGitLog } from "./git";
+import { commitTime, readAuthoredMerges, readGitLog } from "./git";
 
 export type CoverageCategory = "human" | "with_ai" | "ai" | "bot";
 
@@ -34,7 +34,14 @@ export interface CoverageReport {
  * undisclosed commits are `unknown`, never inferred as human.
  */
 export function repoCoverage(root: string, opts: { range?: string; limit?: number } = {}): CoverageReport {
-  const commits = readGitLog(root, opts.range ? undefined : opts.limit ?? 500, opts.range);
+  const limit = opts.range ? undefined : opts.limit ?? 500;
+  const authored = readGitLog(root, limit, opts.range);
+  // Merges that author content of their own (conflict resolutions) are scored too, over the same span
+  // of history: the range, or back to the oldest commit in the window (all history if it isn't full).
+  const oldest = authored.at(-1)?.sha;
+  const since = limit && oldest && authored.length >= limit ? commitTime(root, oldest) : undefined;
+  const merges = authored.length > 0 && (!limit || authored.length < limit || since !== undefined) ? readAuthoredMerges(root, { range: opts.range, since }) : [];
+  const commits = [...authored, ...merges];
   const byCategory: Record<CoverageCategory, number> = { human: 0, with_ai: 0, ai: 0, bot: 0 };
   const byTier = { asserted: 0, verified: 0 };
   let known = 0;
@@ -57,8 +64,8 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
 
   return {
     isEstimate: true,
-    methodology: "commit-level authorship disclosure (estimate); undisclosed = unknown, never inferred",
-    scope: opts.range ? `range ${opts.range}` : `last ${commits.length} commits`,
+    methodology: "commit-level authorship disclosure (estimate); undisclosed = unknown, never inferred; merges scored only when they change content of their own",
+    scope: (opts.range ? `range ${opts.range}` : `last ${authored.length} commits`) + (merges.length ? ` + ${merges.length} merges with changes of their own` : ""),
     total: commits.length,
     known,
     unknown: commits.length - known,

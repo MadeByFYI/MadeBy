@@ -53,6 +53,86 @@ describe("repoCoverage — the honest authorship scoreboard", () => {
     expect(r.byCategory.human).toBe(0); // the honesty guarantee
   });
 
+  // A merge is scored only when it changes content of its own (a conflict resolution): selection by
+  // content, never by disclosure — so a disclosed plain merge must NOT sneak into "known".
+  it("scores merges with changes of their own, and only those", () => {
+    const d = repo();
+    commit(d, "base.ts", "chore: base\n\nAuthored-by-human: Dev <dev@example.com>");
+    // plain merge: no conflict, nothing authored — excluded even though it carries a disclosure
+    git(d, "checkout", "-q", "-b", "side");
+    commit(d, "side.ts", "feat: side\n\nAuthored-by-human: Dev <dev@example.com>");
+    git(d, "checkout", "-q", "main");
+    commit(d, "main.ts", "feat: main\n\nAuthored-by-human: Dev <dev@example.com>");
+    git(d, "merge", "-q", "--no-ff", "side", "-m", "Merge side\n\nCo-Authored-By: Claude <noreply@anthropic.com>");
+    // conflicted merges: both sides edit one file and the merge resolves it to new content
+    const conflict = (branch: string, msg: string): void => {
+      git(d, "checkout", "-q", "-b", branch);
+      writeFileSync(join(d, "shared.ts"), `${branch}\n`);
+      git(d, "add", "-A");
+      git(d, "commit", "--no-verify", "-q", "-m", `feat: ${branch}\n\nAuthored-by-human: Dev <dev@example.com>`);
+      git(d, "checkout", "-q", "main");
+      writeFileSync(join(d, "shared.ts"), `main-${branch}\n`);
+      git(d, "add", "-A");
+      git(d, "commit", "--no-verify", "-q", "-m", `feat: main-${branch}\n\nAuthored-by-human: Dev <dev@example.com>`);
+      try {
+        git(d, "merge", "-q", branch);
+      } catch {
+        /* expected conflict */
+      }
+      writeFileSync(join(d, "shared.ts"), `resolved-${branch}\n`);
+      git(d, "add", "-A");
+      git(d, "commit", "--no-verify", "-q", "-m", msg);
+    };
+    conflict("fix1", "Merge fix1\n\nCo-Authored-By: Claude <noreply@anthropic.com>"); // disclosed → with_ai
+    conflict("fix2", "Merge fix2"); // undisclosed → unknown, never guessed
+
+    const r = repoCoverage(d);
+    // 7 non-merge commits (base, side, main, fix1, main-fix1, fix2, main-fix2) + the 2 conflict merges
+    expect(r.total).toBe(9);
+    expect(r.known).toBe(8);
+    expect(r.unknown).toBe(1); // the undisclosed conflict merge
+    expect(r.byCategory.with_ai).toBe(1); // the disclosed conflict merge; the disclosed plain merge isn't scored
+    expect(r.scope).toContain("2 merges with changes of their own");
+
+    // a range scopes merges the same way: the last merge plus the branch commit it brought in
+    const ranged = repoCoverage(d, { range: "HEAD~1..HEAD" });
+    expect(ranged.total).toBe(2); // fix2 + its merge
+    expect(ranged.unknown).toBe(1); // the merge
+  });
+
+  it("a limited window only scores merges inside it", () => {
+    const d = repo();
+    commit(d, "a.ts", "chore: a");
+    git(d, "checkout", "-q", "-b", "x");
+    writeFileSync(join(d, "s.ts"), "x\n");
+    git(d, "add", "-A");
+    git(d, "commit", "--no-verify", "-q", "-m", "x");
+    git(d, "checkout", "-q", "main");
+    writeFileSync(join(d, "s.ts"), "m\n");
+    git(d, "add", "-A");
+    git(d, "commit", "--no-verify", "-q", "-m", "m");
+    try {
+      git(d, "merge", "-q", "x");
+    } catch {
+      /* expected conflict */
+    }
+    writeFileSync(join(d, "s.ts"), "resolved\n");
+    git(d, "add", "-A");
+    git(d, "commit", "--no-verify", "-q", "-m", "Merge x");
+    // make the window end after the merge: later commits dated well after it
+    const later = (f: string): void => {
+      writeFileSync(join(d, f), f);
+      git(d, "add", "-A");
+      execFileSync("git", ["-C", d, "-c", "user.name=Dev", "-c", "user.email=dev@example.com", "commit", "--no-verify", "-q", "-m", f], {
+        env: { ...process.env, GIT_COMMITTER_DATE: "2099-01-01T00:00:00Z", GIT_AUTHOR_DATE: "2099-01-01T00:00:00Z" },
+      });
+    };
+    later("p.ts");
+    later("q.ts");
+    expect(repoCoverage(d, { limit: 2 }).total).toBe(2); // window = p, q; the older merge is outside it
+    expect(repoCoverage(d).total).toBe(6); // a, x, m, p, q + the merge (window not full ⇒ all history)
+  });
+
   it("never throws outside a git repo (degrades to an empty report)", () => {
     const d = mkdtempSync(join(tmpdir(), "madeby-cov-nogit-"));
     dirs.push(d);

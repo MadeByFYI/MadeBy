@@ -9,6 +9,19 @@ import type { CommitMeta } from "@madeby/classify";
 // so every call would throw and (via the catch below) silently return []. Use \x1f.
 const FIELD = "\x1f"; // unit separator between fields
 const RECORD = "\x1e"; // record separator between commits
+const GROUP = "\x1d"; // ends a commit's message where a file list follows it (readAuthoredMerges)
+
+const parseMeta = (rec: string): CommitMeta => {
+  const parts = rec.split(FIELD);
+  const sig = parts[3] ?? "N";
+  return {
+    sha: parts[0] ?? "",
+    authorName: parts[1] ?? "",
+    authorEmail: parts[2] ?? "",
+    signed: sig !== "N" && sig !== "",
+    message: parts.slice(4).join(FIELD).trimEnd(),
+  };
+};
 
 /**
  * Read commit metadata via `git log`. Returns `[]` (never throws) if git or the repo is
@@ -20,7 +33,7 @@ export function readGitLog(repoPath: string, limit?: number, range?: string): Co
       "-C",
       repoPath,
       "log",
-      "--no-merges", // merge commits aren't authored content — exclude them from attribution
+      "--no-merges", // a merge is not authored content by default; readAuthoredMerges finds those that are
       ...(limit ? ["-n", String(limit)] : []),
       // %G? is a signature-PRESENCE probe for the Disclosure Score: 'N' = unsigned; any other code
       // (G/U/E/…) = a signature is present (E = present but unverifiable here — no keyring). We only
@@ -38,16 +51,52 @@ export function readGitLog(repoPath: string, limit?: number, range?: string): Co
       .split(RECORD)
       .map((r) => r.replace(/^\s+/, ""))
       .filter((r) => r.length > 0)
-      .map((rec) => {
-        const parts = rec.split(FIELD);
-        const sha = parts[0] ?? "";
-        const authorName = parts[1] ?? "";
-        const authorEmail = parts[2] ?? "";
-        const sig = parts[3] ?? "N";
-        const message = parts.slice(4).join(FIELD).trimEnd();
-        return { sha, authorName, authorEmail, signed: sig !== "N" && sig !== "", message };
-      });
+      .map(parseMeta);
   } catch {
     return [];
+  }
+}
+
+/**
+ * The merge commits that carry content of their own — a conflict resolution or any other change that
+ * matches none of the merge's parents (`git log --cc` lists files only for those). A plain merge just
+ * joins two histories and authors nothing; these did author something, so coverage scores them like
+ * any other commit. Selection is by content, never by disclosure, so it can't bias known vs unknown.
+ *
+ * Scope mirrors readGitLog: a range is read as-is; otherwise pass `since` (unix seconds, the committer
+ * date of the oldest commit in the readGitLog window) to bound it to the same span of history. Returns
+ * `[]` (never throws) on any failure — fewer commits scored, never a false disclosure.
+ */
+export function readAuthoredMerges(repoPath: string, opts: { range?: string; since?: number } = {}): CommitMeta[] {
+  try {
+    const args = [
+      "-C",
+      repoPath,
+      "log",
+      "--merges",
+      "--cc",
+      "--name-only",
+      `--format=${RECORD}%H${FIELD}%an${FIELD}%ae${FIELD}%G?${FIELD}%B${GROUP}`,
+      ...(opts.since !== undefined && !opts.range ? [`--since=@${opts.since}`] : []),
+      ...(opts.range ? [opts.range] : []),
+    ];
+    const out = execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });
+    return out
+      .split(RECORD)
+      .filter((r) => r.includes(GROUP))
+      .filter((r) => r.slice(r.lastIndexOf(GROUP) + 1).trim().length > 0) // files of its own ⇒ authored
+      .map((r) => parseMeta(r.slice(0, r.lastIndexOf(GROUP))));
+  } catch {
+    return [];
+  }
+}
+
+/** Committer date (unix seconds) of a commit, or undefined if unreadable. */
+export function commitTime(repoPath: string, sha: string): number | undefined {
+  try {
+    const t = Number(execFileSync("git", ["-C", repoPath, "log", "-1", "--format=%ct", sha], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim());
+    return Number.isFinite(t) && t > 0 ? t : undefined;
+  } catch {
+    return undefined;
   }
 }
