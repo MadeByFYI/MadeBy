@@ -192,3 +192,16 @@ describe("tool:model disclosures — the agent AND the model version it ran", ()
     expect(c.modelVersion).toBeUndefined();
   });
 });
+
+describe("an AI agent's bot identity plus its own trailers", () => {
+  it("keeps the ai class from the identity and adds the model its trailer names", () => {
+    const r = classifyCommit({
+      message: "Implement slugify\n\nAuthored-by-ai: Copilot:gpt-6-luna\n\nCo-authored-by: MacDougherty <28536334+MacDougherty@users.noreply.github.com>",
+      authorName: "copilot-swe-agent[bot]",
+      authorEmail: "198982749+Copilot@users.noreply.github.com",
+    });
+    expect(r.class).toBe("ai");
+    expect(r.aiContributors).toHaveLength(2); // the human co-author is not an AI contributor
+    expect(r.aiContributors[1]).toMatchObject({ provider: "github-copilot", tool: "Copilot", modelVersion: "gpt-6-luna" });
+  });
+});

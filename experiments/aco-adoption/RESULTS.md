@@ -133,3 +133,23 @@ without the amended trailer. (The September trial's amendment did survive — ti
 classifies `ai` from its `copilot-swe-agent[bot]` identity, but loses the deliberate disclosure and the
 model. Fix (0.3.10): `--print` emits the trailer lines for the commit message itself, and the ACO block
 (v2) tells agents whose platform makes the commit to use it.
+
+### Round 4 — madeby 0.3.10: `--print` survives the cloud agent's push
+
+Copilot coding agent (cloud), ACO block v2: it ran `npx madeby@latest ai Copilot --print` and put the
+line in its commit message. The **pushed** commit (9e7fbec) carries `Authored-by-ai: Copilot:gpt-6-luna`
+— disclosure and model both on the record. **1 / 1.** One more fix it surfaced: a commit authored by an
+AI agent's bot identity (`copilot-swe-agent[bot]`) classified `ai` from the identity alone and ignored
+its trailers, so the model wasn't credited; the classifier now folds them in, and `coverage` shows
+`Copilot · gpt-6-luna`.
+
+### Cursor — a second witness: its chat store
+
+Still quota-blocked from running Cursor live, but its local chat store answers the open question. For
+each agent session Cursor writes `~/.cursor/chats/<md5(cwd)>/<chat>/store.db`, and every turn carries
+`"modelName":"…"` — what Auto actually routed to. All four round-2 Cursor trials were served by
+**`cursor-grok-4.5-high`** (one model per chat, consistently), though none had `CURSOR_MODEL` in the
+shell that ran madeby. madeby now reads the chat store when `CURSOR_MODEL` is absent — fail-safe: the
+newest chat for this directory, touched in the last 30 minutes, naming exactly one model. Checked on a
+copy of a real trial's store: `Authored-by-ai: Cursor:cursor-grok-4.5-high`. A live Cursor re-run
+remains to confirm it end to end.

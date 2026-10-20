@@ -153,11 +153,16 @@ export function classifyCommit(commit: CommitMeta): CommitClassification {
     const botText = `${commit.authorName ?? ""} ${commit.authorEmail ?? ""}`.trim();
     const agentAi = botText ? matchAi(botText) : null;
     if (agentAi) {
+      // The agent's own trailers still say more than its identity can — e.g. the model it ran
+      // (`Authored-by-ai: Copilot:gpt-6-luna` on a copilot-swe-agent[bot] commit) — so fold them in.
+      const named = [...commit.message.matchAll(AI_AUTHOR_TRAILER), ...commit.message.matchAll(TRAILER_RE)]
+        .map((m) => matchAiTrailer(m[1]!.trim()))
+        .filter((c): c is AiContributor => c !== null);
       return {
         class: "ai",
         confidence: CONF_AI,
-        signals: [`author:${agentAi.provider}`],
-        aiContributors: [{ ...agentAi, raw: botText }],
+        signals: [`author:${agentAi.provider}`, ...named.map((c) => `trailer:${c.provider}`)],
+        aiContributors: [{ ...agentAi, raw: botText }, ...named],
       };
     }
     return { class: "bot", confidence: CONF_BOT, signals: ["author:bot"], aiContributors };
