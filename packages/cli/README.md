@@ -156,7 +156,7 @@ Two modes, nothing more:
 - optional `"recordModel": true` — written by `madeby init --record-model`: the repo asks AI
   disclosures to name the model version as well as the tool. It adds one line to the AGENTS.md rule,
   and `me --with-ai` / `ai` then read the model from the **tool's own record of the session** — Cursor's
-  `CURSOR_MODEL`, the Copilot CLI and Claude Code session logs (locally; only the model id is read) —
+  `CURSOR_MODEL` or its chat store, the Copilot CLI and Claude Code session logs (locally; only the model id is read) —
   which wins over an agent's `--model`, since an agent routed by "Auto" may not know which model served
   it. Elsewhere `--model <version>` is used, never guessed. So `coverage` can list each **agent · model** pairing
   (`Cursor · gpt-5.3-codex` vs `Claude Code · claude-sonnet-5`). A request, not a gate — an AI

@@ -79,6 +79,7 @@ interface AiInput {
   /** for tests: the environment + home the tool's session record is read from */
   env?: Record<string, string | undefined>;
   home?: string;
+  cwd?: string;
 }
 
 /**
@@ -89,7 +90,7 @@ interface AiInput {
  */
 function resolveAi(root: string, o: AiInput): { value: string; tool: string; model?: string; modelSource?: string } {
   const tool = (o.tool && o.tool.trim()) || "AI";
-  const detected = recordsModel(root) ? detectAgentModel(tool, o.env ?? process.env, o.home ?? homedir()) : null;
+  const detected = recordsModel(root) ? detectAgentModel(tool, o.env ?? process.env, o.home ?? homedir(), o.cwd ?? process.cwd()) : null;
   if (detected) return { value: aiValue(detected.tool, detected.model), tool: detected.tool, model: detected.model, modelSource: detected.source };
   const model = o.model?.trim() || undefined;
   return { value: aiValue(tool, model), tool, ...(model ? { model, modelSource: "as given (--model)" } : {}) };

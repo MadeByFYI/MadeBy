@@ -1,4 +1,5 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
@@ -22,6 +23,25 @@ describe("detectAgentModel — the model from the tool's own record, never the a
       model: "composer-2-fast",
       source: "Cursor's CURSOR_MODEL",
     });
+  });
+
+  it("Cursor without CURSOR_MODEL: its chat store for this directory (one model only, recent only)", () => {
+    const h = home();
+    const cwd = "/work/repo";
+    const chat = join(h, ".cursor", "chats", createHash("md5").update(cwd).digest("hex"), "f5abb233");
+    mkdirSync(chat, { recursive: true });
+    const db = join(chat, "store.db");
+    writeFileSync(db, 'SQLite\0..{"providerOptions":{"cursor":{"modelName":"cursor-grok-4.5-high"}}}..{"modelName":"cursor-grok-4.5-high"}');
+    expect(detectAgentModel("Cursor", {}, h, cwd)).toEqual({ tool: "Cursor", model: "cursor-grok-4.5-high", source: "Cursor's chat store" });
+    expect(detectAgentModel("Cursor", {}, h, "/other/repo")).toBeNull(); // another directory's chats never count
+
+    writeFileSync(db, '{"modelName":"cursor-grok-4.5-high"}{"modelName":"gpt-5.2"}');
+    expect(detectAgentModel("Cursor", {}, h, cwd)).toBeNull(); // switched models ⇒ no answer, not a wrong one
+
+    writeFileSync(db, '{"modelName":"cursor-grok-4.5-high"}');
+    const old = (Date.now() - 2 * 60 * 60 * 1000) / 1000;
+    utimesSync(chat, old, old);
+    expect(detectAgentModel("Cursor", {}, h, cwd)).toBeNull(); // a stale chat isn't this session
   });
 
   it("Copilot CLI: the last model in its session log", () => {
