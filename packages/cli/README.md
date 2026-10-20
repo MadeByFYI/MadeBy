@@ -103,7 +103,9 @@ authorship coverage — last 500 commits  (estimate · disclosure, not detection
 It is a **labeled estimate**, honest by construction: an undisclosed commit is **unknown**, never
 inferred as human — disclosure, not detection. The human/with_ai/ai mix is reported *of the known*,
 never of the whole repo, and the asserted-vs-verified split shows how much is signed. `--json` emits
-counts only (percentages are derived at the edge, never stored). Use it to see your gap, then
+counts only (percentages are derived at the edge, never stored). A plain merge authors nothing and
+isn't scored; a merge that changes content of its own (a conflict resolution) is, like any other
+commit — chosen by what it changes, never by whether it discloses. Use it to see your gap, then
 `madeby init --required` to close it going forward.
 
 ### `madeby me` — affirm human authorship
