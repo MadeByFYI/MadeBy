@@ -43,6 +43,8 @@ Usage:
   madeby me --with-ai [tool]     Made by me, with AI: also disclose AI assistance (Assisted-by:
                                  <tool>, default "AI") — the assisted middle state, classified with_ai.
                                  --model <version> names the model too (Assisted-by: <tool>:<version>).
+                                 --print (me / ai) prints the trailer lines instead of amending HEAD,
+                                 for the commit message itself: git commit -m <msg> -m "$(madeby ai <tool> --print)".
   madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
   madeby help                    Show this help.
 

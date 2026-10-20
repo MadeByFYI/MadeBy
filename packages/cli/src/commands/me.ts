@@ -160,6 +160,41 @@ export function attestAiAuthorship(root: string, opts: AiInput = {}): AffirmResu
   return { ...base, ok: true, changed: trailers.length > 0, subject, added };
 }
 
+export interface TrailerResult {
+  ok: boolean;
+  reason?: "no-identity";
+  /** the disclosure trailer lines, ready for a commit message's last paragraph */
+  lines: string[];
+  model?: string;
+  modelSource?: string;
+}
+
+/**
+ * The disclosure as trailer LINES, without touching git — for agents whose platform makes or rebuilds
+ * the commit itself (a cloud coding agent pushing through its own tool), where amending HEAD afterwards
+ * is lost. Put them in the message at commit time: `git commit -m "<msg>" -m "$(madeby ai <tool>
+ * --print)"`. Same values (and the same model resolution) as the amending path.
+ */
+export function disclosureTrailers(root: string, opts: AiInput & { category: "human" | "with_ai" | "ai" }): TrailerResult {
+  if (opts.category === "ai") {
+    const ai = resolveAi(root, opts);
+    return { ok: true, lines: [`Authored-by-ai: ${ai.value}`], model: ai.model, modelSource: ai.modelSource };
+  }
+  let name = "";
+  let email = "";
+  try {
+    name = git(root, ["config", "user.name"]);
+    email = git(root, ["config", "user.email"]);
+  } catch {
+    /* fall through */
+  }
+  if (!name || !email) return { ok: false, reason: "no-identity", lines: [] };
+  const lines = [`Authored-by-human: ${name} <${email}>`];
+  if (opts.category === "human") return { ok: true, lines };
+  const ai = resolveAi(root, opts);
+  return { ok: true, lines: [...lines, `Assisted-by: ${ai.value}`], model: ai.model, modelSource: ai.modelSource };
+}
+
 /**
  * Disclose authorship on HEAD per ACO: affirm human authorship (`Authored-by-human`) and, with
  * `withAi`, disclose AI assistance (`Assisted-by: <tool>`) so the commit classifies `with_ai`. Pure of
@@ -232,6 +267,18 @@ export function meCommand(args: string[]): void {
   if (!root) {
     console.error("madeby me: not a git repository.");
     process.exit(2);
+    return;
+  }
+
+  if (args.includes("--print")) {
+    // stdout carries only the trailer lines, so `$(madeby me --with-ai <tool> --print)` composes
+    const t = disclosureTrailers(root, { category: withAi ? "with_ai" : "human", tool, model });
+    if (!t.ok) {
+      console.error("madeby me: set your git identity first (git config user.name / user.email).");
+      process.exit(1);
+      return;
+    }
+    console.log(t.lines.join("\n"));
     return;
   }
 

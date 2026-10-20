@@ -28,6 +28,10 @@ After you commit, run the matching command. It works with no install via `npx`:
 | `with_ai` | `npx madeby@latest me --with-ai <tool>`     | `Authored-by-human:` + `Assisted-by:`    |
 | `ai`      | `npx madeby@latest ai [tool]`               | `Authored-by-ai:` (add `--witness <log>` for spans) |
 
+If your platform makes or rebuilds the commit for you (a cloud coding agent pushing through its own
+tool), amending afterwards can be lost: add `--print` to get the trailer lines and put them in the
+message itself — `git commit -m "<message>" -m "$(npx madeby@latest ai [tool] --print)"`.
+
 **This repo dogfoods it:** a commit an AI drafted under human direction and review is disclosed with
 `npx madeby@latest me --with-ai "Claude Code"`, which classifies it `with_ai`.
 
