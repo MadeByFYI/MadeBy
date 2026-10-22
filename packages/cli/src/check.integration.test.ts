@@ -397,4 +397,26 @@ describe("madeby mcp — the agent-native MCP server (stdio JSON-RPC)", () => {
     expect(backfill).toMatch(/adoption boundary/i);
     expect(backfill).toMatch(/never fabricate|unknown/i);
   }, 30000);
+
+  // The guides are how an MCP-only agent learns the disclosure surface, so they must name every way to
+  // disclose that the CLI offers: the model version, --print for platforms that make the commit.
+  it("the ACO guide and policy schema cover the model version and print", async () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    const res = await mcpCall(d, [
+      { jsonrpc: "2.0", id: 1, method: "resources/read", params: { uri: "madeby://guide/aco" } },
+      { jsonrpc: "2.0", id: 2, method: "resources/read", params: { uri: "madeby://schema/policy" } },
+      { jsonrpc: "2.0", id: 3, method: "tools/list" },
+    ]);
+    const aco = (res.get(1)!.result as { contents: { text: string }[] }).contents[0]!.text;
+    expect(aco).toMatch(/category/);
+    expect(aco).toMatch(/recordModel/);
+    expect(aco).toMatch(/print: true/);
+    const schema = JSON.parse((res.get(2)!.result as { contents: { text: string }[] }).contents[0]!.text) as { properties: Record<string, unknown> };
+    expect(Object.keys(schema.properties)).toContain("recordModel");
+    const tools = (res.get(3)!.result as { tools: { name: string; inputSchema: { properties: Record<string, unknown> } }[] }).tools;
+    const disclose = tools.find((t) => t.name === "disclose")!;
+    expect(Object.keys(disclose.inputSchema.properties)).toEqual(expect.arrayContaining(["category", "tool", "model", "print"]));
+    expect(Object.keys(tools.find((t) => t.name === "init")!.inputSchema.properties)).toContain("record_model");
+  }, 30000);
 });
