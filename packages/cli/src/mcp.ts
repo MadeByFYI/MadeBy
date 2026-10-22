@@ -185,14 +185,19 @@ const ALIGN_GUIDE = `# Aligning a repository with MadeBy
 MadeBy is **disclosure, not detection** — it records what a commit *states* about its origin, never
 guesses whether code is AI. To align a repo:
 
-1. **Assess** — call \`check\` (or \`who\` with no path for a repo-wide map) to see current coverage.
-2. **Set up** — call \`init\`: it writes \`.madeby/policy.json\` (advisory) and the CI disclosure check.
-   Idempotent; it never clobbers an existing policy or workflow (\`mode: "required"\` only ever raises an
-   advisory policy to required). Then commit the created files.
-3. **Disclose going forward** — contributors disclose origin with a Co-Authored-By / Generated-by
-   trailer (AI), an \`Authored-by-human\` trailer (work they wrote themselves — the symmetric human
-   claim; \`madeby me\` adds it), a DCO Signed-off-by, a signed commit, or \`ai\` (record your own AI
-   session's witnessed spans, structurally verified and local). Human and AI disclosure ride the same ladder.
+1. **Assess** — call \`coverage\` for the scoreboard (known vs unknown, the human / with_ai / ai mix, and
+   the agents and model versions named), \`check\` for the gate's verdict, or \`who\` with no path for a
+   repo-wide map.
+2. **Set up** — call \`init\`: it writes \`.madeby/policy.json\` (advisory), the AGENTS.md disclosure rule,
+   and the CI disclosure check (\`host: "azure-devops"\` for Azure Pipelines). Idempotent; it never
+   clobbers an existing policy or workflow (\`mode: "required"\` only ever raises an advisory policy to
+   required). Add \`record_model: true\` if the repo should also record which model version did the work
+   (opt-in; a project's choice). Then commit the created files.
+3. **Disclose going forward** — contributors disclose origin with an \`Authored-by-ai\` trailer (an AI
+   wrote it; \`madeby ai\` adds it), \`Authored-by-human\` plus \`Assisted-by\` (a human wrote it with AI;
+   \`madeby me --with-ai\`), \`Authored-by-human\` alone (\`madeby me\`), a Co-Authored-By / Generated-by AI
+   trailer, a DCO Signed-off-by, a signed commit, or witnessed spans from an AI session log
+   (\`madeby ai --witness\`). Human and AI disclosure ride the same ladder.
 4. **Account for existing history honestly** — do NOT fabricate disclosure for past commits. Read the
    \`madeby://guide/backfill\` resource: recognize what's already disclosed, attach recoverable
    evidence, and set an adoption boundary — pre-boundary history is labeled *unknown*, never invented.
@@ -276,6 +281,7 @@ const POLICY_SCHEMA = {
     version: { const: 0 },
     mode: { enum: ["advisory", "required"], description: "advisory: report only (the default, and the safe degrade); required: fail on any undisclosed commit" },
     accept: { type: "array", items: { type: "string" }, description: "restrict what satisfies the policy (e.g. dco-signoff, ai-trailer, commit-signature); omit ⇒ any recognized disclosure counts" },
+    recordModel: { type: "boolean", description: "ask AI disclosures to name the model version too (tool:model, e.g. Assisted-by: Cursor:gpt-5.3-codex); madeby reads it from the tool's own session record where it can. Set by init --record-model. A request, not a gate" },
   },
 };
 
@@ -292,12 +298,22 @@ https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md
 - **ai** — an AI agent authored it (a human remains accountable).
 
 ## How an agent discloses its OWN work (asserted tier, no keys)
-- Collaborative / human-directed work you just did -> call **disclose** (with_ai: true, tool: "<your name>").
-  It affirms human authorship + discloses AI assistance on HEAD, classifying the commit with_ai.
+- After you commit, call **disclose** with the honest \`category\` and your \`tool\` name (e.g. "Claude Code"):
+  - \`ai\`: you wrote it; the committer stays accountable. Adds \`Authored-by-ai: <tool>\`.
+  - \`with_ai\`: a human wrote it with your help. Adds \`Authored-by-human\` + \`Assisted-by: <tool>\`.
+  - \`human\`: a human wrote it alone. Adds \`Authored-by-human\`.
+  If you wrote the code and a human is only committing it, that is \`ai\`, not \`with_ai\`.
+- **The model version.** If the repo's \`.madeby/policy.json\` has \`"recordModel": true\`, madeby reads your
+  model from the tool's own record of the session (Cursor, Copilot CLI, Claude Code) and writes
+  \`<tool>:<model>\`. Elsewhere pass \`model\` only if you know your exact model version. Never guess.
+- **If your platform makes or rebuilds the commit** (a cloud coding agent that pushes through its own
+  tool), a trailer amended in afterwards can be lost. Call disclose with \`print: true\` to get the trailer
+  lines instead, and put them in the commit message's last paragraph.
 - Fully AI-authored spans recoverable from your session log -> call **ai** (records structurally-verified
   spans, local-only).
-- Read what's already disclosed -> **who**. Align a whole repo -> **init** (also scaffolds an AGENTS.md
-  ACO convention so any agent working there discloses).
+- Read what's already disclosed -> **who**; measure a repo -> **coverage** (also lists the agents and
+  models named). Align a whole repo -> **init** (also scaffolds an AGENTS.md ACO convention so any agent
+  working there discloses).
 
 Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed.
 `;
