@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Can this remote hold git notes? Run it inside a clone of the repo to test (e.g. the Azure DevOps one).
+# Can this remote hold git notes? Usage: probe-notes-push.sh [clone-dir] [remote]  (default: here, origin)
 # It attaches a note to HEAD in a throwaway ref (refs/notes/madeby-probe), pushes it, reads it back
 # from the remote, then deletes it there and locally. Commits and branches are not touched.
 set -uo pipefail
 REF=refs/notes/madeby-probe
-REMOTE=${1:-origin}
+cd "${1:-.}" || exit 1
+REMOTE=${2:-origin}
 echo "remote: $(git remote get-url "$REMOTE")"
 git notes --ref="$REF" add -f -m "madeby notes probe $(date -u +%FT%TZ)" HEAD || exit 1
 if git push -q "$REMOTE" "$REF:$REF"; then
