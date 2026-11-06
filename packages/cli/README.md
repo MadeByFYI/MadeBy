@@ -43,6 +43,7 @@ npm i -g madeby
 ```
 madeby init                    Set MadeBy up: write .madeby/policy.json + the CI disclosure check.
                                --record-model (opt-in) also asks agents to name the model version.
+                               In a repo that uses Claude Code, also turns its commit trailer on.
 madeby check  [<range>]        The gate: do commits meet .madeby/policy.json? (a verdict — exit code
                                gates). <range> e.g. origin/main..HEAD — a PR's own commits. --json too.
 madeby coverage [<range>]      The scoreboard: how much of the repo's authorship is disclosed (known)
@@ -197,6 +198,24 @@ Two modes, nothing more:
 Fail-safe by design: a missing or malformed policy degrades to `advisory`. `madeby` never blocks a PR
 on its own error, and never invents a stricter gate than the maintainer wrote. It never passes a
 `required` check it couldn't actually run, either: missing history fails it (see `check` above).
+
+### Claude Code's own trailer
+
+Claude Code adds a `Co-Authored-By` trailer to its commits unless a developer turns it off in their
+personal settings — and then the `AGENTS.md` rule alone may not bring it back. So in a repo that uses
+Claude Code (it has a `CLAUDE.md` or a `.claude/` folder; `--claude-code` to force), `madeby init`
+sets the trailer in the shared `.claude/settings.json`:
+
+```json
+{ "attribution": { "commit": "Co-Authored-By: Claude Code <noreply@anthropic.com>" } }
+```
+
+The shared project file overrides a developer's personal settings, so everyone in the repo gets the
+trailer back. It's fixed text — Claude Code's setting has no placeholder for the model — so to record
+the model use `--record-model`. It merges into an existing file and never changes a value the team
+already set, including turning attribution off on purpose. A developer's own
+`.claude/settings.local.json` or instructions can still turn it off; the `required` check is what
+holds the line.
 
 ## Use it as a PR check
 

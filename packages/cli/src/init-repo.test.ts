@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
@@ -43,6 +43,54 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(pipe).toContain(`npx --yes madeby@${version} check`);
     expect(pipe).toContain("persistCredentials: false");
     expect(pipe).toContain("fetchDepth: 0");
+  });
+
+  describe("Claude Code's commit trailer (.claude/settings.json)", () => {
+    const settings = (root: string) => JSON.parse(readFileSync(join(root, ".claude", "settings.json"), "utf8"));
+    const TRAILER = "Co-Authored-By: Claude Code <noreply@anthropic.com>";
+
+    it("isn't touched in a repo with no sign of Claude Code, unless forced", () => {
+      const root = tmp();
+      expect(initRepo(root).claudeSettings).toBe("not-used");
+      expect(existsSync(join(root, ".claude"))).toBe(false);
+      expect(initRepo(root, { claudeCode: true }).claudeSettings).toBe("created");
+      expect(settings(root)).toEqual({ attribution: { commit: TRAILER } });
+    });
+
+    it("is created when the repo has a CLAUDE.md", () => {
+      const root = tmp();
+      writeFileSync(join(root, "CLAUDE.md"), "# CLAUDE.md\n");
+      const r = initRepo(root);
+      expect(r.claudeSettings).toBe("created");
+      expect(r.created).toContain(".claude/settings.json");
+    });
+
+    it("is merged into existing settings, keeping everything else", () => {
+      const root = tmp();
+      mkdirSync(join(root, ".claude"));
+      writeFileSync(join(root, ".claude", "settings.json"), JSON.stringify({ permissions: { allow: ["Bash(npm test)"] }, attribution: { pr: "" } }));
+      expect(initRepo(root).claudeSettings).toBe("merged");
+      expect(settings(root)).toEqual({ permissions: { allow: ["Bash(npm test)"] }, attribution: { pr: "", commit: TRAILER } });
+      expect(initRepo(root).claudeSettings).toBe("kept"); // idempotent
+    });
+
+    it("never overrides a choice the team made, including turning it off", () => {
+      for (const s of [{ attribution: false }, { attribution: { commit: "" } }, { includeCoAuthoredBy: false }]) {
+        const root = tmp();
+        mkdirSync(join(root, ".claude"));
+        writeFileSync(join(root, ".claude", "settings.json"), JSON.stringify(s));
+        expect(initRepo(root).claudeSettings).toBe("kept");
+        expect(settings(root)).toEqual(s);
+      }
+    });
+
+    it("leaves a file it can't parse alone", () => {
+      const root = tmp();
+      mkdirSync(join(root, ".claude"));
+      writeFileSync(join(root, ".claude", "settings.json"), "{ nope");
+      expect(initRepo(root).claudeSettings).toBe("malformed");
+      expect(readFileSync(join(root, ".claude", "settings.json"), "utf8")).toBe("{ nope");
+    });
   });
 
   it("is idempotent — re-running skips AGENTS.md and never clobbers it", () => {
