@@ -59,7 +59,19 @@ export interface InitOptions {
   update?: boolean;
   /** ask AI disclosures to name the model version too (policy `recordModel` + the AGENTS.md line) */
   recordModel?: boolean;
+  /**
+   * turn Claude Code's commit trailer on for the repo (`.claude/settings.json`) even without signs the
+   * repo uses Claude Code; by default it's done only when there's a CLAUDE.md or a .claude/ folder
+   */
+  claudeCode?: boolean;
 }
+
+/**
+ * What init did with Claude Code's shared settings: created the file, merged the trailer setting into
+ * it, kept a value the team already set (including turning it off on purpose), skipped a file it
+ * couldn't parse, or did nothing because the repo shows no sign of Claude Code.
+ */
+export type ClaudeSettingsStatus = "created" | "merged" | "kept" | "malformed" | "not-used";
 
 export interface InitResult {
   /** files written from scratch */
@@ -80,6 +92,8 @@ export interface InitResult {
   policyMode: string;
   /** does the repo's policy now ask AI disclosures to name the model version? */
   recordModel: boolean;
+  /** Claude Code's commit trailer in `.claude/settings.json` (see ClaudeSettingsStatus) */
+  claudeSettings: ClaudeSettingsStatus;
   host: string;
   nextSteps: string[];
 }
@@ -171,6 +185,39 @@ function ensurePolicy(
   return { mode: raise ? "required" : current.mode, recordModel: modelOn || current.recordModel === true, malformed: !isObject };
 }
 
+// Claude Code's commit trailer, set in the repo's shared settings. Claude Code adds `Co-Authored-By` to
+// its commits unless a developer turns it off; a shared project setting overrides their personal one
+// (user < shared project < local < managed), so the repo gets the trailer back for those who turned it
+// off. Setting it means fixed text — there's no placeholder for the model — so the model is recorded by
+// `init --record-model` instead. A team's own explicit value, "off" included, is theirs and never touched.
+export const CLAUDE_TRAILER = "Co-Authored-By: Claude Code <noreply@anthropic.com>";
+
+function ensureClaudeSettings(root: string, force: boolean): ClaudeSettingsStatus {
+  const abs = join(root, ".claude", "settings.json");
+  const usesClaude = force || existsSync(join(root, "CLAUDE.md")) || existsSync(join(root, ".claude"));
+  if (!usesClaude) return "not-used";
+  if (!existsSync(abs)) {
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, JSON.stringify({ attribution: { commit: CLAUDE_TRAILER } }, null, 2) + "\n");
+    return "created";
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(abs, "utf8"));
+  } catch {
+    return "malformed";
+  }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return "malformed";
+  const settings = raw as Record<string, unknown>;
+  const attribution = settings.attribution;
+  // the team already decided: attribution off, or a commit line of their own (even an empty one)
+  if (attribution === false || (attribution && typeof attribution === "object" && "commit" in attribution)) return "kept";
+  if (attribution === undefined && settings.includeCoAuthoredBy === false) return "kept";
+  const next = { ...settings, attribution: { ...(attribution && typeof attribution === "object" ? attribution : {}), commit: CLAUDE_TRAILER } };
+  writeFileSync(abs, JSON.stringify(next, null, 2) + "\n");
+  return "merged";
+}
+
 // Ensure an agent file carries a current ACO rule. Absent file + createIfAbsent ⇒ write the full
 // convention (created). No ACO block yet ⇒ append the section (merged). Outdated block ⇒ refresh it in
 // place when `update`, else flag it (outdated). Current/newer ⇒ leave it (skipped) — except that a
@@ -234,6 +281,8 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, ...aco });
   // CLAUDE.md — Claude Code reads this preferentially; merge/refresh if the repo has one (never create).
   ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, ...aco });
+  const claudeSettings = ensureClaudeSettings(root, opts.claudeCode ?? false);
+  if (claudeSettings === "created") created.push(".claude/settings.json");
   if (host === "github") {
     writeIfAbsent(join(root, ".github", "workflows", "disclosure.yml"), ".github/workflows/disclosure.yml", GH_WORKFLOW, created, skipped);
   } else if (host === "azure-devops") {
@@ -271,9 +320,16 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
     nextSteps.push('When ready to enforce: run \'madeby init --required\' (or set "mode": "required" in .madeby/policy.json), then make the check required on the protected branch — the host\'s control plane (GitHub: gh api branch protection; Azure: a build-validation policy). See the MCP resource madeby://guide/enforce for exact commands.');
   }
   nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), or an Authored-by-ai trailer ('madeby ai' — AI authored, committer accountable). A DCO Signed-off-by or a signed commit alone doesn't say who wrote the code, so it counts only if the policy's 'accept' lists it. Evidence upgrade: 'madeby ai --witness' records your own AI session's witnessed spans.");
+  if (claudeSettings === "created" || claudeSettings === "merged") {
+    nextSteps.push(`Claude Code now adds '${CLAUDE_TRAILER}' to its commits in this repo (.claude/settings.json), for everyone — including developers who turned the trailer off in their personal settings. Their .claude/settings.local.json, or an instruction of their own, can still turn it off; the check is what holds the line.`);
+  } else if (claudeSettings === "kept") {
+    nextSteps.push("This repo's .claude/settings.json already sets Claude Code's commit attribution, so it was left as the team set it. Clear that setting for the default trailer, or set attribution.commit to name the AI.");
+  } else if (claudeSettings === "malformed") {
+    nextSteps.push(".claude/settings.json isn't valid JSON, so Claude Code's commit trailer wasn't set. Fix the file and run 'madeby init' again.");
+  }
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
-  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, host, nextSteps };
+  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, claudeSettings, host, nextSteps };
 }
 
 // The GitHub Actions workflow (mirrors the quickstart; pinned action tag; fetch-depth:0 so the gate

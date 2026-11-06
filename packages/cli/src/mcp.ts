@@ -62,6 +62,7 @@ const TOOLS: Tool[] = [
         host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
         update: { type: "boolean", description: "refresh an outdated ACO convention block in place (drift update); default false (report only)" },
         record_model: { type: "boolean", description: "opt in: ask AI disclosures to also name the model version (tool:model) — policy recordModel + an AGENTS.md line. Never turned off by init; default false." },
+        claude_code: { type: "boolean", description: "set Claude Code's commit trailer in .claude/settings.json even if the repo shows no sign of Claude Code (it is set automatically when there is a CLAUDE.md or .claude/). A value the team already set is never changed." },
       },
     },
     handler: (args) =>
@@ -70,6 +71,7 @@ const TOOLS: Tool[] = [
         host: args.host as string | undefined,
         update: args.update as boolean | undefined,
         recordModel: args.record_model as boolean | undefined,
+        claudeCode: args.claude_code as boolean | undefined,
       }),
   },
   {
