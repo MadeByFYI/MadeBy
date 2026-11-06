@@ -65,14 +65,16 @@ claimed, never guesses; if you used AI, disclose the AI rather than claiming hum
 - `advisory` — report the disclosure coverage on each PR; never fails the check. The default, and
   what you get with no policy file at all (it's optional).
 - `required` — fail the check on any commit that discloses nothing your policy accepts.
-- optional `"accept": ["dco-signoff", "ai-trailer", ...]` — restrict what satisfies the policy
-  (omit ⇒ any recognized disclosure counts).
+- optional `"accept": ["dco-signoff", "ai-trailer", ...]` — set what satisfies the policy
+  (omit ⇒ any authorship disclosure counts; a DCO sign-off or signature alone counts only if listed).
 
 **2. `.github/workflows/disclosure.yml`:**
 
 ```yaml
 name: Disclosure
 on: pull_request
+permissions:
+  contents: read
 jobs:
   madeby:
     runs-on: ubuntu-latest
@@ -80,8 +82,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0            # so the action can scope to the PR's own commits (base..head)
+          persist-credentials: false
       - uses: MadeByFYI/MadeBy/packages/action@v0.2.0
+        with:
+          version: "0.3.13"         # pin an exact madeby release
 ```
+
+`madeby init` writes this file with the release you ran pinned. **Pin the version:** the check runs
+code from npm in your CI, so run the release you chose, not whatever is newest. And keep the job
+free of credentials: it only reads git history, so it needs no token.
 
 That's the whole thing: **commit two files.** No app to install, nothing hosted, no data leaves your
 CI. When you're ready to *gate*, set `"mode": "required"` and add the check to branch protection.
@@ -97,8 +106,13 @@ build-validation branch policy**:
 steps:
   - template: azure-pipelines-disclosure.yml@MadeBy   # or a local/relative path
     parameters:
-      version: latest
+      version: "0.3.13"   # pin an exact madeby release
 ```
+
+Or let `madeby init --host azure-devops` write `.madeby/azure-pipelines.yml`: a standalone PR-only
+pipeline with the release pinned, full history and no credentials kept. Run the check in a pipeline
+of its own like that, not as a step in one that keeps credentials (`persistCredentials: true`): it
+runs code from npm, and only needs to read git history.
 
 On a PR build `madeby check` **auto-scopes to the PR's own commits** from the Azure environment — no
 range logic in your YAML (the `azure-devops` host adapter reads `BUILD_REASON` +
@@ -117,9 +131,9 @@ CI step on that host (compute the range from that host's env).
 
 ## What a contributor does to pass a `required` gate
 
-Whatever discloses origin — add a `Co-Authored-By:` / `Generated-by:` trailer, affirm your own
-authorship with `madeby me`, add a DCO `Signed-off-by:`, sign the commit, or record your AI session
-with `madeby ai`. The check comments a short summary and points to how.
+Say who wrote it — `madeby ai <tool>` (an AI wrote it), `madeby me --with-ai <tool>` (you, with AI),
+`madeby me` (you alone), or a `Co-Authored-By:` / `Generated-by:` trailer naming the AI tool. A DCO
+`Signed-off-by:` or a signature alone counts only if the policy's `accept` lists it. The check comments a short summary and points to how.
 
 ## Honest notes
 

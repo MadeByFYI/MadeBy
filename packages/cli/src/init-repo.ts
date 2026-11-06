@@ -8,6 +8,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseDisclosurePolicy } from "@madeby/core";
+import { VERSION } from "./version";
 
 // The ACO block is versioned and fenced by an open+close marker. Bump ACO_VERSION whenever ACO_BODY
 // changes; repos seeded with an older version then report as outdated until `madeby init --update`.
@@ -235,6 +236,8 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, ...aco });
   if (host === "github") {
     writeIfAbsent(join(root, ".github", "workflows", "disclosure.yml"), ".github/workflows/disclosure.yml", GH_WORKFLOW, created, skipped);
+  } else if (host === "azure-devops") {
+    writeIfAbsent(join(root, ".madeby", "azure-pipelines.yml"), ".madeby/azure-pipelines.yml", AZURE_PIPELINE, created, skipped);
   }
 
   const nextSteps: string[] = ["Commit the created files."];
@@ -260,23 +263,26 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
     nextSteps.push(`${outdated.join(" + ")} carries an OUTDATED ACO convention — run 'madeby init --update' to refresh it in place (only the ACO block changes).`);
   }
   if (host === "azure-devops") {
-    nextSteps.push("Add the Azure Pipelines template (packages/action/azure-pipelines-disclosure.yml) and wire it as a PR build-validation branch policy.");
+    nextSteps.push("In Azure DevOps, create a pipeline from .madeby/azure-pipelines.yml (a PR-only pipeline: no credentials kept, madeby pinned) and add it to the protected branch as a build-validation policy.");
   } else if (host !== "github") {
     nextSteps.push(`Add a CI step that runs 'npx madeby check' on pull requests for ${host}.`);
   }
   if (policy.mode !== "required") {
     nextSteps.push('When ready to enforce: run \'madeby init --required\' (or set "mode": "required" in .madeby/policy.json), then make the check required on the protected branch — the host\'s control plane (GitHub: gh api branch protection; Azure: a build-validation policy). See the MCP resource madeby://guide/enforce for exact commands.');
   }
-  nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), an Authored-by-ai trailer ('madeby ai' — AI authored, committer accountable), a DCO Signed-off-by, or a signed commit. Evidence upgrade: 'madeby ai --witness' records your own AI session's witnessed spans.");
+  nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), or an Authored-by-ai trailer ('madeby ai' — AI authored, committer accountable). A DCO Signed-off-by or a signed commit alone doesn't say who wrote the code, so it counts only if the policy's 'accept' lists it. Evidence upgrade: 'madeby ai --witness' records your own AI session's witnessed spans.");
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
   return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, host, nextSteps };
 }
 
 // The GitHub Actions workflow (mirrors the quickstart; pinned action tag; fetch-depth:0 so the gate
-// can auto-scope to the PR's own commits).
+// can auto-scope to the PR's own commits). madeby is pinned to the release that wrote it, and the job
+// can only read: a check needs no token, so none is kept for the code it runs.
 const GH_WORKFLOW = `name: Disclosure
 on: pull_request
+permissions:
+  contents: read
 jobs:
   madeby:
     runs-on: ubuntu-latest
@@ -284,5 +290,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: MadeByFYI/MadeBy/packages/action@v0.2.0
+        with:
+          version: "${VERSION}"
+`;
+
+// The Azure Pipelines equivalent: a PR-only pipeline, run as a build-validation policy. Full history
+// (the range needs the target branch), no credentials kept, madeby pinned. The check reads git only.
+const AZURE_PIPELINE = `# MadeBy disclosure check. Run it as a build-validation policy on the protected branch: Azure
+# DevOps runs it for each pull request. It reads the git history only, so it keeps no credentials.
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+    fetchDepth: 0 # the PR's commits and the target branch, so the range can be read
+    persistCredentials: false
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "20.x"
+  - script: npx --yes madeby@${VERSION} check
+    displayName: MadeBy disclosure check
 `;

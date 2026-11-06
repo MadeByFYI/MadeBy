@@ -29,6 +29,22 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(r.nextSteps.some((s) => s.includes("AGENTS.md ACO convention was added"))).toBe(true);
   });
 
+  it("pins the madeby release in the CI file it writes, and keeps no credentials (GitHub and Azure)", () => {
+    const version = (JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf8")) as { version: string }).version;
+    const gh = tmp();
+    initRepo(gh);
+    const wf = readFileSync(join(gh, ".github", "workflows", "disclosure.yml"), "utf8");
+    expect(wf).toContain(`version: "${version}"`);
+    expect(wf).toContain("persist-credentials: false");
+    const az = tmp();
+    const r = initRepo(az, { host: "azure-devops" });
+    expect(r.created).toContain(".madeby/azure-pipelines.yml");
+    const pipe = readFileSync(join(az, ".madeby", "azure-pipelines.yml"), "utf8");
+    expect(pipe).toContain(`npx --yes madeby@${version} check`);
+    expect(pipe).toContain("persistCredentials: false");
+    expect(pipe).toContain("fetchDepth: 0");
+  });
+
   it("is idempotent — re-running skips AGENTS.md and never clobbers it", () => {
     const root = tmp();
     initRepo(root);

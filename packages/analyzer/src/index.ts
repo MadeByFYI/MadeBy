@@ -1,7 +1,7 @@
 // @madeby/analyzer — the curiosity mirror's engine: git history → classify → breakdown.
 // Node-only (reads git). Composes @madeby/classify; commit-level in v0.
 
-export { readAuthoredMerges, readGitLog } from "./git";
+export { readAuthoredMerges, readGitLog, historyProblem } from "./git";
 export { analyzeCommits } from "./analyze";
 export type { AnalysisResult } from "./analyze";
 // Disclosure primitives as library functions — shared by the CLI (check) and the MCP
@@ -13,7 +13,7 @@ export type { DisclosedCommit, RepoDisclosure } from "./read-disclosures";
 export { provenanceOf, provenanceMap } from "./path-provenance";
 export type { PathProvenance, ProvenanceRecord, ProvenanceMap, WitnessedFile } from "./path-provenance";
 export { agentName, repoCoverage } from "./coverage";
-export type { AgentCount, CoverageReport, CoverageCategory } from "./coverage";
+export type { AgentCount, AuthorCount, CoverageReport, CoverageCategory } from "./coverage";
 export { recordAiSpans } from "./record-spans";
 export type { RecordOptions, RecordResult } from "./record-spans";
 export { badgeSnippet } from "./badge";
@@ -33,7 +33,7 @@ export type { EnrichOptions } from "./enrich";
 // third parties register siblings (Azure DevOps, GitLab, …) through the same registry.
 import "./host/azure"; // side-effect: register the Azure adapter (bare import survives bundling)
 import "./host/gitlab"; // side-effect: register the GitLab adapter
-export { registerHostAdapter, getHostAdapter, listHostAdapters, detectCiRange } from "./host/registry";
+export { registerHostAdapter, getHostAdapter, listHostAdapters, detectCiRange, detectCiPullRequest } from "./host/registry";
 export { githubAdapter } from "./host/github";
 export { azureAdapter } from "./host/azure";
 export { gitlabAdapter } from "./host/gitlab";

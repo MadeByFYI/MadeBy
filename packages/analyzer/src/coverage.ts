@@ -32,6 +32,24 @@ export interface CoverageReport {
    * Code` + `Co-Authored-By: Claude Opus 5`) counts under each, so the counts can sum past the total.
    */
   readonly byAgent: ReadonlyArray<AgentCount>;
+  /**
+   * The same picture per commit author, most commits first: who discloses and who doesn't. Keyed by
+   * the author email git records (an identity is never guessed), named by its most recent name.
+   */
+  readonly byAuthor: ReadonlyArray<AuthorCount>;
+}
+
+export interface AuthorCount {
+  /** the git author name on the author's most recent commit in scope */
+  readonly name: string;
+  /** the git author email, lowercased — the grouping key */
+  readonly email: string;
+  /** commits scored */
+  readonly commits: number;
+  /** of those, commits with an authorship disclosure on the record */
+  readonly known: number;
+  /** counts over the author's KNOWN commits */
+  readonly byCategory: Readonly<Record<CoverageCategory, number>>;
 }
 
 export interface AgentCount {
@@ -86,6 +104,7 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
   const byTier = { asserted: 0, verified: 0 };
   let known = 0;
   const agents = new Map<string, { name: string; provider: string; tool?: string; model?: string; commits: number }>();
+  const authors = new Map<string, { name: string; email: string; commits: number; known: number; byCategory: Record<CoverageCategory, number> }>();
 
   for (const c of commits) {
     const kinds = commitDisclosureKinds({ message: c.message, signed: c.signed });
@@ -96,7 +115,14 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
     // not the human-vs-AI category, so those stay unknown here.
     const category: CoverageCategory | "unknown" =
       cls === "human" && !kinds.includes("human-attestation") ? "unknown" : cls;
+    // commits arrive newest first, so the first name seen for an email is its most recent
+    const email = (c.authorEmail ?? "").toLowerCase();
+    const author = authors.get(email) ?? { name: c.authorName ?? email, email, commits: 0, known: 0, byCategory: { human: 0, with_ai: 0, ai: 0, bot: 0 } };
+    author.commits += 1;
+    authors.set(email, author);
     if (category === "unknown") continue;
+    author.known += 1;
+    author.byCategory[category] += 1;
     known += 1;
     byCategory[category] += 1;
     if (c.signed) byTier.verified += 1;
@@ -126,5 +152,6 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
     byCategory,
     byTier,
     byAgent: [...agents.values()].sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)),
+    byAuthor: [...authors.values()].sort((a, b) => b.commits - a.commits || a.email.localeCompare(b.email)),
   };
 }

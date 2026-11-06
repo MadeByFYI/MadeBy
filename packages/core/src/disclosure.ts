@@ -38,13 +38,19 @@ export interface DisclosureKindMeta {
   ceiling: TrustTier;
   /** 'recognized' = we parse it today; 'planned' = in the vocabulary, parser not yet landed */
   parser: ParserStatus;
+  /**
+   * whether the signal says WHO wrote the code (a person, a person with AI, or an AI). A DCO sign-off
+   * says the signer may submit it, a signature says who committed it: real disclosures, but of
+   * accountability, not authorship — so by default they don't satisfy a policy on their own.
+   */
+  authorship: boolean;
 }
 
 // The open registry. `planned` entries are honest placeholders (evidence, not guessing): the
 // vocabulary is complete so the index/gate can enumerate what disclosure means, and a parser lands
 // per standard as we build it (same discipline as the tool-parser harness).
 export const DISCLOSURE_KINDS: Record<DisclosureKind, DisclosureKindMeta> = {
-  "ai-trailer": { label: "AI-authorship trailer", nativeness: "external", ceiling: "asserted", parser: "recognized" },
+  "ai-trailer": { label: "AI-authorship trailer", nativeness: "external", ceiling: "asserted", parser: "recognized", authorship: true },
   // The AFFIRMATIVE human-authorship claim — the symmetric counterpart of the AI trailer, NOT a
   // separate mechanism: same recognizer, same ladder. A bare trailer is `asserted` (identical to the
   // AI trailer); sign it → verified, swear it → sworn — the signature authenticates WHO is claiming
@@ -52,17 +58,17 @@ export const DISCLOSURE_KINDS: Record<DisclosureKind, DisclosureKindMeta> = {
   // tier: AI authorship can leave a re-checkable ARTIFACT (a session log matched to the code,
   // `prove`); human authorship is the author's firsthand TESTIMONY — real, but not independently
   // re-checkable, so to a third party it lands as an attestation (asserted → signed → sworn testimony).
-  "human-attestation": { label: "human-authorship attestation", nativeness: "madeby", ceiling: "asserted", parser: "recognized" },
-  "dco-signoff": { label: "DCO Signed-off-by", nativeness: "external", ceiling: "asserted", parser: "recognized" },
-  "commit-signature": { label: "commit signature", nativeness: "external", ceiling: "verified", parser: "recognized" },
-  "ai-tool-config": { label: "committed AI-tool config", nativeness: "external", ceiling: "asserted", parser: "recognized" },
-  "spdx-license": { label: "SPDX license metadata", nativeness: "external", ceiling: "asserted", parser: "recognized" },
-  "spdx-ai-disclosure": { label: "SPDX-AI-Disclosure tag", nativeness: "external", ceiling: "asserted", parser: "recognized" },
-  reuse: { label: "REUSE licensing", nativeness: "external", ceiling: "asserted", parser: "planned" },
-  "in-toto": { label: "in-toto attestation", nativeness: "external", ceiling: "verified", parser: "planned" },
-  slsa: { label: "SLSA provenance", nativeness: "external", ceiling: "verified", parser: "planned" },
-  "madeby-manifest": { label: "MadeBy witnessed manifest", nativeness: "madeby", ceiling: "asserted", parser: "recognized" },
-  "madeby-declaration": { label: "MadeBy self-hosted declaration", nativeness: "madeby", ceiling: "sworn", parser: "recognized" },
+  "human-attestation": { label: "human-authorship attestation", nativeness: "madeby", ceiling: "asserted", parser: "recognized", authorship: true },
+  "dco-signoff": { label: "DCO Signed-off-by", nativeness: "external", ceiling: "asserted", parser: "recognized", authorship: false },
+  "commit-signature": { label: "commit signature", nativeness: "external", ceiling: "verified", parser: "recognized", authorship: false },
+  "ai-tool-config": { label: "committed AI-tool config", nativeness: "external", ceiling: "asserted", parser: "recognized", authorship: false },
+  "spdx-license": { label: "SPDX license metadata", nativeness: "external", ceiling: "asserted", parser: "recognized", authorship: false },
+  "spdx-ai-disclosure": { label: "SPDX-AI-Disclosure tag", nativeness: "external", ceiling: "asserted", parser: "recognized", authorship: true },
+  reuse: { label: "REUSE licensing", nativeness: "external", ceiling: "asserted", parser: "planned", authorship: false },
+  "in-toto": { label: "in-toto attestation", nativeness: "external", ceiling: "verified", parser: "planned", authorship: false },
+  slsa: { label: "SLSA provenance", nativeness: "external", ceiling: "verified", parser: "planned", authorship: false },
+  "madeby-manifest": { label: "MadeBy witnessed manifest", nativeness: "madeby", ceiling: "asserted", parser: "recognized", authorship: true },
+  "madeby-declaration": { label: "MadeBy self-hosted declaration", nativeness: "madeby", ceiling: "sworn", parser: "recognized", authorship: true },
 };
 
 /** A recognized disclosure signal — normalized across carriers. */

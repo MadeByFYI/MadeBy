@@ -10,10 +10,11 @@
 #   steps:
 #     - template: azure-pipelines-disclosure.yml@MadeBy   # or a local/relative path
 #       parameters:
-#         version: latest       # npm version/tag of the `madeby` CLI (optional)
+#         version: "0.3.13"     # pin an exact `madeby` release (default: latest)
 #         range: ""             # override the auto-detected range (optional)
 #
-# Wire it as a PR build validation branch policy on your protected branch to gate merges.
+# Wire it as a PR build validation branch policy on your protected branch to gate merges. Run it in a
+# PR-only pipeline of its own: it runs code from npm, so keep no credentials in that job.
 
 parameters:
   - name: version
@@ -26,6 +27,7 @@ parameters:
 steps:
   - checkout: self
     fetchDepth: 0 # so the PR history + the target branch (origin/<target>) are present for the range
+    persistCredentials: false # the check only reads git history
     displayName: "Checkout (full history)"
   - task: NodeTool@0
     inputs:

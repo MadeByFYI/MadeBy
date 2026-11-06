@@ -11,12 +11,18 @@
 #     - remote: 'https://raw.githubusercontent.com/MadeByFYI/MadeBy/v0.2.0/packages/action/gitlab-ci-disclosure.yml'
 #
 # Then require the "disclosure" job on the target branch via a merge-request approval / pipeline rule.
+# Pin the release it runs (it runs code from npm) by extending the job in your .gitlab-ci.yml:
+#
+#   disclosure:
+#     variables:
+#       MADEBY_VERSION: "0.3.13"
 
 disclosure:
   image: node:20
   variables:
     GIT_DEPTH: 0 # so the MR base + head SHAs are present for the range
+    MADEBY_VERSION: latest
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   script:
-    - npx --yes madeby check
+    - npx --yes "madeby@${MADEBY_VERSION}" check

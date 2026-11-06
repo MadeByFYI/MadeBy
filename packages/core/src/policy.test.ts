@@ -32,10 +32,19 @@ describe("evaluateDisclosurePolicy", () => {
   const commits = [c("a", ["dco-signoff"]), c("b", ["commit-signature"]), c("d", [])];
 
   it("required: any accepted disclosure makes a commit compliant; undisclosed fails the gate", () => {
-    const r = evaluateDisclosurePolicy({ version: 0, mode: "required" }, commits);
+    const r = evaluateDisclosurePolicy({ version: 0, mode: "required", accept: ["dco-signoff", "commit-signature"] }, commits);
     expect(r.compliant).toBe(2);
     expect(r.nonCompliant.map((v) => v.ref)).toEqual(["d"]);
     expect(r.pass).toBe(false); // 'd' discloses nothing → required gate fails
+  });
+
+  it("by default only an authorship disclosure counts; a lone sign-off or signature is reported apart", () => {
+    const r = evaluateDisclosurePolicy({ version: 0, mode: "required" }, [...commits, c("e", ["ai-trailer"]), c("f", ["human-attestation", "dco-signoff"])]);
+    expect(r.compliant).toBe(2); // e, f
+    expect(r.nonCompliant.map((v) => v.ref)).toEqual(["a", "b", "d"]);
+    expect(r.nonCompliant.find((v) => v.ref === "a")!.notAccepted).toEqual(["dco-signoff"]);
+    expect(r.summary).toMatch(/3 undisclosed \(2 carry only a sign-off or signature/);
+    expect(r.pass).toBe(false);
   });
 
   it("required with a specific accept list only counts those kinds", () => {
@@ -46,7 +55,7 @@ describe("evaluateDisclosurePolicy", () => {
 
   it("advisory reports the same picture but always passes the gate", () => {
     const r = evaluateDisclosurePolicy({ version: 0, mode: "advisory" }, commits);
-    expect(r.nonCompliant.map((v) => v.ref)).toEqual(["d"]);
+    expect(r.nonCompliant.map((v) => v.ref)).toEqual(["a", "b", "d"]);
     expect(r.pass).toBe(true); // advisory never blocks
   });
 

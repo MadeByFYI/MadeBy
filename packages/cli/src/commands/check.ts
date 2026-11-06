@@ -5,7 +5,7 @@
 // and never invent a stricter gate than the maintainer wrote. A thin renderer over the shared
 // `evaluateRepoDisclosure` library primitive; `@madeby/core`'s `commitDisclosureKinds` is the raw recognizer.
 
-import { evaluateRepoDisclosure } from "@madeby/analyzer";
+import { detectCiPullRequest, evaluateRepoDisclosure, historyProblem } from "@madeby/analyzer";
 import { repoRoot, resolveRange } from "../scope";
 
 export function checkCommand(args: string[]): void {
@@ -24,12 +24,31 @@ export function checkCommand(args: string[]): void {
   const { range, autoHost } = resolveRange(explicit);
   const result = evaluateRepoDisclosure(root, { range });
 
+  // The history must be here to be scored. A shallow clone, a range endpoint that was never fetched, or
+  // a PR build whose range can't be read would otherwise score whatever is present — or nothing — and
+  // pass. That's a pipeline problem, not ours, so `required` fails on it (never a false pass) and
+  // `advisory` warns loudly.
+  const prHost = explicit || autoHost ? null : detectCiPullRequest();
+  const problem = prHost
+    ? `this is a ${prHost} pull-request build, but its commit range couldn't be read from the CI environment. Pass the range explicitly: madeby check <base>..<head>`
+    : historyProblem(root, range);
+  const blocked = problem !== null && result.mode === "required";
+  const pass = result.pass && !blocked;
+
   if (json) {
-    console.log(JSON.stringify({ range: range ?? null, autoHost: autoHost ?? null, ...result }, null, 2));
-    process.exit(result.pass ? 0 : 1);
+    console.log(JSON.stringify({ range: range ?? null, autoHost: autoHost ?? null, ...result, pass, ...(problem ? { historyProblem: problem } : {}) }, null, 2));
+    process.exit(pass ? 0 : 1);
     return;
   }
 
+  if (problem) {
+    const banner = blocked ? "FAILED — can't check this history" : "WARNING — this result may be wrong";
+    console.error(`\nmadeby check: ${banner}: ${problem}\n`);
+  }
+  if (blocked) {
+    process.exit(1);
+    return;
+  }
   if (result.warning) console.warn(`madeby check: ${result.warning}`);
   if (autoHost) console.log(`madeby check: auto-scoped to the ${autoHost} PR range.`);
   console.log(`madeby check — ${result.summary}`);
@@ -41,12 +60,14 @@ export function checkCommand(args: string[]): void {
     }
     if (result.undisclosed.length > 20) console.log(`  … and ${result.undisclosed.length - 20} more`);
     console.log(
-      `\nTo disclose: add a Co-Authored-By / Generated-by trailer, affirm your own authorship with 'madeby me',` +
-        ` add a DCO Signed-off-by, sign the commit, or record your AI session with 'madeby ai'.` +
+      `\nTo disclose who wrote it: 'madeby ai <tool>' (an AI wrote it), 'madeby me --with-ai <tool>' (you, with AI),` +
+        ` or 'madeby me' (you alone); a Co-Authored-By trailer naming an AI tool also counts. A DCO sign-off or a` +
+        ` signature alone doesn't say who wrote the code.` +
         ` (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
     );
   }
 
-  // `required` gates; `advisory` only reports. Never exit non-zero on our own error.
+  // `required` gates; `advisory` only reports. Never exit non-zero on our own error (a missing history
+  // is the pipeline's, handled above).
   process.exit(result.pass ? 0 : 1);
 }

@@ -34,3 +34,9 @@ export function detectCiRange(env: Record<string, string | undefined> = process.
   }
   return null;
 }
+
+/** The id of the host whose pull-request build this is (per its `ciPullRequest`), else null. */
+export function detectCiPullRequest(env: Record<string, string | undefined> = process.env): string | null {
+  for (const adapter of registry.values()) if (adapter.ciPullRequest?.(env)) return adapter.id;
+  return null;
+}
