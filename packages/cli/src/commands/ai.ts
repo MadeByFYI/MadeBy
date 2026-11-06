@@ -1,3 +1,6 @@
+// `madeby ai [tool] --for <commit|range>` discloses EARLIER commits instead, with an empty disclosure
+// commit (see `discloseFor` in ./me), for a repo where amending or rebasing isn't allowed.
+//
 // `madeby ai [tool]` — made by AI: attest that an AI authored HEAD, by adding an `Authored-by-ai:
 // <tool>` trailer (asserted tier — no session log, works anywhere). `--model <version>` also names the
 // model it ran (`Authored-by-ai: <tool>:<version>`). `--print` prints the trailer instead of amending
@@ -13,7 +16,7 @@
 // add a parser for an unsupported tool, without any code or prompts leaving the machine.
 
 import { recordAiSpans, writeParserSample } from "@madeby/analyzer";
-import { attestAiAuthorship, disclosureTrailers, parseModel } from "./me";
+import { attestAiAuthorship, discloseFor, disclosureTrailers, parseFor, parseModel, renderDiscloseFor } from "./me";
 import { repoRoot } from "../scope";
 
 const ISSUE_URL = "https://github.com/MadeByFYI/MadeBy/issues/new";
@@ -29,8 +32,8 @@ export function aiCommand(args: string[]): void {
   const makeSample = args.includes("--make-parser-sample");
   const witness = args.includes("--witness");
   const model = parseModel(args);
-  // positional args, minus --model's value
-  const positional = args.filter((a, i) => !a.startsWith("--") && !(args[i - 1] === "--model"));
+  // positional args, minus --model's and --for's values
+  const positional = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--model" && args[i - 1] !== "--for");
 
   // Contribution path (unchanged): a content-free format skeleton for an unsupported tool's log.
   if (makeSample) {
@@ -81,6 +84,11 @@ export function aiCommand(args: string[]): void {
 
   // Default: assert AI authorship via a trailer (asserted tier — no session log needed).
   const tool = positional[0] || "AI";
+  const forTarget = parseFor(args);
+  if (forTarget) {
+    renderDiscloseFor("ai", forTarget, discloseFor(root, forTarget, { category: "ai", tool, model }));
+    return;
+  }
   if (args.includes("--print")) {
     // the trailer line only, for the commit message itself: git commit -m "<msg>" -m "$(madeby ai <tool> --print)"
     console.log(disclosureTrailers(root, { category: "ai", tool, model }).lines.join("\n"));

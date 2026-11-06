@@ -229,3 +229,28 @@ export function commitDisclosureKinds(commit: { message: string; signed?: boolea
   if (commit.signed === true) kinds.push("commit-signature");
   return kinds;
 }
+
+/** Does this message itself disclose who wrote the commit (an authorship trailer, not just a sign-off)? */
+export function hasAuthorshipDisclosure(message: string): boolean {
+  return commitDisclosureKinds({ message }).some((k) => DISCLOSURE_KINDS[k].authorship);
+}
+
+// The disclosure commit (ACO §5): an empty commit whose `Discloses: <full hash>` lines name EARLIER
+// commits and whose ACO trailers say who wrote them — disclosure after the fact, without rewriting
+// history. Full hashes only (SHA-1 or SHA-256), so a reference is never ambiguous.
+const DISCLOSES_RE = /^[ \t]*Discloses[ \t]*:[ \t]*([0-9a-f]{64}|[0-9a-f]{40})[ \t]*$/gim;
+
+/** The commits a disclosure commit names, lowercased and de-duplicated, in order. Empty ⇒ not one. */
+export function disclosedTargets(message: string): string[] {
+  return [...new Set([...message.matchAll(DISCLOSES_RE)].map((m) => m[1]!.toLowerCase()))];
+}
+
+/** The disclosure a disclosure commit makes: its message minus the subject and the `Discloses:` lines. */
+export function disclosureCommitTrailers(message: string): string {
+  return message
+    .split("\n")
+    .slice(1)
+    .filter((l) => !/^[ \t]*Discloses[ \t]*:/i.test(l))
+    .join("\n")
+    .trim();
+}

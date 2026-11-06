@@ -45,6 +45,8 @@ Usage:
                                  --model <version> names the model too (Assisted-by: <tool>:<version>).
                                  --print (me / ai) prints the trailer lines instead of amending HEAD,
                                  for the commit message itself: git commit -m <msg> -m "$(madeby ai <tool> --print)".
+                                 --for <commit|range> (me / ai) discloses EARLIER commits instead, with one
+                                 new empty commit naming them (Discloses: <hash>) — nothing rewritten.
   madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
   madeby help                    Show this help.
 

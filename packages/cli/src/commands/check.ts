@@ -59,10 +59,15 @@ export function checkCommand(args: string[]): void {
       console.log(`  ✗ ${v.ref}  ${v.subject.slice(0, 60)}`);
     }
     if (result.undisclosed.length > 20) console.log(`  … and ${result.undisclosed.length - 20} more`);
+    const why = { "other-author": "it names another author's commit", "not-an-ancestor": "it names a commit that isn't before it", "unknown-commit": "it names a commit that isn't here" };
+    for (const r of result.lateRejected.slice(0, 20)) {
+      console.log(`  ! ${r.sha.slice(0, 8)} is named by disclosure commit ${r.via.slice(0, 8)}, which can't disclose it: ${why[r.reason]}.`);
+    }
     console.log(
       `\nTo disclose who wrote it: 'madeby ai <tool>' (an AI wrote it), 'madeby me --with-ai <tool>' (you, with AI),` +
         ` or 'madeby me' (you alone); a Co-Authored-By trailer naming an AI tool also counts. A DCO sign-off or a` +
-        ` signature alone doesn't say who wrote the code.` +
+        ` signature alone doesn't say who wrote the code. Already pushed, or no amending allowed? Add --for <range>` +
+        ` (e.g. madeby me --with-ai <tool> --for origin/main..HEAD): one new commit discloses the earlier ones, nothing rewritten.` +
         ` (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
     );
   }

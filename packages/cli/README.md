@@ -148,6 +148,25 @@ of AI disclosure); a sworn declaration is *sworn*. The one asymmetry is evidence
 leave a re-checkable artifact (a session log, `madeby ai`); human authorship is your firsthand
 testimony. If you used AI, disclose the AI — don't claim human.
 
+### Disclosing earlier commits — `--for`
+
+`me` and `ai` amend HEAD. When that isn't possible — the commits are already pushed, or the repo
+forbids amending and rebasing — disclose them with **one new commit** instead:
+
+```sh
+madeby me --with-ai "Claude Code" --for origin/dev..HEAD   # your commits on this branch
+madeby ai "Claude Code" --for 4f1c2a9e                     # one commit
+```
+
+It makes an empty **disclosure commit** whose `Discloses: <hash>` lines name the commits and whose
+trailers say who wrote them. Nothing is rewritten. Push it as usual: on a pull request the check
+re-runs, and it travels with the branch into every target it's merged into. Only your own commits
+(author email = `git config user.email`) that don't disclose yet are included; the rest are listed
+as skipped. The model is named only if you pass `--model`, since the session you're in now didn't
+write those commits. `check`, `coverage` and `who` read disclosure commits by the rules in
+[ACO §5](https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md#5-carriers-bindings--subsume-dont-compete), and `coverage` counts how many
+disclosures arrived late.
+
 **The policy file is optional.** With no `.madeby/policy.json`, `check` defaults to **advisory** —
 it reports coverage and never blocks, so you can run it (or add the CI check) with zero config. Add
 the file only when you want to enforce:

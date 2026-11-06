@@ -51,3 +51,5 @@ export { MATCH_THRESHOLD } from "./capture-local";
 // "@madeby/analyzer/*" internals / the relative path in tests, not the package root.
 export { writeParserSample } from "./record-spans";
 export type { SampleResult } from "./record-spans";
+export { readDisclosureCommits, applyLateDisclosures, rangeHead } from "./late-disclosure";
+export type { DisclosureCommits, LateDisclosure, RejectedDisclosure, LateAppliedCommit } from "./late-disclosure";

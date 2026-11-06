@@ -117,6 +117,25 @@ describe("madeby check — the disclosure gate fires per policy", () => {
     expect(run(d).code).toBe(0);
   });
 
+  // No amend, no rebase: a developer who failed the check discloses earlier commits with one new commit.
+  it("--for: a disclosure commit makes a failing required check pass, skipping other authors' commits", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    const base = commit(d, "a.txt", "one\n", "chore: base\n\nAuthored-by-human: Test <test@example.com>");
+    commit(d, "b.txt", "two\n", "feat: b");
+    commit(d, "c.txt", "three\n", "feat: c");
+    writePolicy(d, "required");
+    expect(run(d, `${base}..HEAD`).code).toBe(1);
+    const me = (...a: string[]) =>
+      spawnSync(process.execPath, [BIN, "me", ...a], { cwd: d, encoding: "utf8", env: { ...cleanEnv(), GIT_CONFIG_COUNT: "2", GIT_CONFIG_KEY_0: "user.name", GIT_CONFIG_VALUE_0: "Test", GIT_CONFIG_KEY_1: "user.email", GIT_CONFIG_VALUE_1: "test@example.com" } });
+    const r = me("--with-ai", "Claude Code", "--for", `${base}..HEAD`);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/disclosure commit [0-9a-f]{8} for 2 earlier commits/);
+    expect(git(d, "log", "-1", "--format=%B")).toMatch(/^Disclose authorship of 2 earlier commits[\s\S]*Discloses: [0-9a-f]{40}\nDiscloses: [0-9a-f]{40}\nAuthored-by-human: Test <test@example.com>\nAssisted-by: Claude Code/);
+    expect(run(d, `${base}..HEAD`).code).toBe(0);
+    expect(me("--with-ai", "Claude Code", "--for", `${base}..HEAD`).stdout).toMatch(/nothing to disclose/); // idempotent
+  });
+
   // A pipeline that didn't fetch the history must not pass by scoring nothing (field report, 2026-11).
   describe("missing history is reported, never passed silently", () => {
     it("a range endpoint that isn't in the clone: required fails (exit 1), advisory warns (exit 0)", () => {

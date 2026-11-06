@@ -1,6 +1,7 @@
-# Disclosing after the fact — the disclosure commit (design, draft 2026-11-06)
+# Disclosing after the fact — the disclosure commit (design, 2026-11-06)
 
-Status: **draft for review**. Nothing here is built yet.
+Status: **built** (2026-11-06): `me` / `ai --for`, the MCP `disclose` tool's `for`, and the reading
+rules in `packages/analyzer/src/late-disclosure.ts`.
 
 ## The problem
 
@@ -56,6 +57,9 @@ madeby me --for origin/dev..HEAD
 - **Only undisclosed commits.** A commit whose message already discloses, or that an earlier
   disclosure commit covers, is skipped. Skipped commits are listed with the reason.
 - **Empty only.** It refuses when changes are staged, so a disclosure commit never carries content.
+- **The model only as given.** In a repo that records the model, `me` and `ai` normally read it from
+  the running session. Not here: the session now isn't the one that wrote those commits, so the model
+  is named only with `--model`.
 - Then the developer pushes as usual.
 
 ### Reading them
@@ -90,13 +94,11 @@ the same rules.
 - Commits already merged, with no PR open, need a small PR to land the disclosure commit. In
   practice the same `task/<id>` branch goes to stage and prod later, so the next merge carries it.
 
-## Open questions
+## Decided
 
-1. **The trailer's name.** `Discloses:` is short and reads well; an ACO-specific name
-   (`ACO-Discloses:`) can't collide with anything another tool writes. Recommendation: `Discloses:`
-   with full hashes only, which no other convention uses.
-2. **Hash length.** Full hashes only (40 hex for SHA-1, 64 for SHA-256), so a reference can never be
-   ambiguous. Costs readability, which the subject line covers.
+- **The trailer is `Discloses:`**, followed by a full hash (40 hex for SHA-1, 64 for SHA-256), so a
+  reference is never ambiguous and no other convention's trailer looks like it. (`ACO-Discloses:` was
+  the alternative: unmistakably ACO's, but clunkier.)
 
 ## Considered and set aside
 
