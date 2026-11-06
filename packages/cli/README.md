@@ -27,6 +27,12 @@ sign-offs, SPDX AI-disclosure tags — and lets a project **gate PRs** on it (`m
 guesses whether code is AI; no tool can do that honestly. It reports only what contributors **put on
 the record**.
 
+The commands `init` writes into `AGENTS.md` pin the exact madeby release (`npx madeby@0.3.16 …`),
+like the CI file does: agents run them on developers' machines, which hold credentials, so they run
+the release the team chose rather than whatever is newest. When a newer release is out, `init`
+reports the rule as outdated, and `npx madeby@latest init --update` moves the pin in one commit to
+review.
+
 Zero hosted infrastructure — runs against your local git history, on a laptop or in any CI. Nothing
 leaves your machine.
 

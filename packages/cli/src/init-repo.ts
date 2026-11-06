@@ -14,27 +14,32 @@ import { VERSION } from "./version";
 // The ACO block is versioned and fenced by an open+close marker. Bump ACO_VERSION whenever ACO_BODY
 // changes; repos seeded with an older version then report as outdated until `madeby init --update`.
 // The legacy (pre-versioning) marker `<!-- madeby:aco -->` is recognized too and migrated on update.
-const ACO_VERSION = 2;
+// v3: the commands pin the exact madeby release (`npx madeby@<version>`), as the CI file does — agents
+// run them on developers' machines, which hold credentials. A block pinned to an older release reports
+// as outdated too, so `init --update` moves the pin in one reviewed commit, like a dependency update.
+const ACO_VERSION = 3;
 const ACO_OPEN = `<!-- madeby:aco v${ACO_VERSION} -->`;
 const ACO_CLOSE = `<!-- /madeby:aco -->`;
 // Matches any ACO open marker: the versioned form (capturing the version) or the legacy unversioned one.
 const ACO_OPEN_RE = /<!-- madeby:aco(?: v(\d+))? -->/;
 
+const PKG = `madeby@${VERSION}`;
 const ACO_BODY = `## Authorship disclosure (ACO)
 
 When you author or modify content here, **disclose who authored it** — per
 [ACO, the Authorship Certificate of Origin](https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md).
 After you commit, run the command for the honest category (no install, no setup):
 
-- **ai** — an AI authored it (the committer stays accountable): \`npx madeby@latest ai [tool]\`
-- **with_ai** — a human authored it with AI assistance: \`npx madeby@latest me --with-ai [tool]\`
-- **human** — a human authored it: \`npx madeby@latest me\`
+- **ai** — an AI authored it (the committer stays accountable): \`npx ${PKG} ai [tool]\`
+- **with_ai** — a human authored it with AI assistance: \`npx ${PKG} me --with-ai [tool]\`
+- **human** — a human authored it: \`npx ${PKG} me\`
 
 If your platform makes the commit for you (a cloud coding agent that pushes through its own tool),
 amending afterwards can be lost — put the disclosure in the message instead, with \`--print\`:
-\`git commit -m "<message>" -m "$(npx madeby@latest ai [tool] --print)"\`.
+\`git commit -m "<message>" -m "$(npx ${PKG} ai [tool] --print)"\`.
 
-Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed.
+Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed. (The madeby
+version is pinned on purpose; \`npx madeby@latest init --update\` moves it to the newest release.)
 `;
 
 // The opt-in model line (`init --record-model`): this repo also records which model version did the
@@ -42,7 +47,7 @@ Disclose per commit, honestly. Undisclosed content stays *unknown*, never guesse
 const MODEL_LINE = `
 **This repo also records the model.** Name your tool as usual — madeby reads the model from the
 tool's own record of the session where it can (Cursor, Copilot CLI, Claude Code), e.g.
-\`npx madeby@latest me --with-ai Cursor\` writes \`Assisted-by: Cursor:<model>\`. Elsewhere add
+\`npx ${PKG} me --with-ai Cursor\` writes \`Assisted-by: Cursor:<model>\`. Elsewhere add
 \`--model <version>\` with the exact model you are running as. If you don't know it, leave it off —
 never guess.
 `;
@@ -130,6 +135,14 @@ export function acoStatus(content: string): AcoStatus {
   if (!loc) return "absent";
   if (loc.version === null || loc.version < ACO_VERSION) return "outdated"; // legacy or older
   if (loc.version > ACO_VERSION) return "newer"; // written by a newer madeby — don't downgrade
+  // same convention version: the pinned release decides (older pin ⇒ outdated, newer ⇒ leave it)
+  const pin = /npx madeby@(\d+)\.(\d+)\.(\d+)/.exec(content.slice(loc.start, loc.end));
+  if (pin) {
+    const [a, b, c] = VERSION.split(".").map(Number) as [number, number, number];
+    const cmp = Number(pin[1]) - a || Number(pin[2]) - b || Number(pin[3]) - c;
+    if (cmp < 0) return "outdated";
+    if (cmp > 0) return "newer";
+  }
   return "current";
 }
 
@@ -338,7 +351,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
     nextSteps.push(".madeby/policy.json is not a valid policy, so the check treats it as advisory. It was left untouched — fix it (e.g. { \"version\": 0, \"mode\": \"required\" }) to enforce.");
   }
   if (created.includes("AGENTS.md")) {
-    nextSteps.push("An AGENTS.md ACO convention was added — agents that read it disclose authorship (e.g. 'npx madeby@latest ai [tool]'). Tune it to your repo's tools.");
+    nextSteps.push(`An AGENTS.md ACO convention was added — agents that read it disclose authorship (e.g. 'npx ${PKG} ai [tool]'), with madeby pinned to this release. Tune it to your repo's tools.`);
   }
   if (merged.length > 0) {
     nextSteps.push(`Merged the ACO disclosure rule into your existing ${merged.join(" + ")} — review the appended "Authorship disclosure (ACO)" section and tune it to your repo.`);
@@ -347,7 +360,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
     nextSteps.push(`Refreshed an outdated ACO convention in ${updated.join(" + ")} to the current version — review the change before committing.`);
   }
   if (outdated.length > 0) {
-    nextSteps.push(`${outdated.join(" + ")} carries an OUTDATED ACO convention — run 'madeby init --update' to refresh it in place (only the ACO block changes).`);
+    nextSteps.push(`${outdated.join(" + ")} carries an OUTDATED ACO convention (an older convention or an older pinned madeby) — run 'npx madeby@latest init --update' to refresh it in place (only the ACO block changes).`);
   }
   if (host === "azure-devops") {
     nextSteps.push("In Azure DevOps, create a pipeline from .madeby/azure-pipelines.yml (a PR-only pipeline: no credentials kept, madeby pinned) and add it to the protected branch as a build-validation policy.");

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { initRepo, acoStatus } from "./init-repo";
+import { VERSION } from "./version";
 
 const dirs: string[] = [];
 const tmp = (): string => {
@@ -23,7 +24,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(existsSync(join(root, "AGENTS.md"))).toBe(true);
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("Authorship Certificate of Origin");
-    expect(md).toContain("npx madeby@latest me --with-ai");
+    expect(md).toContain(`npx madeby@${VERSION} me --with-ai`);
     expect(md).toMatch(/with_ai/);
     expect(r.created).toContain(".madeby/policy.json");
     expect(r.created).toContain(".github/workflows/disclosure.yml");
@@ -147,7 +148,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(md).toContain("# my existing agents file"); // original content preserved
     expect(md).toContain("Build with `make`.");
     expect(md).toContain("## Authorship disclosure (ACO)"); // ACO section appended
-    expect(md).toContain("npx madeby@latest ai [tool]");
+    expect(md).toContain(`npx madeby@${VERSION} ai [tool]`);
     expect(r.nextSteps.some((s) => s.includes("Merged the ACO disclosure rule into your existing AGENTS.md"))).toBe(true);
   });
 
@@ -195,6 +196,10 @@ describe("initRepo — ACO convention drift detection + update", () => {
     initRepo(fresh);
     expect(acoStatus(readFileSync(join(fresh, "AGENTS.md"), "utf8"))).toBe("current");
     expect(acoStatus("<!-- madeby:aco v999 -->\nx\n<!-- /madeby:aco -->\n")).toBe("newer");
+    // same convention version: the pinned release decides
+    expect(acoStatus("<!-- madeby:aco v3 -->\n`npx madeby@0.0.1 me`\n<!-- /madeby:aco -->\n")).toBe("outdated");
+    expect(acoStatus("<!-- madeby:aco v3 -->\n`npx madeby@99.0.0 me`\n<!-- /madeby:aco -->\n")).toBe("newer");
+    expect(acoStatus(`<!-- madeby:aco v3 -->\n\`npx madeby@${VERSION} me\`\n<!-- /madeby:aco -->\n`)).toBe("current");
   });
 
   it("flags an outdated AGENTS.md but does NOT modify it without --update", () => {
@@ -220,8 +225,8 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(md).toContain("Build: make.");
     expect(md).toContain("## My own notes"); // content AFTER the fenced block preserved
     expect(md).toContain("Keep this.");
-    expect(md).toContain("<!-- madeby:aco v2 -->"); // refreshed to current version
-    expect(md).toContain("npx madeby@latest ai [tool]"); // current commands
+    expect(md).toContain("<!-- madeby:aco v3 -->"); // refreshed to current version
+    expect(md).toContain(`npx madeby@${VERSION} ai [tool]`); // current commands
     expect(md).not.toContain("old ACO");
     // and it's now current + idempotent
     expect(acoStatus(md)).toBe("current");
@@ -237,7 +242,7 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(r.updated).toContain("AGENTS.md");
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("# AGENTS.md"); // original title kept
-    expect(md).toContain("<!-- madeby:aco v2 -->");
+    expect(md).toContain("<!-- madeby:aco v3 -->");
     expect(md).toContain("<!-- /madeby:aco -->");
     expect(md).not.toContain("madeby ai <session-log>"); // stale command gone
     expect(acoStatus(md)).toBe("current");
