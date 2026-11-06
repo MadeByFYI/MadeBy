@@ -16,6 +16,7 @@ import {
   type DisclosureKind,
 } from "@madeby/core";
 import { readGitLog } from "./git";
+import { applyLateDisclosures, rangeHead, readDisclosureCommits, type RejectedDisclosure } from "./late-disclosure";
 
 export interface DisclosedCommit {
   /** full commit sha */
@@ -24,16 +25,30 @@ export interface DisclosedCommit {
   subject: string;
   /** the disclosure kinds this commit declares (empty ⇒ undisclosed) */
   disclosures: DisclosureKind[];
+  /** set when a later disclosure commit supplied the disclosure: that commit's hash */
+  late?: string;
 }
 
-/** Read what each commit DECLARES about its origin — no policy applied, no inference. Reads git; never throws (→ []). */
+/**
+ * Read what each commit DECLARES about its origin — in its own message or in a later disclosure commit
+ * that names it — no policy applied, no inference. Reads git; never throws (→ []).
+ */
 export function readDisclosures(root: string, opts: { range?: string; limit?: number } = {}): DisclosedCommit[] {
-  const commits = readGitLog(root, opts.range ? undefined : opts.limit ?? 200, opts.range);
-  return commits.map((c) => ({
-    sha: c.sha ?? "",
-    subject: c.message.split("\n")[0] ?? "",
-    disclosures: commitDisclosureKinds({ message: c.message, signed: c.signed }),
-  }));
+  return readDisclosuresWithRejects(root, opts).commits;
+}
+
+function readDisclosuresWithRejects(root: string, opts: { range?: string; limit?: number }): { commits: DisclosedCommit[]; rejected: RejectedDisclosure[] } {
+  const late = readDisclosureCommits(root, rangeHead(opts.range));
+  const commits = applyLateDisclosures(readGitLog(root, opts.range ? undefined : opts.limit ?? 200, opts.range), late);
+  return {
+    commits: commits.map((c) => ({
+      sha: c.sha ?? "",
+      subject: c.message.split("\n")[0] ?? "",
+      disclosures: commitDisclosureKinds({ message: c.message, signed: c.signed }),
+      ...(c.late ? { late: c.late } : {}),
+    })),
+    rejected: late.rejected,
+  };
 }
 
 export interface RepoDisclosure {
@@ -43,6 +58,8 @@ export interface RepoDisclosure {
   summary: string;
   total: number;
   undisclosed: { ref: string; subject: string }[];
+  /** commits in scope a disclosure commit named but couldn't disclose (another author's, not an ancestor) */
+  lateRejected: RejectedDisclosure[];
   /** present when the policy file was unreadable and we degraded to the default */
   warning?: string;
 }
@@ -61,7 +78,7 @@ export function evaluateRepoDisclosure(root: string, opts: { range?: string; lim
       warning = ".madeby/policy.json is not valid JSON — degrading to advisory (report-only, never blocks).";
     }
   }
-  const commits = readDisclosures(root, opts);
+  const { commits, rejected } = readDisclosuresWithRejects(root, opts);
   const disclosures = commits.map((c) => ({ ref: (c.sha || "").slice(0, 8) || "(unknown)", kinds: c.disclosures }));
   const result = evaluateDisclosurePolicy(policy, disclosures);
   const subjectFor = (ref: string) => commits.find((c) => (c.sha || "").startsWith(ref))?.subject ?? "";
@@ -71,6 +88,7 @@ export function evaluateRepoDisclosure(root: string, opts: { range?: string; lim
     summary: result.summary,
     total: disclosures.length,
     undisclosed: result.nonCompliant.map((v) => ({ ref: v.ref, subject: subjectFor(v.ref) })),
+    lateRejected: rejected.filter((r) => commits.some((c) => c.sha === r.sha)),
     ...(warning ? { warning } : {}),
   };
 }

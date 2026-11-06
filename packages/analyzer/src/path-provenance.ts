@@ -14,11 +14,13 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   commitDisclosureKinds,
+  hasAuthorshipDisclosure,
   recognizeSpdxAiDisclosures,
   spdxAiDisclosureCategory,
   aiDisclosureDefault,
   type DisclosureKind,
 } from "@madeby/core";
+import { readDisclosureCommits } from "./late-disclosure";
 import { isBotIdentity } from "@madeby/classify";
 import { readSpanManifestsFromDir } from "./provenance";
 import { readDisclosures } from "./read-disclosures";
@@ -157,10 +159,13 @@ export function provenanceOf(
       const range = opts.startLine !== undefined ? [`-L`, `${opts.startLine},${opts.endLine ?? opts.startLine}`] : [];
       const porcelain = git(root, ["blame", "--porcelain", ...range, "--", path]);
       const metaCache = new Map<string, ReturnType<typeof commitMeta>>();
+      const late = readDisclosureCommits(root); // commits disclosed afterwards (Discloses:)
       for (const g of blameGroups(porcelain)) {
         let meta = metaCache.get(g.sha);
         if (meta === undefined) {
           meta = commitMeta(root, g.sha);
+          const filled = meta && late.applied.get(g.sha.toLowerCase());
+          if (meta && filled && !hasAuthorshipDisclosure(meta.message)) meta = { ...meta, message: `${meta.message}\n\n${filled.trailers}` };
           metaCache.set(g.sha, meta);
         }
         if (!meta) continue;

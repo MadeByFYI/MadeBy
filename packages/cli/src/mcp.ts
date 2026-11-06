@@ -13,7 +13,7 @@ import { createInterface } from "node:readline";
 import { evaluateRepoDisclosure, recordAiSpans, provenanceOf, provenanceMap, repoCoverage } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
 import { VERSION } from "./version";
-import { affirmAuthorship, attestAiAuthorship, disclosureTrailers } from "./commands/me";
+import { affirmAuthorship, attestAiAuthorship, discloseFor, disclosureTrailers } from "./commands/me";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
 const SERVER_INFO = { name: "madeby", version: VERSION };
@@ -132,6 +132,9 @@ const TOOLS: Tool[] = [
       "that is 'ai' — do NOT claim 'with_ai'/human authorship the human didn't do. Amends HEAD's MESSAGE " +
       "only (a testimony, never a content change) and refuses if there are staged changes. Evidence " +
       "upgrade for the ai category (witnessed spans from a session log) is the CLI `madeby ai --witness`. " +
+      "To disclose EARLIER commits without rewriting them (a repo that forbids amend/rebase), pass `for` " +
+      "(a commit or range): it makes one empty disclosure commit naming them (Discloses: <hash>), only " +
+      "for the git user's own undisclosed commits; push it and the PR check re-runs. " +
       "Read the standard: madeby://guide/aco.",
     inputSchema: {
       type: "object",
@@ -142,6 +145,7 @@ const TOOLS: Tool[] = [
         tool: { type: "string", description: "the AI tool to name (Assisted-by for with_ai, Authored-by-ai for ai). Default: AI." },
         print: { type: "boolean", description: "return the disclosure trailer lines instead of amending HEAD — for platforms that make the commit themselves; put them in the commit message's last paragraph" },
         model: { type: "string", description: "the model version you are running as, e.g. claude-sonnet-5 — written as tool:model. Give it when the repo's AGENTS.md asks; omit it rather than guess." },
+        for: { type: "string", description: "disclose earlier commits instead of HEAD: a commit or a range (e.g. origin/dev..HEAD). Makes an empty disclosure commit; nothing is rewritten. The model is named only if you pass `model` for those commits." },
       },
     },
     handler: (args) => {
@@ -149,6 +153,10 @@ const TOOLS: Tool[] = [
       const tool = args.tool as string | undefined;
       const model = args.model as string | undefined;
       const category = args.category as string | undefined;
+      if (typeof args.for === "string" && args.for) {
+        const c = category === "ai" ? "ai" : category === "with_ai" || args.with_ai === true ? "with_ai" : "human";
+        return discloseFor(root, args.for, { category: c, tool, model: c === "human" ? undefined : model });
+      }
       if (args.print === true) {
         const c = category === "ai" ? "ai" : category === "with_ai" || args.with_ai === true ? "with_ai" : "human";
         return disclosureTrailers(root, { category: c, tool, model });

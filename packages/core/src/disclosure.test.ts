@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  disclosedTargets,
+  disclosureCommitTrailers,
+  hasAuthorshipDisclosure,
   DISCLOSURE_KINDS,
   recognizeDcoSignoffs,
   hasDcoSignoff,
@@ -141,5 +144,21 @@ describe("disclosureKindsPresent", () => {
       { kind: "spdx-license", evidence: "c", tier: "asserted" },
     ]);
     expect(kinds.sort()).toEqual(["dco-signoff", "spdx-license"]);
+  });
+});
+
+describe("disclosure commits — Discloses: <hash>", () => {
+  const sha1 = "4f1c2a9e0b7d3c6a5e8f9b1d2c3a4e5f6a7b8c9d";
+  const msg = `Disclose authorship of 2 earlier commits\n\nDiscloses: ${sha1}\nDiscloses: ${sha1.toUpperCase()}\nDiscloses: 4f1c2a9\nAuthored-by-ai: Claude Code`;
+  it("names full hashes only, de-duplicated", () => {
+    expect(disclosedTargets(msg)).toEqual([sha1]);
+    expect(disclosedTargets("feat: x")).toEqual([]);
+  });
+  it("its disclosure is the trailers, without the subject or the Discloses: lines", () => {
+    expect(disclosureCommitTrailers(msg)).toBe("Authored-by-ai: Claude Code");
+  });
+  it("hasAuthorshipDisclosure: an authorship trailer, not a lone sign-off", () => {
+    expect(hasAuthorshipDisclosure("x\n\nAuthored-by-ai: Cursor")).toBe(true);
+    expect(hasAuthorshipDisclosure("x\n\nSigned-off-by: A <a@b.c>")).toBe(false);
   });
 });

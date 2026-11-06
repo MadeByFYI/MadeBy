@@ -7,6 +7,7 @@
 import { commitDisclosureKinds } from "@madeby/core";
 import { classifyCommit } from "@madeby/classify";
 import { commitTime, readAuthoredMerges, readGitLog } from "./git";
+import { applyLateDisclosures, rangeHead, readDisclosureCommits } from "./late-disclosure";
 
 export type CoverageCategory = "human" | "with_ai" | "ai" | "bot";
 
@@ -22,6 +23,8 @@ export interface CoverageReport {
   readonly known: number;
   /** commits with no authorship disclosure — origin unknown, never guessed */
   readonly unknown: number;
+  /** of the known, those disclosed afterwards by a disclosure commit (`Discloses:`), not in their own message */
+  readonly late: number;
   /** counts over the KNOWN commits (not the whole repo) */
   readonly byCategory: Readonly<Record<CoverageCategory, number>>;
   /** trust split over the KNOWN commits: asserted (self-reported) vs verified (signed) */
@@ -99,10 +102,12 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
   const oldest = authored.at(-1)?.sha;
   const since = limit && oldest && authored.length >= limit ? commitTime(root, oldest) : undefined;
   const merges = authored.length > 0 && (!limit || authored.length < limit || since !== undefined) ? readAuthoredMerges(root, { range: opts.range, since }) : [];
-  const commits = [...authored, ...merges];
+  // Disclosure commits fill in commits disclosed afterwards; they aren't authored work themselves.
+  const commits = applyLateDisclosures([...authored, ...merges], readDisclosureCommits(root, rangeHead(opts.range)));
   const byCategory: Record<CoverageCategory, number> = { human: 0, with_ai: 0, ai: 0, bot: 0 };
   const byTier = { asserted: 0, verified: 0 };
   let known = 0;
+  let late = 0;
   const agents = new Map<string, { name: string; provider: string; tool?: string; model?: string; commits: number }>();
   const authors = new Map<string, { name: string; email: string; commits: number; known: number; byCategory: Record<CoverageCategory, number> }>();
 
@@ -124,6 +129,7 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
     author.known += 1;
     author.byCategory[category] += 1;
     known += 1;
+    if (c.late) late += 1;
     byCategory[category] += 1;
     if (c.signed) byTier.verified += 1;
     else byTier.asserted += 1;
@@ -144,11 +150,12 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
 
   return {
     isEstimate: true,
-    methodology: "commit-level authorship disclosure (estimate); undisclosed = unknown, never inferred; merges scored only when they change content of their own",
+    methodology: "commit-level authorship disclosure (estimate); undisclosed = unknown, never inferred; merges scored only when they change content of their own; a disclosure commit (Discloses:) fills in commits disclosed afterwards and isn't scored itself",
     scope: (opts.range ? `range ${opts.range}` : `last ${authored.length} commits`) + (merges.length ? ` + ${merges.length} merges with changes of their own` : ""),
     total: commits.length,
     known,
     unknown: commits.length - known,
+    late,
     byCategory,
     byTier,
     byAgent: [...agents.values()].sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)),

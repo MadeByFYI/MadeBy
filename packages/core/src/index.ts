@@ -100,6 +100,9 @@ export {
   aiDisclosureDefault,
   disclosureKindsPresent,
   commitDisclosureKinds,
+  hasAuthorshipDisclosure,
+  disclosedTargets,
+  disclosureCommitTrailers,
 } from "./disclosure";
 export type {
   DisclosureKind,

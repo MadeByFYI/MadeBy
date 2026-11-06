@@ -102,6 +102,13 @@ replace them** — an existing disclosure is ingested as a carrier at its suppor
 - **SPDX 3.0 AI profile / SPDX-AI-Disclosure tags** — recognized (interop / BOM export).
 - **Commit trailers** — the canonical asserted-tier carrier (see §7).
 - **in-toto predicate** — signing-native; composes with the Sigstore / SLSA rails.
+- **Disclosure commits** — disclosure after the fact, for history that can't be rewritten: an empty
+  commit whose `Discloses: <full hash>` lines name earlier commits and whose trailers (§7) say who wrote
+  them. A reader applies it to a named commit only if that commit is an ancestor of the disclosure
+  commit and has the same author email, and only when the commit's own message discloses nothing (the
+  message comes first). A later disclosure commit supersedes an earlier one for the same commit. The
+  disclosure commit is not authored work itself; one that changes content is an ordinary commit and its
+  `Discloses:` lines are ignored. Disclosure applied this way is labeled late. Asserted tier.
 - **git-notes**, **commit signatures**, and **witnessed AI-span evidence** (`.madeby/spans`).
 - **Self-hosted sworn declarations** — detected and pointed to, never re-hosted.
 
