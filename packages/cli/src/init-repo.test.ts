@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,9 +52,11 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
 
     it("isn't touched in a repo with no sign of Claude Code, unless forced", () => {
       const root = tmp();
-      expect(initRepo(root).claudeSettings).toBe("not-used");
+      const r0 = initRepo(root);
+      expect(r0.claudeSettings).toEqual([]);
+      expect(r0.nextSteps.some((x) => x.startsWith("No Claude Code files found"))).toBe(true);
       expect(existsSync(join(root, ".claude"))).toBe(false);
-      expect(initRepo(root, { claudeCode: true }).claudeSettings).toBe("created");
+      expect(initRepo(root, { claudeCode: true }).claudeSettings).toEqual([{ file: ".claude/settings.json", status: "created" }]);
       expect(settings(root)).toEqual({ attribution: { commit: TRAILER } });
     });
 
@@ -61,7 +64,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
       const root = tmp();
       writeFileSync(join(root, "CLAUDE.md"), "# CLAUDE.md\n");
       const r = initRepo(root);
-      expect(r.claudeSettings).toBe("created");
+      expect(r.claudeSettings).toEqual([{ file: ".claude/settings.json", status: "created" }]);
       expect(r.created).toContain(".claude/settings.json");
     });
 
@@ -69,9 +72,9 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
       const root = tmp();
       mkdirSync(join(root, ".claude"));
       writeFileSync(join(root, ".claude", "settings.json"), JSON.stringify({ permissions: { allow: ["Bash(npm test)"] }, attribution: { pr: "" } }));
-      expect(initRepo(root).claudeSettings).toBe("merged");
+      expect(initRepo(root).claudeSettings[0]!.status).toBe("merged");
       expect(settings(root)).toEqual({ permissions: { allow: ["Bash(npm test)"] }, attribution: { pr: "", commit: TRAILER } });
-      expect(initRepo(root).claudeSettings).toBe("kept"); // idempotent
+      expect(initRepo(root).claudeSettings[0]!.status).toBe("kept"); // idempotent
     });
 
     it("never overrides a choice the team made, including turning it off", () => {
@@ -79,16 +82,47 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
         const root = tmp();
         mkdirSync(join(root, ".claude"));
         writeFileSync(join(root, ".claude", "settings.json"), JSON.stringify(s));
-        expect(initRepo(root).claudeSettings).toBe("kept");
+        expect(initRepo(root).claudeSettings[0]!.status).toBe("kept");
         expect(settings(root)).toEqual(s);
       }
+    });
+
+    // #224: a monorepo whose app (and its Claude Code files) live below the root
+    it("finds Claude Code files below the root and sets things up beside each", () => {
+      const root = tmp();
+      execFileSync("git", ["init", "-q"], { cwd: root });
+      mkdirSync(join(root, "application", ".claude", "skills"), { recursive: true });
+      writeFileSync(join(root, "application", "CLAUDE.md"), "# app\n");
+      writeFileSync(join(root, "application", ".claude", "skills", "s.md"), "x\n");
+      mkdirSync(join(root, "tools", "cli"), { recursive: true });
+      writeFileSync(join(root, "tools", "cli", "CLAUDE.md"), "# cli\n");
+      mkdirSync(join(root, "node_modules", "dep"), { recursive: true });
+      writeFileSync(join(root, "node_modules", "dep", "CLAUDE.md"), "# not ours\n");
+      writeFileSync(join(root, ".gitignore"), "node_modules/\n");
+      const r = initRepo(root);
+      expect(r.claudeSettings).toEqual([
+        { file: "application/.claude/settings.json", status: "created" },
+        { file: "tools/cli/.claude/settings.json", status: "created" },
+      ]);
+      expect(r.merged).toEqual(expect.arrayContaining(["application/CLAUDE.md", "tools/cli/CLAUDE.md"]));
+      expect(readFileSync(join(root, "application", "CLAUDE.md"), "utf8")).toContain("Authorship Certificate of Origin");
+      expect(existsSync(join(root, ".claude"))).toBe(false); // nothing at the root, which has no Claude Code files
+      expect(existsSync(join(root, "node_modules", "dep", ".claude"))).toBe(false); // ignored files never count
+    });
+
+    it("a CLAUDE.md kept inside .claude/ belongs to the folder above it", () => {
+      const root = tmp();
+      execFileSync("git", ["init", "-q"], { cwd: root });
+      mkdirSync(join(root, ".claude"));
+      writeFileSync(join(root, ".claude", "CLAUDE.md"), "# x\n");
+      expect(initRepo(root).claudeSettings).toEqual([{ file: ".claude/settings.json", status: "created" }]);
     });
 
     it("leaves a file it can't parse alone", () => {
       const root = tmp();
       mkdirSync(join(root, ".claude"));
       writeFileSync(join(root, ".claude", "settings.json"), "{ nope");
-      expect(initRepo(root).claudeSettings).toBe("malformed");
+      expect(initRepo(root).claudeSettings[0]!.status).toBe("malformed");
       expect(readFileSync(join(root, ".claude", "settings.json"), "utf8")).toBe("{ nope");
     });
   });

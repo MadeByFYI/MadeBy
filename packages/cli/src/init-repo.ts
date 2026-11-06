@@ -5,6 +5,7 @@
 // outdated block and — with { update: true } — refresh just that block in place, never clobbering the
 // rest of the file.
 
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { parseDisclosurePolicy } from "@madeby/core";
@@ -67,11 +68,11 @@ export interface InitOptions {
 }
 
 /**
- * What init did with Claude Code's shared settings: created the file, merged the trailer setting into
- * it, kept a value the team already set (including turning it off on purpose), skipped a file it
- * couldn't parse, or did nothing because the repo shows no sign of Claude Code.
+ * What init did with one Claude Code shared settings file: created it, merged the trailer setting into
+ * it, kept a value the team already set (including turning it off on purpose), or skipped a file it
+ * couldn't parse.
  */
-export type ClaudeSettingsStatus = "created" | "merged" | "kept" | "malformed" | "not-used";
+export type ClaudeSettingsStatus = "created" | "merged" | "kept" | "malformed";
 
 export interface InitResult {
   /** files written from scratch */
@@ -92,8 +93,11 @@ export interface InitResult {
   policyMode: string;
   /** does the repo's policy now ask AI disclosures to name the model version? */
   recordModel: boolean;
-  /** Claude Code's commit trailer in `.claude/settings.json` (see ClaudeSettingsStatus) */
-  claudeSettings: ClaudeSettingsStatus;
+  /**
+   * Claude Code's commit trailer, per `.claude/settings.json` init handled — one beside each place the
+   * repo uses Claude Code (a CLAUDE.md or .claude/ folder, at any depth). Empty ⇒ none found.
+   */
+  claudeSettings: { file: string; status: ClaudeSettingsStatus }[];
   host: string;
   nextSteps: string[];
 }
@@ -192,10 +196,34 @@ function ensurePolicy(
 // `init --record-model` instead. A team's own explicit value, "off" included, is theirs and never touched.
 export const CLAUDE_TRAILER = "Co-Authored-By: Claude Code <noreply@anthropic.com>";
 
-function ensureClaudeSettings(root: string, force: boolean): ClaudeSettingsStatus {
-  const abs = join(root, ".claude", "settings.json");
-  const usesClaude = force || existsSync(join(root, "CLAUDE.md")) || existsSync(join(root, ".claude"));
-  if (!usesClaude) return "not-used";
+/**
+ * The folders (relative to the root, "" for the root) where the repo uses Claude Code: each one holding
+ * a CLAUDE.md or a .claude/ folder, at any depth. Claude Code reads the .claude/settings.json of the
+ * folder it's launched from, so a monorepo whose app lives in application/ needs the setting there.
+ * Reads git's view of the tree (tracked, plus untracked files that aren't ignored), so dependencies and
+ * build output never count.
+ */
+export function claudeCodeDirs(root: string): string[] {
+  const dirs = new Set<string>();
+  if (existsSync(join(root, "CLAUDE.md")) || existsSync(join(root, ".claude"))) dirs.add("");
+  let files: string[] = [];
+  try {
+    files = execFileSync("git", ["-C", root, "-c", "core.quotePath=false", "ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }).split("\n");
+  } catch {
+    /* not a repo / no git: the root check above stands */
+  }
+  for (const f of files) {
+    const parts = f.split("/");
+    // the folder that holds a .claude/ (the first one on the path), else the one holding a CLAUDE.md —
+    // a CLAUDE.md kept inside .claude/ belongs to the folder above it
+    const at = parts.indexOf(".claude");
+    if (at >= 0 && at < parts.length - 1) dirs.add(parts.slice(0, at).join("/"));
+    else if (parts[parts.length - 1] === "CLAUDE.md") dirs.add(parts.slice(0, -1).join("/"));
+  }
+  return [...dirs].sort();
+}
+
+function ensureClaudeSettings(abs: string): ClaudeSettingsStatus {
   if (!existsSync(abs)) {
     mkdirSync(dirname(abs), { recursive: true });
     writeFileSync(abs, JSON.stringify({ attribution: { commit: CLAUDE_TRAILER } }, null, 2) + "\n");
@@ -281,8 +309,18 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, ...aco });
   // CLAUDE.md — Claude Code reads this preferentially; merge/refresh if the repo has one (never create).
   ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, ...aco });
-  const claudeSettings = ensureClaudeSettings(root, opts.claudeCode ?? false);
-  if (claudeSettings === "created") created.push(".claude/settings.json");
+  // Claude Code: the rule in every CLAUDE.md, and the trailer setting beside each place it's used.
+  const claudeDirs = claudeCodeDirs(root);
+  if (opts.claudeCode && !claudeDirs.includes("")) claudeDirs.unshift("");
+  const claudeSettings: InitResult["claudeSettings"] = [];
+  for (const dir of claudeDirs) {
+    const rel = (f: string) => (dir ? `${dir}/${f}` : f);
+    if (dir) ensureAco(join(root, dir, "CLAUDE.md"), rel("CLAUDE.md"), res, { createIfAbsent: false, ...aco });
+    const file = rel(".claude/settings.json");
+    const status = ensureClaudeSettings(join(root, file));
+    if (status === "created") created.push(file);
+    claudeSettings.push({ file, status });
+  }
   if (host === "github") {
     writeIfAbsent(join(root, ".github", "workflows", "disclosure.yml"), ".github/workflows/disclosure.yml", GH_WORKFLOW, created, skipped);
   } else if (host === "azure-devops") {
@@ -320,12 +358,20 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
     nextSteps.push('When ready to enforce: run \'madeby init --required\' (or set "mode": "required" in .madeby/policy.json), then make the check required on the protected branch — the host\'s control plane (GitHub: gh api branch protection; Azure: a build-validation policy). See the MCP resource madeby://guide/enforce for exact commands.');
   }
   nextSteps.push("Contributors disclose origin with a Co-Authored-By / Generated-by trailer (AI), an Authored-by-human trailer ('madeby me'), or an Authored-by-ai trailer ('madeby ai' — AI authored, committer accountable). A DCO Signed-off-by or a signed commit alone doesn't say who wrote the code, so it counts only if the policy's 'accept' lists it. Evidence upgrade: 'madeby ai --witness' records your own AI session's witnessed spans.");
-  if (claudeSettings === "created" || claudeSettings === "merged") {
-    nextSteps.push(`Claude Code now adds '${CLAUDE_TRAILER}' to its commits in this repo (.claude/settings.json), for everyone — including developers who turned the trailer off in their personal settings. Their .claude/settings.local.json, or an instruction of their own, can still turn it off; the check is what holds the line.`);
-  } else if (claudeSettings === "kept") {
-    nextSteps.push("This repo's .claude/settings.json already sets Claude Code's commit attribution, so it was left as the team set it. Clear that setting for the default trailer, or set attribution.commit to name the AI.");
-  } else if (claudeSettings === "malformed") {
-    nextSteps.push(".claude/settings.json isn't valid JSON, so Claude Code's commit trailer wasn't set. Fix the file and run 'madeby init' again.");
+  const set = claudeSettings.filter((c) => c.status === "created" || c.status === "merged").map((c) => c.file);
+  const kept = claudeSettings.filter((c) => c.status === "kept").map((c) => c.file);
+  const broken = claudeSettings.filter((c) => c.status === "malformed").map((c) => c.file);
+  if (claudeSettings.length === 0) {
+    nextSteps.push("No Claude Code files found (a CLAUDE.md or .claude/ folder, at any depth), so Claude Code's commit trailer wasn't set. If developers use Claude Code here, run 'madeby init --claude-code'.");
+  }
+  if (set.length > 0) {
+    nextSteps.push(`Claude Code now adds '${CLAUDE_TRAILER}' to its commits when launched where ${set.join(", ")} applies, for everyone — including developers who turned the trailer off in their personal settings. Their .claude/settings.local.json, or an instruction of their own, can still turn it off; the check is what holds the line.`);
+  }
+  if (kept.length > 0) {
+    nextSteps.push(`${kept.join(", ")} already set${kept.length === 1 ? "s" : ""} Claude Code's commit attribution, so it was left as the team set it. Clear that setting for the default trailer, or set attribution.commit to name the AI.`);
+  }
+  if (broken.length > 0) {
+    nextSteps.push(`${broken.join(", ")} isn't valid JSON, so Claude Code's commit trailer wasn't set there. Fix it and run 'madeby init' again.`);
   }
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 

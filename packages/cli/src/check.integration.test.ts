@@ -136,6 +136,20 @@ describe("madeby check — the disclosure gate fires per policy", () => {
     expect(me("--with-ai", "Claude Code", "--for", `${base}..HEAD`).stdout).toMatch(/nothing to disclose/); // idempotent
   });
 
+  // #223: --for exists to avoid rewriting history, so a mistake while using it must never amend HEAD.
+  it("--for with an empty value refuses and leaves HEAD alone (me and ai)", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    const head = commit(d, "a.txt", "one\n", "chore: plain commit");
+    const env = { ...cleanEnv(), GIT_CONFIG_COUNT: "2", GIT_CONFIG_KEY_0: "user.name", GIT_CONFIG_VALUE_0: "Test", GIT_CONFIG_KEY_1: "user.email", GIT_CONFIG_VALUE_1: "test@example.com" };
+    for (const args of [["me", "--with-ai", "Claude Code", "--for", ""], ["me", "--for="], ["ai", "Claude Code", "--for"], ["me", "--for", "nope..alsonope"]]) {
+      const r = spawnSync(process.execPath, [BIN, ...args], { cwd: d, encoding: "utf8", env });
+      expect(r.status).toBe(1);
+      expect(r.stderr).toMatch(/Nothing was changed/);
+      expect(git(d, "rev-parse", "HEAD")).toBe(head);
+    }
+  });
+
   // A pipeline that didn't fetch the history must not pass by scoring nothing (field report, 2026-11).
   describe("missing history is reported, never passed silently", () => {
     it("a range endpoint that isn't in the clone: required fails (exit 1), advisory warns (exit 0)", () => {

@@ -6,7 +6,7 @@
 
 import { commitDisclosureKinds } from "@madeby/core";
 import { classifyCommit } from "@madeby/classify";
-import { commitTime, readAuthoredMerges, readGitLog } from "./git";
+import { commitTime, readAuthoredMerges, readGitLog, supportsRemergeDiff } from "./git";
 import { applyLateDisclosures, rangeHead, readDisclosureCommits } from "./late-disclosure";
 
 export type CoverageCategory = "human" | "with_ai" | "ai" | "bot";
@@ -150,8 +150,13 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
 
   return {
     isEstimate: true,
-    methodology: "commit-level authorship disclosure (estimate); undisclosed = unknown, never inferred; merges scored only when they change content of their own; a disclosure commit (Discloses:) fills in commits disclosed afterwards and isn't scored itself",
-    scope: (opts.range ? `range ${opts.range}` : `last ${authored.length} commits`) + (merges.length ? ` + ${merges.length} merges with changes of their own` : ""),
+    methodology:
+      "commit-level authorship disclosure (estimate); undisclosed = unknown, never inferred; merges scored only when they change content of their own" +
+      (supportsRemergeDiff() ? " (beyond git's automatic merge)" : " (approximate: this git predates --remerge-diff, so merges git made cleanly may be counted too)") +
+      "; a disclosure commit (Discloses:) fills in commits disclosed afterwards and isn't scored itself",
+    scope:
+      (opts.range ? `range ${opts.range}` : `last ${authored.length} commits`) +
+      (merges.length ? ` + ${merges.length} merges with changes of their own${supportsRemergeDiff() ? "" : " (approximate — git < 2.36)"}` : ""),
     total: commits.length,
     known,
     unknown: commits.length - known,

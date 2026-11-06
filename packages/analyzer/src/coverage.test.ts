@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { agentName, repoCoverage } from "./coverage";
+import { supportsRemergeDiff } from "./git";
 
 const dirs: string[] = [];
 const git = (dir: string, ...a: string[]): string =>
@@ -73,6 +74,26 @@ describe("repoCoverage — the honest authorship scoreboard", () => {
 
   // A merge is scored only when it changes content of its own (a conflict resolution): selection by
   // content, never by disclosure — so a disclosed plain merge must NOT sneak into "known".
+  // #222: both sides changed one file, git merged it cleanly — nobody wrote anything in the merge.
+  it("doesn't score a clean merge of a file both sides changed (git >= 2.36)", () => {
+    if (!supportsRemergeDiff()) return; // older git: --cc over-counts these, and coverage says so
+    const d = repo();
+    writeFileSync(join(d, "f.ts"), "a\nb\nc\nd\ne\nf\n");
+    git(d, "add", "-A");
+    git(d, "commit", "--no-verify", "-q", "-m", "chore: base\n\nAuthored-by-human: Dev <dev@example.com>");
+    git(d, "checkout", "-q", "-b", "side");
+    writeFileSync(join(d, "f.ts"), "A\nb\nc\nd\ne\nf\n");
+    git(d, "commit", "--no-verify", "-q", "-am", "feat: side\n\nAuthored-by-human: Dev <dev@example.com>");
+    git(d, "checkout", "-q", "main");
+    writeFileSync(join(d, "f.ts"), "a\nb\nc\nd\ne\nF\n");
+    git(d, "commit", "--no-verify", "-q", "-am", "feat: main\n\nAuthored-by-human: Dev <dev@example.com>");
+    git(d, "merge", "-q", "--no-ff", "side", "-m", "Merge side"); // undisclosed, and authors nothing
+    const r = repoCoverage(d);
+    expect(r.total).toBe(3); // base, side, main — not the merge
+    expect(r.unknown).toBe(0);
+    expect(r.scope).not.toMatch(/merges/);
+  });
+
   it("scores merges with changes of their own, and only those", () => {
     const d = repo();
     commit(d, "base.ts", "chore: base\n\nAuthored-by-human: Dev <dev@example.com>");

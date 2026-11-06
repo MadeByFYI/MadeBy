@@ -127,9 +127,11 @@ model versions are listed exactly as the AI commits name them — a commit namin
 (`Assisted-by: Claude Code` + `Co-Authored-By: Claude Opus 5.5`) counts under both, so those rows can
 sum past 100%. `--by author` shows one row per commit author (grouped by email): how many of their
 commits disclose, and the mix — who discloses and who never does. `--json` (which includes `byAuthor`) emits
-counts only (percentages are derived at the edge, never stored). A plain merge authors nothing and
-isn't scored; a merge that changes content of its own (a conflict resolution) is, like any other
-commit — chosen by what it changes, never by whether it discloses. Use it to see your gap, then
+counts only (percentages are derived at the edge, never stored). A merge git made on its own authors nothing
+and isn't scored, even when both sides changed the same file; a merge where someone changed what git
+would have produced (a conflict resolved by hand) is, like any other commit — chosen by what it
+changes, never by whether it discloses. That takes git 2.36 or later (`--remerge-diff`); with older
+git, merges git made cleanly may be counted too, and the scope says the count is approximate. Use it to see your gap, then
 `madeby init --required` to close it going forward.
 
 ### `madeby me` — affirm human authorship
@@ -204,7 +206,10 @@ on its own error, and never invents a stricter gate than the maintainer wrote. I
 Claude Code adds a `Co-Authored-By` trailer to its commits unless a developer turns it off in their
 personal settings — and then the `AGENTS.md` rule alone may not bring it back. So in a repo that uses
 Claude Code (it has a `CLAUDE.md` or a `.claude/` folder; `--claude-code` to force), `madeby init`
-sets the trailer in the shared `.claude/settings.json`:
+sets the trailer in the shared `.claude/settings.json`. It looks at any depth: Claude Code reads the
+settings of the folder it's launched from, so a monorepo whose app keeps its `CLAUDE.md` in
+`application/` gets `application/.claude/settings.json`, and the disclosure rule merged into that
+`CLAUDE.md`. If it finds none, it says so.
 
 ```json
 { "attribution": { "commit": "Co-Authored-By: Claude Code <noreply@anthropic.com>" } }

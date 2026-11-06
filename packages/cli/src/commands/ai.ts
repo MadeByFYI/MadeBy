@@ -85,7 +85,7 @@ export function aiCommand(args: string[]): void {
   // Default: assert AI authorship via a trailer (asserted tier — no session log needed).
   const tool = positional[0] || "AI";
   const forTarget = parseFor(args);
-  if (forTarget) {
+  if (forTarget !== undefined) {
     renderDiscloseFor("ai", forTarget, discloseFor(root, forTarget, { category: "ai", tool, model }));
     return;
   }
