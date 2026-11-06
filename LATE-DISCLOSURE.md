@@ -88,13 +88,12 @@ notes and `coverage` and `who` see them. Local config only, never committed.
 
 ## Open questions
 
-1. **Does Azure Repos accept pushes to `refs/notes/*`?** Not documented either way. GitHub accepts
-   them (it no longer shows them in its UI, which doesn't matter here). To be tested on a real Azure
-   repo with `scripts/probe-notes-push.sh` before building anything. If Azure refuses, the fallback is
-   a branch holding the notes (`refs/heads/madeby-notes`), which Azure must accept, with the same
-   commands on top.
-2. **Branch permissions.** Even if Azure accepts the ref, a repo's permissions may restrict who can
-   create refs. The probe reports what happens for an ordinary contributor.
+1. ~~**Does Azure Repos accept pushes to `refs/notes/*`?**~~ **Yes** (tested 2026-11-06 with
+   `scripts/probe-notes-push.sh` on an Azure DevOps Services repo: pushed, read back with
+   `ls-remote`, deleted). GitHub accepts them too (it no longer shows them in its UI, which doesn't
+   matter here).
+2. **Branch permissions.** The probe ran as a project administrator. A repo's permissions may still
+   stop an ordinary contributor from creating the ref; the same probe, run by one, will tell.
 3. **One shared ref or one per person** (`refs/notes/madeby/<id>`)? One ref is what git's tooling
    expects (`--notes=madeby`) and the merge-and-retry handles contention at this team size. Per-person
    refs avoid contention entirely and make who-wrote-the-note obvious, at the cost of a custom read.
