@@ -155,9 +155,10 @@ const TOOLS: Tool[] = [
       const tool = args.tool as string | undefined;
       const model = args.model as string | undefined;
       const category = args.category as string | undefined;
-      if (typeof args.for === "string" && args.for) {
+      // `for` given at all — even empty — means "disclose earlier commits", never "amend HEAD"
+      if (args.for !== undefined && args.for !== null) {
         const c = category === "ai" ? "ai" : category === "with_ai" || args.with_ai === true ? "with_ai" : "human";
-        return discloseFor(root, args.for, { category: c, tool, model: c === "human" ? undefined : model });
+        return discloseFor(root, typeof args.for === "string" ? args.for : "", { category: c, tool, model: c === "human" ? undefined : model });
       }
       if (args.print === true) {
         const c = category === "ai" ? "ai" : category === "with_ai" || args.with_ai === true ? "with_ai" : "human";

@@ -260,13 +260,17 @@ export function affirmAuthorship(root: string, opts: AiInput & { withAi?: boolea
   return { ...base, ok: true, changed: trailers.length > 0, name, email, subject, added, category };
 }
 
-/** Parse `--for <commit|range>` or `--for=<commit|range>`; undefined if unset. */
+/**
+ * Parse `--for <commit|range>` or `--for=<commit|range>`: undefined only when the flag is absent. A
+ * flag with no value gives "" — never undefined — so a mistake while using `--for` (an empty script
+ * variable) is refused instead of falling back to amending HEAD, which `--for` exists to avoid.
+ */
 export function parseFor(args: string[]): string | undefined {
   const i = args.findIndex((a) => a === "--for" || a.startsWith("--for="));
   if (i === -1) return undefined;
   const a = args[i]!;
   const v = a.startsWith("--for=") ? a.slice("--for=".length) : args[i + 1];
-  return v && !v.startsWith("-") ? v : undefined;
+  return v && !v.startsWith("-") ? v.trim() : "";
 }
 
 export interface DiscloseForResult {
@@ -291,6 +295,7 @@ export interface DiscloseForResult {
  */
 export function discloseFor(root: string, target: string, opts: { category: "human" | "with_ai" | "ai"; tool?: string; model?: string }): DiscloseForResult {
   const none = { disclosed: [], skipped: [], lines: [] };
+  if (!target.trim()) return { ok: false, reason: "bad-target", ...none };
   let email = "";
   try {
     email = git(root, ["config", "user.email"]).toLowerCase();
@@ -349,7 +354,7 @@ export function renderDiscloseFor(cmd: string, target: string, r: DiscloseForRes
   if (!r.ok) {
     if (r.reason === "no-identity") console.error(`madeby ${cmd}: set your git identity first (git config user.name / user.email).`);
     else if (r.reason === "staged-changes") console.error(`madeby ${cmd}: you have staged changes. A disclosure commit carries no content — commit or unstage them first.`);
-    else console.error(`madeby ${cmd}: no commits found for ${target}. Give a commit or a range, e.g. --for origin/dev..HEAD`);
+    else console.error(`madeby ${cmd}: no commits found for ${target ? `'${target}'` : "an empty --for"}. Give a commit or a range, e.g. --for origin/dev..HEAD. Nothing was changed.`);
     process.exit(1);
     return;
   }
@@ -381,7 +386,7 @@ export function meCommand(args: string[]): void {
   }
 
   const forTarget = parseFor(args);
-  if (forTarget) {
+  if (forTarget !== undefined) {
     renderDiscloseFor("me", forTarget, discloseFor(root, forTarget, { category: withAi ? "with_ai" : "human", tool, model }));
     return;
   }

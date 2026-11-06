@@ -15,7 +15,7 @@ import {
   DEFAULT_POLICY,
   type DisclosureKind,
 } from "@madeby/core";
-import { readGitLog } from "./git";
+import { readScoredCommits } from "./git";
 import { applyLateDisclosures, rangeHead, readDisclosureCommits, type RejectedDisclosure } from "./late-disclosure";
 
 export interface DisclosedCommit {
@@ -39,7 +39,9 @@ export function readDisclosures(root: string, opts: { range?: string; limit?: nu
 
 function readDisclosuresWithRejects(root: string, opts: { range?: string; limit?: number }): { commits: DisclosedCommit[]; rejected: RejectedDisclosure[] } {
   const late = readDisclosureCommits(root, rangeHead(opts.range));
-  const commits = applyLateDisclosures(readGitLog(root, opts.range ? undefined : opts.limit ?? 200, opts.range), late);
+  // the commits coverage scores: non-merges, plus merges that changed content of their own
+  const { authored, merges } = readScoredCommits(root, { range: opts.range, limit: opts.limit ?? 200 });
+  const commits = applyLateDisclosures([...authored, ...merges], late);
   return {
     commits: commits.map((c) => ({
       sha: c.sha ?? "",

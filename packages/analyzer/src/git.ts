@@ -84,11 +84,34 @@ export function readGitLog(repoPath: string, limit?: number, range?: string): Co
   }
 }
 
+let remergeDiff: boolean | undefined;
 /**
- * The merge commits that carry content of their own — a conflict resolution or any other change that
- * matches none of the merge's parents (`git log --cc` lists files only for those). A plain merge just
- * joins two histories and authors nothing; these did author something, so coverage scores them like
- * any other commit. Selection is by content, never by disclosure, so it can't bias known vs unknown.
+ * Can this git tell a merge someone wrote from one git made on its own? `--remerge-diff` (git 2.36+)
+ * diffs a merge against git's own automatic merge of its parents, so it is empty for a clean merge and
+ * shows exactly what a person changed — a conflict resolution, or an edit slipped into the merge.
+ */
+export function supportsRemergeDiff(): boolean {
+  if (remergeDiff === undefined) {
+    try {
+      const v = /git version (\d+)\.(\d+)/.exec(execFileSync("git", ["--version"], { encoding: "utf8" }));
+      remergeDiff = !!v && (Number(v[1]) > 2 || (Number(v[1]) === 2 && Number(v[2]) >= 36));
+    } catch {
+      remergeDiff = false;
+    }
+  }
+  return remergeDiff;
+}
+
+/**
+ * The merge commits that carry content of their own — a conflict resolved by hand, or any other change
+ * git's automatic merge wouldn't have made. A plain merge just joins two histories and authors nothing;
+ * these did author something, so coverage scores them like any other commit. Selection is by content,
+ * never by disclosure, so it can't bias known vs unknown.
+ *
+ * With git 2.36+ that is `--remerge-diff`: files listed only where the merge differs from git's own
+ * re-merge of its parents. Older git falls back to `--cc`, which also lists files both sides changed
+ * that git merged cleanly — an over-count, so callers label the result an approximation
+ * (supportsRemergeDiff).
  *
  * Scope mirrors readGitLog: a range is read as-is; otherwise pass `since` (unix seconds, the committer
  * date of the oldest commit in the readGitLog window) to bound it to the same span of history. Returns
@@ -101,7 +124,7 @@ export function readAuthoredMerges(repoPath: string, opts: { range?: string; sin
       repoPath,
       "log",
       "--merges",
-      "--cc",
+      supportsRemergeDiff() ? "--remerge-diff" : "--cc",
       "--name-only",
       `--format=${RECORD}%H${FIELD}%an${FIELD}%ae${FIELD}%G?${FIELD}%B${GROUP}`,
       ...(opts.since !== undefined && !opts.range ? [`--since=@${opts.since}`] : []),
@@ -126,4 +149,20 @@ export function commitTime(repoPath: string, sha: string): number | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The commits that carry authored work, as `coverage` and `check` both score them: the window's (or
+ * range's) non-merge commits, plus the merges in the same span that changed content of their own
+ * (readAuthoredMerges). One reader, so the scoreboard and the gate always measure the same commits.
+ */
+export function readScoredCommits(repoPath: string, opts: { range?: string; limit?: number }): { authored: CommitMeta[]; merges: CommitMeta[] } {
+  const limit = opts.range ? undefined : opts.limit;
+  const authored = readGitLog(repoPath, limit, opts.range);
+  // the same span of history: the range, or back to the oldest commit in the window (all history if
+  // the window isn't full)
+  const oldest = authored.at(-1)?.sha;
+  const since = limit && oldest && authored.length >= limit ? commitTime(repoPath, oldest) : undefined;
+  const merges = authored.length > 0 && (!limit || authored.length < limit || since !== undefined) ? readAuthoredMerges(repoPath, { range: opts.range, since }) : [];
+  return { authored, merges };
 }

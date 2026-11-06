@@ -1,8 +1,10 @@
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { initRepo, acoStatus } from "./init-repo";
+import { VERSION } from "./version";
 
 const dirs: string[] = [];
 const tmp = (): string => {
@@ -22,7 +24,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(existsSync(join(root, "AGENTS.md"))).toBe(true);
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("Authorship Certificate of Origin");
-    expect(md).toContain("npx madeby@latest me --with-ai");
+    expect(md).toContain(`npx madeby@${VERSION} me --with-ai`);
     expect(md).toMatch(/with_ai/);
     expect(r.created).toContain(".madeby/policy.json");
     expect(r.created).toContain(".github/workflows/disclosure.yml");
@@ -51,9 +53,11 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
 
     it("isn't touched in a repo with no sign of Claude Code, unless forced", () => {
       const root = tmp();
-      expect(initRepo(root).claudeSettings).toBe("not-used");
+      const r0 = initRepo(root);
+      expect(r0.claudeSettings).toEqual([]);
+      expect(r0.nextSteps.some((x) => x.startsWith("No Claude Code files found"))).toBe(true);
       expect(existsSync(join(root, ".claude"))).toBe(false);
-      expect(initRepo(root, { claudeCode: true }).claudeSettings).toBe("created");
+      expect(initRepo(root, { claudeCode: true }).claudeSettings).toEqual([{ file: ".claude/settings.json", status: "created" }]);
       expect(settings(root)).toEqual({ attribution: { commit: TRAILER } });
     });
 
@@ -61,7 +65,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
       const root = tmp();
       writeFileSync(join(root, "CLAUDE.md"), "# CLAUDE.md\n");
       const r = initRepo(root);
-      expect(r.claudeSettings).toBe("created");
+      expect(r.claudeSettings).toEqual([{ file: ".claude/settings.json", status: "created" }]);
       expect(r.created).toContain(".claude/settings.json");
     });
 
@@ -69,9 +73,9 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
       const root = tmp();
       mkdirSync(join(root, ".claude"));
       writeFileSync(join(root, ".claude", "settings.json"), JSON.stringify({ permissions: { allow: ["Bash(npm test)"] }, attribution: { pr: "" } }));
-      expect(initRepo(root).claudeSettings).toBe("merged");
+      expect(initRepo(root).claudeSettings[0]!.status).toBe("merged");
       expect(settings(root)).toEqual({ permissions: { allow: ["Bash(npm test)"] }, attribution: { pr: "", commit: TRAILER } });
-      expect(initRepo(root).claudeSettings).toBe("kept"); // idempotent
+      expect(initRepo(root).claudeSettings[0]!.status).toBe("kept"); // idempotent
     });
 
     it("never overrides a choice the team made, including turning it off", () => {
@@ -79,16 +83,47 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
         const root = tmp();
         mkdirSync(join(root, ".claude"));
         writeFileSync(join(root, ".claude", "settings.json"), JSON.stringify(s));
-        expect(initRepo(root).claudeSettings).toBe("kept");
+        expect(initRepo(root).claudeSettings[0]!.status).toBe("kept");
         expect(settings(root)).toEqual(s);
       }
+    });
+
+    // #224: a monorepo whose app (and its Claude Code files) live below the root
+    it("finds Claude Code files below the root and sets things up beside each", () => {
+      const root = tmp();
+      execFileSync("git", ["init", "-q"], { cwd: root });
+      mkdirSync(join(root, "application", ".claude", "skills"), { recursive: true });
+      writeFileSync(join(root, "application", "CLAUDE.md"), "# app\n");
+      writeFileSync(join(root, "application", ".claude", "skills", "s.md"), "x\n");
+      mkdirSync(join(root, "tools", "cli"), { recursive: true });
+      writeFileSync(join(root, "tools", "cli", "CLAUDE.md"), "# cli\n");
+      mkdirSync(join(root, "node_modules", "dep"), { recursive: true });
+      writeFileSync(join(root, "node_modules", "dep", "CLAUDE.md"), "# not ours\n");
+      writeFileSync(join(root, ".gitignore"), "node_modules/\n");
+      const r = initRepo(root);
+      expect(r.claudeSettings).toEqual([
+        { file: "application/.claude/settings.json", status: "created" },
+        { file: "tools/cli/.claude/settings.json", status: "created" },
+      ]);
+      expect(r.merged).toEqual(expect.arrayContaining(["application/CLAUDE.md", "tools/cli/CLAUDE.md"]));
+      expect(readFileSync(join(root, "application", "CLAUDE.md"), "utf8")).toContain("Authorship Certificate of Origin");
+      expect(existsSync(join(root, ".claude"))).toBe(false); // nothing at the root, which has no Claude Code files
+      expect(existsSync(join(root, "node_modules", "dep", ".claude"))).toBe(false); // ignored files never count
+    });
+
+    it("a CLAUDE.md kept inside .claude/ belongs to the folder above it", () => {
+      const root = tmp();
+      execFileSync("git", ["init", "-q"], { cwd: root });
+      mkdirSync(join(root, ".claude"));
+      writeFileSync(join(root, ".claude", "CLAUDE.md"), "# x\n");
+      expect(initRepo(root).claudeSettings).toEqual([{ file: ".claude/settings.json", status: "created" }]);
     });
 
     it("leaves a file it can't parse alone", () => {
       const root = tmp();
       mkdirSync(join(root, ".claude"));
       writeFileSync(join(root, ".claude", "settings.json"), "{ nope");
-      expect(initRepo(root).claudeSettings).toBe("malformed");
+      expect(initRepo(root).claudeSettings[0]!.status).toBe("malformed");
       expect(readFileSync(join(root, ".claude", "settings.json"), "utf8")).toBe("{ nope");
     });
   });
@@ -113,7 +148,7 @@ describe("initRepo — scaffolds the ACO agent convention (the paved road)", () 
     expect(md).toContain("# my existing agents file"); // original content preserved
     expect(md).toContain("Build with `make`.");
     expect(md).toContain("## Authorship disclosure (ACO)"); // ACO section appended
-    expect(md).toContain("npx madeby@latest ai [tool]");
+    expect(md).toContain(`npx madeby@${VERSION} ai [tool]`);
     expect(r.nextSteps.some((s) => s.includes("Merged the ACO disclosure rule into your existing AGENTS.md"))).toBe(true);
   });
 
@@ -161,6 +196,10 @@ describe("initRepo — ACO convention drift detection + update", () => {
     initRepo(fresh);
     expect(acoStatus(readFileSync(join(fresh, "AGENTS.md"), "utf8"))).toBe("current");
     expect(acoStatus("<!-- madeby:aco v999 -->\nx\n<!-- /madeby:aco -->\n")).toBe("newer");
+    // same convention version: the pinned release decides
+    expect(acoStatus("<!-- madeby:aco v3 -->\n`npx madeby@0.0.1 me`\n<!-- /madeby:aco -->\n")).toBe("outdated");
+    expect(acoStatus("<!-- madeby:aco v3 -->\n`npx madeby@99.0.0 me`\n<!-- /madeby:aco -->\n")).toBe("newer");
+    expect(acoStatus(`<!-- madeby:aco v3 -->\n\`npx madeby@${VERSION} me\`\n<!-- /madeby:aco -->\n`)).toBe("current");
   });
 
   it("flags an outdated AGENTS.md but does NOT modify it without --update", () => {
@@ -186,8 +225,8 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(md).toContain("Build: make.");
     expect(md).toContain("## My own notes"); // content AFTER the fenced block preserved
     expect(md).toContain("Keep this.");
-    expect(md).toContain("<!-- madeby:aco v2 -->"); // refreshed to current version
-    expect(md).toContain("npx madeby@latest ai [tool]"); // current commands
+    expect(md).toContain("<!-- madeby:aco v3 -->"); // refreshed to current version
+    expect(md).toContain(`npx madeby@${VERSION} ai [tool]`); // current commands
     expect(md).not.toContain("old ACO");
     // and it's now current + idempotent
     expect(acoStatus(md)).toBe("current");
@@ -203,7 +242,7 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(r.updated).toContain("AGENTS.md");
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("# AGENTS.md"); // original title kept
-    expect(md).toContain("<!-- madeby:aco v2 -->");
+    expect(md).toContain("<!-- madeby:aco v3 -->");
     expect(md).toContain("<!-- /madeby:aco -->");
     expect(md).not.toContain("madeby ai <session-log>"); // stale command gone
     expect(acoStatus(md)).toBe("current");

@@ -26,7 +26,7 @@ export function initCommand(args: string[]): void {
 
   for (const f of r.created) console.log(`  + ${f}`);
   for (const f of r.merged) console.log(`  ~ ${f} (merged in the ACO rule)`);
-  if (r.claudeSettings === "merged") console.log("  ~ .claude/settings.json (merged in Claude Code's commit trailer)");
+  for (const c of r.claudeSettings) if (c.status === "merged") console.log(`  ~ ${c.file} (merged in Claude Code's commit trailer)`);
   for (const f of r.updated) console.log(`  ↑ ${f} (ACO convention refreshed to the current version)`);
   for (const f of r.raised) console.log(`  ↑ ${f} (mode raised to required)`);
   for (const f of r.modelOn) console.log(`  ↑ ${f} (now records the model version)`);
