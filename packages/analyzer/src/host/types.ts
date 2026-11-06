@@ -64,4 +64,11 @@ export interface HostAdapter {
    * so a detector can try each adapter and take the first hit.
    */
   ciRange?(env: Record<string, string | undefined>): string | null;
+
+  /**
+   * Optional: is this THIS host's pull-request build, whether or not `ciRange` could read its range?
+   * Lets `madeby check` tell "not a PR build" (score recent history) from "a PR build whose range is
+   * missing" (a broken pipeline it must report, never pass silently).
+   */
+  ciPullRequest?(env: Record<string, string | undefined>): boolean;
 }

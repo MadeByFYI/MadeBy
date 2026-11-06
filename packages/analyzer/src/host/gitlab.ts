@@ -23,7 +23,11 @@ export const gitlabAdapter: HostAdapter = {
 
   // GitLab CI sets these predefined variables on a merge-request pipeline. CI_MERGE_REQUEST_DIFF_BASE_SHA
   // is the merge-base of the MR; CI_COMMIT_SHA is the head — so base..head is the MR's own commits.
-  // (Needs the MR pipeline / a deep-enough fetch for those SHAs.) Any absence → null (recent history).
+  // (Needs the MR pipeline / a deep-enough fetch for those SHAs.) Any absence → null (reported by `check`).
+  ciPullRequest(env: Record<string, string | undefined>): boolean {
+    return env.CI_PIPELINE_SOURCE === "merge_request_event";
+  },
+
   ciRange(env: Record<string, string | undefined>): string | null {
     if (env.CI_PIPELINE_SOURCE !== "merge_request_event") return null;
     const base = env.CI_MERGE_REQUEST_DIFF_BASE_SHA;

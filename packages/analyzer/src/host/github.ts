@@ -36,8 +36,12 @@ export const githubAdapter: HostAdapter = {
   // On a `pull_request` event GitHub sets GITHUB_EVENT_NAME + GITHUB_EVENT_PATH (a JSON payload with
   // the PR's base/head SHAs). Reading base..head here replaces the bash range computation the Action
   // used to carry — the range logic now lives once, in the adapter. Needs the PR history present
-  // (the quickstart's `fetch-depth: 0`). Any absence/parse failure → null (fall back to recent
-  // history); never throws.
+  // (the quickstart's `fetch-depth: 0`). Any absence/parse failure → null (`check` reports the
+  // unreadable PR build, see ciPullRequest); never throws.
+  ciPullRequest(env: Record<string, string | undefined>): boolean {
+    return env.GITHUB_EVENT_NAME === "pull_request" || env.GITHUB_EVENT_NAME === "pull_request_target";
+  },
+
   ciRange(env: Record<string, string | undefined>): string | null {
     const event = env.GITHUB_EVENT_NAME;
     if (event !== "pull_request" && event !== "pull_request_target") return null;
@@ -51,7 +55,7 @@ export const githubAdapter: HostAdapter = {
       const head = payload.pull_request?.head?.sha;
       if (base && head) return `${base}..${head}`;
     } catch {
-      // unreadable / malformed event payload → no range; the gate degrades to recent history
+      // unreadable / malformed event payload → no range; `check` reports it
     }
     return null;
   },

@@ -24,6 +24,33 @@ const parseMeta = (rec: string): CommitMeta => {
 };
 
 /**
+ * Why `range` can't be scored faithfully in this clone, or null when it can. A shallow clone may cut
+ * the history short, and a range whose endpoint isn't here (a target branch never fetched) would make
+ * `git log` fail — which readGitLog turns into "no commits", a silent pass. Callers report this
+ * instead of scoring whatever happens to be present (fail safe: never a false "all disclosed").
+ */
+export function historyProblem(repoPath: string, range?: string): string | null {
+  const git = (...args: string[]): string | null => {
+    try {
+      return execFileSync("git", ["-C", repoPath, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    } catch {
+      return null;
+    }
+  };
+  if (git("rev-parse", "--is-shallow-repository") === "true") {
+    return "this is a shallow clone, so the history may be cut short. Fetch the full history (Azure Pipelines: fetchDepth: 0 on the checkout step; GitHub Actions: fetch-depth: 0).";
+  }
+  if (range) {
+    for (const end of range.split(/\.{2,3}/).filter(Boolean)) {
+      if (git("rev-parse", "--verify", "--quiet", `${end}^{commit}`) === null) {
+        return `the range ${range} can't be read: ${end} isn't in this clone. Fetch it (full history), or pass a range that exists.`;
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Read commit metadata via `git log`. Returns `[]` (never throws) if git or the repo is
  * unavailable, so callers degrade gracefully (the resolver/analyzer "not available" state).
  */

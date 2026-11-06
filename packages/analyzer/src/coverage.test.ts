@@ -43,6 +43,24 @@ describe("repoCoverage — the honest authorship scoreboard", () => {
     expect(r.byTier.verified).toBe(0);
   });
 
+  it("breaks the picture down per author, keyed by email, named by the most recent name", () => {
+    const d = repo();
+    const as = (name: string, email: string, file: string, msg: string): void => {
+      writeFileSync(join(d, file), file + "\n");
+      git(d, "add", "-A");
+      execFileSync("git", ["-C", d, "-c", `user.name=${name}`, "-c", `user.email=${email}`, "-c", "commit.gpgsign=false", "commit", "--no-verify", "-q", "-m", msg]);
+    };
+    as("Wren", "wren@example.com", "a.ts", "feat: a\n\nAuthored-by-human: Wren <wren@example.com>\nAssisted-by: Claude Code");
+    as("Kai", "kai@example.com", "b.ts", "feat: b");
+    as("Kai", "kai@example.com", "c.ts", "feat: c");
+    as("Wren Ito", "Wren@Example.com", "d.ts", "feat: d"); // same person, renamed and re-cased
+    const r = repoCoverage(d);
+    expect(r.byAuthor).toEqual([
+      { name: "Kai", email: "kai@example.com", commits: 2, known: 0, byCategory: { human: 0, with_ai: 0, ai: 0, bot: 0 } },
+      { name: "Wren Ito", email: "wren@example.com", commits: 2, known: 1, byCategory: { human: 0, with_ai: 1, ai: 0, bot: 0 } },
+    ]);
+  });
+
   it("an all-undisclosed repo is 0 known / all unknown — never inferred human", () => {
     const d = repo();
     commit(d, "a.ts", "chore: init");

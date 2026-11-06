@@ -28,7 +28,12 @@ export const azureAdapter: HostAdapter = {
 
   // Azure Pipelines sets these predefined variables on a PR-triggered build. The target branch is
   // given as a ref (not a SHA), so the range references origin/<target>; the pipeline template uses
-  // fetchDepth: 0 so that ref + the PR history are present. Any absence → null (recent history).
+  // fetchDepth: 0 so that ref + the PR history are present. Any absence → null; `check` then reports
+  // the PR build whose range it couldn't read (ciPullRequest) instead of passing on recent history.
+  ciPullRequest(env: Record<string, string | undefined>): boolean {
+    return env.BUILD_REASON === "PullRequest";
+  },
+
   ciRange(env: Record<string, string | undefined>): string | null {
     if (env.BUILD_REASON !== "PullRequest") return null;
     const targetRef = env.SYSTEM_PULLREQUEST_TARGETBRANCH; // e.g. "refs/heads/main"

@@ -1,4 +1,4 @@
-// `madeby coverage [<range>] [--json]` — the authorship-coverage scoreboard: how much of your repo's
+// `madeby coverage [<range>] [--by author] [--json]` — the authorship-coverage scoreboard: how much of your repo's
 // authorship is ON THE RECORD (known) vs undisclosed (unknown, never guessed), the human/with_ai/ai mix
 // of the known, and the asserted-vs-verified trust split. Disclosure, not detection — a thin renderer
 // over the shared `repoCoverage` primitive. The maintainer's scoreboard: it shows the gap, and points
@@ -27,6 +27,24 @@ const AGENT_ROWS = 8;
 const pct = (n: number, d: number): number => (d > 0 ? Math.round((n / d) * 100) : 0);
 /** a 20-cell bar for a 0..100 percentage */
 const bar = (p: number): string => "█".repeat(Math.round(p / 5)) + "░".repeat(20 - Math.round(p / 5));
+
+/** One row per commit author: how many commits, and how many of them disclose who wrote them. */
+function renderByAuthor(r: CoverageReport): void {
+  console.log(`authorship coverage by author — ${r.scope}  (estimate · disclosure, not detection)`);
+  if (r.byAuthor.length === 0) {
+    console.log("  (no commits to score)");
+    return;
+  }
+  const label = (a: CoverageReport["byAuthor"][number]) => (a.name && a.name !== a.email ? `${a.name} <${a.email}>` : a.email);
+  const width = Math.max(...r.byAuthor.map((a) => label(a).length));
+  console.log(`  ${"author".padEnd(width)}  commits  disclosed   human  with_ai     ai`);
+  for (const a of r.byAuthor) {
+    const k = a.byCategory;
+    console.log(
+      `  ${label(a).padEnd(width)}  ${String(a.commits).padStart(7)}  ${`${a.known} · ${pct(a.known, a.commits)}%`.padStart(9)}  ${String(k.human).padStart(6)}  ${String(k.with_ai).padStart(7)}  ${String(k.ai + k.bot).padStart(5)}`,
+    );
+  }
+}
 
 function render(r: CoverageReport, required: boolean): void {
   const knownPct = pct(r.known, r.total);
@@ -69,7 +87,14 @@ function render(r: CoverageReport, required: boolean): void {
 
 export function coverageCommand(args: string[]): void {
   const json = args.includes("--json");
-  const range = args.find((a) => !a.startsWith("--"));
+  const byAt = args.findIndex((a) => a === "--by" || a.startsWith("--by="));
+  const by = byAt < 0 ? undefined : args[byAt]!.includes("=") ? args[byAt]!.split("=")[1] : args[byAt + 1];
+  if (by !== undefined && by !== "author") {
+    console.error("madeby coverage: --by takes 'author'.");
+    process.exit(2);
+    return;
+  }
+  const range = args.find((a, i) => !a.startsWith("--") && !(byAt >= 0 && i === byAt + 1 && !args[byAt]!.includes("=")));
   const root = repoRoot();
   if (!root) {
     console.error("madeby coverage: not a git repository.");
@@ -81,5 +106,6 @@ export function coverageCommand(args: string[]): void {
     console.log(JSON.stringify(r, null, 2));
     return;
   }
-  render(r, policyIsRequired(root));
+  if (by === "author") renderByAuthor(r);
+  else render(r, policyIsRequired(root));
 }

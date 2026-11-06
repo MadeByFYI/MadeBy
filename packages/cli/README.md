@@ -67,22 +67,30 @@ sides of it, and `init`/`check` are the setup and the gate.
 ### `madeby check` — the disclosure gate
 
 Reads `.madeby/policy.json`, recognizes each commit's disclosure signals, and reports coverage.
-A commit **discloses its origin** if it carries any of:
+A commit **discloses who wrote it** if it carries any of:
 
 - an **AI-authorship trailer** — `Co-Authored-By:` / `Generated-by:` / `Assisted-by:` naming an AI
-  tool (Claude Code, Copilot, Cursor, aider, … already emit these);
+  tool (Claude Code, Copilot, Cursor, aider, … already emit these), or `Authored-by-ai:`;
 - an **affirmative human-authorship trailer** — `Authored-by-human: <you>` (see below);
-- a **DCO `Signed-off-by:`** line;
-- a **commit signature**;
 - a **`madeby ai`** attestation (your own AI session's witnessed spans).
 
-Exit codes: **0** = pass · **1** = a `required` policy failed on an undisclosed commit · **2** = not
-a git repository. Under `advisory` it only reports (always exit 0) — so it's safe to add to CI
+A **DCO `Signed-off-by:`** line or a **commit signature** is recognized too, but on its own it says
+who is accountable for the commit, not who wrote it, so it counts only if the policy's `accept`
+lists it. `check` reports commits that carry only one of those apart from those that carry nothing.
+
+Exit codes: **0** = pass · **1** = a `required` policy failed on an undisclosed commit, or couldn't
+read the history (below) · **2** = not a git repository. Under `advisory` it only reports (always exit 0) — so it's safe to add to CI
 before you decide to enforce anything.
 
 In CI, omit `<range>` — on a pull-request build `madeby check` **auto-scopes to the PR's own
-commits** from the CI environment (GitHub today; other hosts via their adapter). Pass an explicit
-`<range>` to override.
+commits** from the CI environment (GitHub, Azure DevOps and GitLab). Pass an explicit `<range>` to
+override.
+
+**The history has to be there.** On a shallow clone, when a range endpoint isn't in the clone (a
+target branch that was never fetched), or on a pull-request build whose range can't be read, `check`
+says so: under `required` it fails rather than score whatever happens to be present, and under
+`advisory` it prints a warning. Check out the full history (`fetch-depth: 0` on GitHub,
+`fetchDepth: 0` on Azure Pipelines); the files `madeby init` writes already do.
 
 ### `madeby coverage` — the authorship scoreboard
 
@@ -92,6 +100,7 @@ history's authorship is **on the record** — no policy, no config:
 ```sh
 madeby coverage                 # scores recent history
 madeby coverage origin/main..HEAD   # or a range
+madeby coverage --by author     # the same, one row per commit author
 ```
 
 ```
@@ -115,7 +124,8 @@ inferred as human — disclosure, not detection. The human/with_ai/ai mix is rep
 never of the whole repo, and the asserted-vs-verified split shows how much is signed. The agents and
 model versions are listed exactly as the AI commits name them — a commit naming a tool and its model
 (`Assisted-by: Claude Code` + `Co-Authored-By: Claude Opus 5.5`) counts under both, so those rows can
-sum past 100%. `--json` emits
+sum past 100%. `--by author` shows one row per commit author (grouped by email): how many of their
+commits disclose, and the mix — who discloses and who never does. `--json` (which includes `byAuthor`) emits
 counts only (percentages are derived at the edge, never stored). A plain merge authors nothing and
 isn't scored; a merge that changes content of its own (a conflict resolution) is, like any other
 commit — chosen by what it changes, never by whether it discloses. Use it to see your gap, then
@@ -151,8 +161,8 @@ Two modes, nothing more:
 
 - `advisory` — report coverage on each run; never fails. **The default** (and what you get with no file).
 - `required` — fail on any commit that discloses nothing your policy accepts.
-- optional `"accept": ["dco-signoff", "ai-trailer", …]` — restrict what satisfies the policy
-  (omit ⇒ any recognized disclosure counts).
+- optional `"accept": ["dco-signoff", "ai-trailer", …]` — set what satisfies the policy
+  (omit ⇒ any authorship disclosure counts; a DCO sign-off or signature alone counts only if listed).
 - optional `"recordModel": true` — written by `madeby init --record-model`: the repo asks AI
   disclosures to name the model version as well as the tool. It adds one line to the AGENTS.md rule,
   and `me --with-ai` / `ai` then read the model from the **tool's own record of the session** — Cursor's
@@ -166,7 +176,8 @@ Two modes, nothing more:
 (There's no "off" — that's just not running the check. Advisory is the floor.)
 
 Fail-safe by design: a missing or malformed policy degrades to `advisory`. `madeby` never blocks a PR
-on its own error, and never invents a stricter gate than the maintainer wrote.
+on its own error, and never invents a stricter gate than the maintainer wrote. It never passes a
+`required` check it couldn't actually run, either: missing history fails it (see `check` above).
 
 ## Use it as a PR check
 

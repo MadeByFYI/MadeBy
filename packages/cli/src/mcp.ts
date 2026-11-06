@@ -12,10 +12,11 @@ import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { evaluateRepoDisclosure, recordAiSpans, provenanceOf, provenanceMap, repoCoverage } from "@madeby/analyzer";
 import { initRepo } from "./init-repo";
+import { VERSION } from "./version";
 import { affirmAuthorship, attestAiAuthorship, disclosureTrailers } from "./commands/me";
 
 const DEFAULT_PROTOCOL = "2024-11-05";
-const SERVER_INFO = { name: "madeby", version: "0.3.12" };
+const SERVER_INFO = { name: "madeby", version: VERSION };
 
 /** Resolve a repo root from a path arg (default: the server's cwd). Throws if not a git repo. */
 function rootFor(path?: string): string {
@@ -86,8 +87,8 @@ const TOOLS: Tool[] = [
       "Authorship coverage scoreboard for a repo — the honest estimate of how much of the code's " +
       "authorship is ON THE RECORD (known) vs undisclosed (unknown — origin unknown, NEVER guessed), the " +
       "human/with_ai/ai mix OF THE KNOWN (never of the whole repo), the asserted-vs-verified trust " +
-      "split, and byAgent: the agents and model versions named in the AI commits, exactly as disclosed " +
-      "(a commit naming a tool and its model counts under both). Disclosure, not detection; the report is a labeled estimate (counts only — derive percents " +
+      "split, byAgent: the agents and model versions named in the AI commits, exactly as disclosed " +
+      "(a commit naming a tool and its model counts under both), and byAuthor: the same picture per commit author (by email), to see who discloses and who doesn't. Disclosure, not detection; the report is a labeled estimate (counts only — derive percents " +
       "at the edge). Use it to show a maintainer their provenance picture and motivate requiring disclosure.",
     inputSchema: repoInput,
     handler: (args) => repoCoverage(rootFor(args.path as string | undefined), { range: args.range as string | undefined }),
@@ -196,8 +197,9 @@ guesses whether code is AI. To align a repo:
 3. **Disclose going forward** — contributors disclose origin with an \`Authored-by-ai\` trailer (an AI
    wrote it; \`madeby ai\` adds it), \`Authored-by-human\` plus \`Assisted-by\` (a human wrote it with AI;
    \`madeby me --with-ai\`), \`Authored-by-human\` alone (\`madeby me\`), a Co-Authored-By / Generated-by AI
-   trailer, a DCO Signed-off-by, a signed commit, or witnessed spans from an AI session log
-   (\`madeby ai --witness\`). Human and AI disclosure ride the same ladder.
+   trailer, or witnessed spans from an AI session log (\`madeby ai --witness\`). Human and AI disclosure
+   ride the same ladder. A DCO Signed-off-by or a signed commit alone says who is accountable, not who
+   wrote the code, so it satisfies the policy only if the policy's \`accept\` lists it.
 4. **Account for existing history honestly** — do NOT fabricate disclosure for past commits. Read the
    \`madeby://guide/backfill\` resource: recognize what's already disclosed, attach recoverable
    evidence, and set an adoption boundary — pre-boundary history is labeled *unknown*, never invented.
@@ -236,8 +238,8 @@ from a PR.
 ## Azure DevOps (build validation branch policy)
 
 Project Settings -> Repositories -> (repo) -> Policies -> Branch (main) -> Build Validation -> Add:
-point it at the pipeline that includes azure-pipelines-disclosure.yml; set trigger automatic and
-required. CLI equivalent: az repos policy build create ... --branch main --blocking true.
+point it at the pipeline created from .madeby/azure-pipelines.yml (written by init with host
+azure-devops); set trigger automatic and required. CLI equivalent: az repos policy build create ... --branch main --blocking true.
 `;
 
 const BACKFILL_GUIDE = `# Honest backfill for an existing repo
@@ -247,8 +249,9 @@ refuses it. But you CAN make an honest, verifiable statement about history. Back
 never raise a commit's origin above its evidence — unknown stays unknown, just explicitly so.
 
 1. **Recognize what's already there** (free, pure evidence). Run \`check\` over FULL history:
-   existing Co-Authored-By AI trailers, DCO Signed-off-by, signed commits, and bot authorship are
-   recognized now even though they predate adoption. Much of your history may already be disclosed.
+   existing Co-Authored-By AI trailers and bot authorship are recognized now even though they predate
+   adoption. Much of your history may already be disclosed. (DCO sign-offs and signatures are
+   recognized too, but say who is accountable, not who wrote the code.)
 
 2. **Attach recoverable evidence** (opt-in, evidence-grade):
    - Old AI-tool session logs -> \`ai\` attaches structurally-verified spans to their commits (it
@@ -280,7 +283,7 @@ const POLICY_SCHEMA = {
   properties: {
     version: { const: 0 },
     mode: { enum: ["advisory", "required"], description: "advisory: report only (the default, and the safe degrade); required: fail on any undisclosed commit" },
-    accept: { type: "array", items: { type: "string" }, description: "restrict what satisfies the policy (e.g. dco-signoff, ai-trailer, commit-signature); omit ⇒ any recognized disclosure counts" },
+    accept: { type: "array", items: { type: "string" }, description: "restrict what satisfies the policy (e.g. dco-signoff, ai-trailer, commit-signature); omit ⇒ any authorship disclosure counts (a DCO sign-off or signature alone counts only if listed)" },
     recordModel: { type: "boolean", description: "ask AI disclosures to name the model version too (tool:model, e.g. Assisted-by: Cursor:gpt-5.3-codex); madeby reads it from the tool's own session record where it can. Set by init --record-model. A request, not a gate" },
   },
 };

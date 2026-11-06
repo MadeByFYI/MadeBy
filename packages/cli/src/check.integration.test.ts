@@ -53,6 +53,8 @@ function cleanEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
   delete env.GITHUB_EVENT_NAME;
   delete env.GITHUB_EVENT_PATH;
+  delete env.BUILD_REASON;
+  delete env.CI_PIPELINE_SOURCE;
   return env;
 }
 function run(dir: string, ...args: string[]): { code: number; out: string } {
@@ -64,7 +66,7 @@ function runCmd(cmd: string, dir: string, ...args: string[]): { code: number; ou
   return { code: r.status ?? -1, out: (r.stdout ?? "") + (r.stderr ?? "") };
 }
 
-// A repo with three commits: root undisclosed, then one AI-trailer, then one DCO sign-off.
+// A repo with three commits: root undisclosed, then one AI-trailer, then a human attestation + DCO sign-off.
 // Returns the root sha so a range can exclude the undisclosed root (an all-disclosed slice).
 let repo = "";
 let rootSha = "";
@@ -74,7 +76,7 @@ beforeAll(() => {
   git(repo, "init", "-q", "-b", "main");
   rootSha = commit(repo, "a.txt", "one\n", "chore: initial commit"); // undisclosed
   commit(repo, "b.txt", "two\n", "feat: add b\n\nCo-Authored-By: Claude <noreply@anthropic.com>"); // ai-trailer
-  headSha = commit(repo, "c.txt", "three\n", "fix: tweak c\n\nSigned-off-by: Dev <dev@example.com>"); // dco-signoff
+  headSha = commit(repo, "c.txt", "three\n", "fix: tweak c\n\nAuthored-by-human: Dev <dev@example.com>\nSigned-off-by: Dev <dev@example.com>"); // human + dco
 });
 
 afterAll(() => {
@@ -101,6 +103,48 @@ describe("madeby check — the disclosure gate fires per policy", () => {
     writePolicy(repo, "required");
     const { code } = run(repo, `${rootSha}..HEAD`); // excludes the undisclosed root → b + c, both disclosed
     expect(code).toBe(0);
+  });
+
+  it("required: a lone DCO sign-off doesn't disclose authorship (fails, says why); listing it in accept passes", () => {
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    commit(d, "a.txt", "one\n", "fix: a\n\nSigned-off-by: Dev <dev@example.com>");
+    writePolicy(d, "required");
+    const r = run(d);
+    expect(r.code).toBe(1);
+    expect(r.out).toMatch(/carry only a sign-off or signature/);
+    writeFileSync(join(d, ".madeby", "policy.json"), JSON.stringify({ version: 0, mode: "required", accept: ["dco-signoff"] }));
+    expect(run(d).code).toBe(0);
+  });
+
+  // A pipeline that didn't fetch the history must not pass by scoring nothing (field report, 2026-11).
+  describe("missing history is reported, never passed silently", () => {
+    it("a range endpoint that isn't in the clone: required fails (exit 1), advisory warns (exit 0)", () => {
+      writePolicy(repo, "required");
+      const r = run(repo, "origin/main..HEAD"); // no remote → origin/main was never fetched
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/can't check this history.*origin\/main isn't in this clone/s);
+      writePolicy(repo, "advisory");
+      const a = run(repo, "origin/main..HEAD");
+      expect(a.code).toBe(0);
+      expect(a.out).toMatch(/WARNING/);
+    });
+
+    it("a shallow clone: required fails", () => {
+      const d = tmpRepo();
+      execFileSync("git", ["clone", "-q", "--depth", "1", `file://${repo}`, d]);
+      writePolicy(d, "required");
+      const r = run(d, "HEAD~1..HEAD");
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/shallow clone/);
+    });
+
+    it("an Azure PR build whose target branch isn't set: required fails, naming the fix", () => {
+      writePolicy(repo, "required");
+      const r = spawnSync(process.execPath, [BIN, "check"], { cwd: repo, encoding: "utf8", env: { ...cleanEnv(), BUILD_REASON: "PullRequest" } });
+      expect(r.status).toBe(1);
+      expect(r.stderr).toMatch(/azure-devops pull-request build.*madeby check <base>\.\.<head>/s);
+    });
   });
 
   it("the policy file is optional: with none, check defaults to advisory (reports, exit 0)", () => {

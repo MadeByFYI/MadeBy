@@ -4,11 +4,11 @@
 // so it runs anywhere — a contributor's laptop, one line in any CI, or the thin GitHub Action —
 // with no hosted backend. The file is the carrier; we detect and evaluate, we don't host.
 //
-// Disclosure, never detection: the policy asks contributors to STATE their origin (a trailer, a DCO
-// sign-off, a signature, a declaration). It never asserts whether code is AI. What a maintainer does
+// Disclosure, never detection: the policy asks contributors to STATE their origin (an authorship
+// trailer, a declaration). It never asserts whether code is AI. What a maintainer does
 // with a failing check — advise, or block — is THEIR policy; we ship the neutral instrument.
 
-import type { DisclosureKind } from "./disclosure";
+import { DISCLOSURE_KINDS, type DisclosureKind } from "./disclosure";
 
 // Two modes, not three: `advisory` reports, `required` gates. "Off" isn't a mode — it's not running
 // the check (or removing the workflow). So advisory is the floor: the safe default and the safe
@@ -20,8 +20,9 @@ export interface DisclosurePolicy {
   /** required = fail non-disclosing commits; advisory = report only (never blocks) */
   mode: PolicyMode;
   /**
-   * The disclosure kinds that SATISFY the policy. Omitted/empty = any recognized disclosure signal
-   * counts (the maintainer just wants origin disclosed, by whatever means).
+   * The disclosure kinds that SATISFY the policy. Omitted/empty = any AUTHORSHIP disclosure counts
+   * (one that says who wrote the code). A DCO sign-off or a signature alone says who is accountable,
+   * not who wrote it, so it satisfies the policy only when listed here explicitly.
    */
   accept?: DisclosureKind[];
   /**
@@ -69,6 +70,8 @@ export interface CommitVerdict {
   compliant: boolean;
   /** the accepted kinds this commit actually had (empty ⇒ non-compliant) */
   satisfiedBy: DisclosureKind[];
+  /** recognized disclosures the policy doesn't accept (e.g. a lone DCO sign-off), so a report can say why */
+  notAccepted: DisclosureKind[];
 }
 
 export interface PolicyEvaluation {
@@ -82,9 +85,14 @@ export interface PolicyEvaluation {
   summary: string;
 }
 
+/** Whether a kind satisfies the policy: listed in `accept`, or — when `accept` is unset — an authorship disclosure. */
+export function acceptsKind(policy: DisclosurePolicy, kind: DisclosureKind): boolean {
+  return policy.accept ? policy.accept.includes(kind) : DISCLOSURE_KINDS[kind]?.authorship === true;
+}
+
 /**
  * Evaluate a policy against a set of contributions. A commit is compliant iff it carries at least
- * one accepted disclosure kind (any recognized kind, when `accept` is unset). `required` fails the
+ * one accepted disclosure kind (any authorship disclosure, when `accept` is unset). `required` fails the
  * gate on any non-compliant commit; `advisory` always passes (report only). Fail-safe: an empty
  * commit set passes (nothing to gate).
  */
@@ -92,22 +100,24 @@ export function evaluateDisclosurePolicy(
   policy: DisclosurePolicy,
   commits: readonly CommitDisclosure[],
 ): PolicyEvaluation {
-  const accept = policy.accept; // undefined ⇒ any kind counts
-  const isAccepted = (k: DisclosureKind) => !accept || accept.includes(k);
-
+  const accept = policy.accept; // undefined ⇒ any authorship disclosure counts
   const verdicts: CommitVerdict[] = commits.map((c) => {
-    const satisfiedBy = c.kinds.filter(isAccepted);
-    return { ref: c.ref, compliant: satisfiedBy.length > 0, satisfiedBy };
+    const satisfiedBy = c.kinds.filter((k) => acceptsKind(policy, k));
+    const notAccepted = c.kinds.filter((k) => !acceptsKind(policy, k));
+    return { ref: c.ref, compliant: satisfiedBy.length > 0, satisfiedBy, notAccepted };
   });
 
   const nonCompliant = verdicts.filter((v) => !v.compliant);
   const compliant = verdicts.length - nonCompliant.length;
   const pass = policy.mode !== "required" || nonCompliant.length === 0;
 
-  const wanted = accept ? accept.join(", ") : "any recognized disclosure";
+  const wanted = accept ? accept.join(", ") : "any authorship disclosure";
+  // commits that disclosed something, just not authorship (a lone sign-off or signature) — said apart,
+  // so "undisclosed" never hides that the author did put something on the record
+  const otherOnly = nonCompliant.filter((v) => v.notAccepted.length > 0).length;
   const summary =
     `${compliant}/${verdicts.length} commits disclose origin (${policy.mode}; accepts: ${wanted}).` +
-    (nonCompliant.length ? ` ${nonCompliant.length} undisclosed.` : "");
+    (nonCompliant.length ? ` ${nonCompliant.length} undisclosed` + (otherOnly ? ` (${otherOnly} carry only a sign-off or signature, which don't say who wrote the code).` : ".") : "");
 
   return { mode: policy.mode, pass, total: verdicts.length, compliant, nonCompliant, summary };
 }

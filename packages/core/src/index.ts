@@ -114,6 +114,7 @@ export {
   DEFAULT_POLICY,
   parseDisclosurePolicy,
   evaluateDisclosurePolicy,
+  acceptsKind,
 } from "./policy";
 export type {
   DisclosurePolicy,
