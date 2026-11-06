@@ -1,6 +1,9 @@
 // `madeby ai [tool] --for <commit|range>` discloses EARLIER commits instead, with an empty disclosure
 // commit (see `discloseFor` in ./me), for a repo where amending or rebasing isn't allowed.
 //
+// `madeby ai [tool] --merges` declares that merges you finish in this clone are resolved by the AI (the
+// merge hook, ../merge-hook); `--merges off` clears it.
+//
 // `madeby ai [tool]` — made by AI: attest that an AI authored HEAD, by adding an `Authored-by-ai:
 // <tool>` trailer (asserted tier — no session log, works anywhere). `--model <version>` also names the
 // model it ran (`Authored-by-ai: <tool>:<version>`). `--print` prints the trailer instead of amending
@@ -16,7 +19,8 @@
 // add a parser for an unsupported tool, without any code or prompts leaving the machine.
 
 import { recordAiSpans, writeParserSample } from "@madeby/analyzer";
-import { attestAiAuthorship, discloseFor, disclosureTrailers, parseFor, parseModel, renderDiscloseFor } from "./me";
+import { mergesFlag } from "../merge-hook";
+import { aiValue, attestAiAuthorship, discloseFor, disclosureTrailers, parseFor, parseModel, renderDiscloseFor } from "./me";
 import { repoRoot } from "../scope";
 
 const ISSUE_URL = "https://github.com/MadeByFYI/MadeBy/issues/new";
@@ -32,8 +36,8 @@ export function aiCommand(args: string[]): void {
   const makeSample = args.includes("--make-parser-sample");
   const witness = args.includes("--witness");
   const model = parseModel(args);
-  // positional args, minus --model's and --for's values
-  const positional = args.filter((a, i) => !a.startsWith("--") && args[i - 1] !== "--model" && args[i - 1] !== "--for");
+  // positional args, minus --model's, --for's and --merges' values
+  const positional = args.filter((a, i) => !a.startsWith("--") && !["--model", "--for", "--merges"].includes(args[i - 1] ?? ""));
 
   // Contribution path (unchanged): a content-free format skeleton for an unsupported tool's log.
   if (makeSample) {
@@ -84,6 +88,7 @@ export function aiCommand(args: string[]): void {
 
   // Default: assert AI authorship via a trailer (asserted tier — no session log needed).
   const tool = positional[0] || "AI";
+  if (mergesFlag("ai", root, args, { category: "ai", tool: aiValue(tool, model) })) return;
   const forTarget = parseFor(args);
   if (forTarget !== undefined) {
     renderDiscloseFor("ai", forTarget, discloseFor(root, forTarget, { category: "ai", tool, model }));
