@@ -92,8 +92,9 @@ notes and `coverage` and `who` see them. Local config only, never committed.
    `scripts/probe-notes-push.sh` on an Azure DevOps Services repo: pushed, read back with
    `ls-remote`, deleted). GitHub accepts them too (it no longer shows them in its UI, which doesn't
    matter here).
-2. **Branch permissions.** The probe ran as a project administrator. A repo's permissions may still
-   stop an ordinary contributor from creating the ref; the same probe, run by one, will tell.
+2. **Branch permissions.** The probe ran on the founder's account, whose permissions may be broader
+   than a contributor's. A repo's permissions may still stop an ordinary contributor from creating
+   the ref; the same probe, run by one, will tell.
 3. **One shared ref or one per person** (`refs/notes/madeby/<id>`)? One ref is what git's tooling
    expects (`--notes=madeby`) and the merge-and-retry handles contention at this team size. Per-person
    refs avoid contention entirely and make who-wrote-the-note obvious, at the cost of a custom read.
