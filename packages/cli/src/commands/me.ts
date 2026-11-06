@@ -7,6 +7,9 @@
 // `madeby me [--with-ai tool] --for <commit|range>` — disclose EARLIER commits without rewriting them:
 // one empty disclosure commit naming them (`Discloses: <hash>`), for repos that forbid amend/rebase.
 //
+// `madeby me [--with-ai tool] --merges` — a standing declaration for merges you finish in this clone:
+// the merge hook (../merge-hook) adds it to their message. `--merges off` clears it.
+//
 // `madeby me --with-ai [tool]` — made by me, WITH AI: the assisted middle state (the wild's third
 // category). Adds an `Assisted-by: <tool>` disclosure alongside the human affirmation, so the commit
 // classifies as `with_ai` (badge `hi + ai`) — a human is accountable AND the AI is disclosed, in one
@@ -23,6 +26,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { readAuthoredMerges, readDisclosureCommits, readGitLog } from "@madeby/analyzer";
 import { hasAuthorshipDisclosure, parseDisclosurePolicy } from "@madeby/core";
+import { mergesFlag } from "../merge-hook";
 import { detectAgentModel } from "../model-source";
 import { repoRoot } from "../scope";
 
@@ -384,6 +388,9 @@ export function meCommand(args: string[]): void {
     process.exit(2);
     return;
   }
+
+  // a standing declaration for merges finished in this clone (the merge hook) — model only as given
+  if (mergesFlag("me", root, args, withAi ? { category: "with_ai", tool: aiValue(tool, model) } : { category: "human" })) return;
 
   const forTarget = parseFor(args);
   if (forTarget !== undefined) {

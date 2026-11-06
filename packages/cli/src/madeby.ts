@@ -30,6 +30,7 @@ Usage:
                                  --record-model to also ask agents for the model version (opt-in).
                                  In a repo that uses Claude Code (CLAUDE.md or .claude/; --claude-code to
                                  force) it also turns Claude Code's commit trailer on in .claude/settings.json.
+                                 --hooks installs the merge hook in this clone (see --merges below).
   madeby check [<range>]         The gate: do commits meet .madeby/policy.json? (a verdict — exit
                                  code gates). <range> e.g. origin/main..HEAD; in CI it's auto-detected.
                                  --json for a machine-readable result.
@@ -49,6 +50,8 @@ Usage:
                                  for the commit message itself: git commit -m <msg> -m "$(madeby ai <tool> --print)".
                                  --for <commit|range> (me / ai) discloses EARLIER commits instead, with one
                                  new empty commit naming them (Discloses: <hash>) — nothing rewritten.
+                                 --merges (me / ai) says once how you resolve merge conflicts; merges you
+                                 finish in this clone then carry it (installs the merge hook). --merges off clears it.
   madeby mcp                     Run the MCP server (stdio) — the tools, agent-callable.
   madeby help                    Show this help.
 

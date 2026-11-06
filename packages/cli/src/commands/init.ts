@@ -1,9 +1,11 @@
-// `madeby init [--required] [--record-model] [--claude-code] [--host <id>]` — align this repo with MadeBy: write .madeby/policy.json
+// `madeby init [--required] [--record-model] [--claude-code] [--hooks] [--host <id>]` — align this repo with MadeBy: write .madeby/policy.json
 // (advisory by default) and the CI disclosure check. Idempotent (never clobbers existing files; the
 // one deliberate change is --required raising an existing advisory policy to required). A
-// thin renderer over the shared `initRepo` — the same one the MCP `init` tool calls.
+// thin renderer over the shared `initRepo` — the same one the MCP `init` tool calls. `--hooks` installs
+// the merge hook in this clone only (each developer's own; see ../merge-hook).
 
 import { initRepo } from "../init-repo";
+import { installMergeHook, renderHookInstall } from "../merge-hook";
 import { repoRoot } from "../scope";
 
 export function initCommand(args: string[]): void {
@@ -35,4 +37,8 @@ export function initCommand(args: string[]): void {
   console.log(`\nmadeby init — policy: ${r.policyMode}${r.recordModel ? " + records model" : ""}, host: ${r.host}`);
   console.log("Next:");
   for (const s of r.nextSteps) console.log(`  - ${s}`);
+  if (args.includes("--hooks")) {
+    console.log(`\n${renderHookInstall(installMergeHook(root))}`);
+    console.log("Say once how you resolve conflicts, and merges you finish here carry it: madeby me --merges (or me --with-ai <tool> --merges, ai <tool> --merges).");
+  }
 }

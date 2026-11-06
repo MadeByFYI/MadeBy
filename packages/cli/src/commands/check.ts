@@ -56,7 +56,7 @@ export function checkCommand(args: string[]): void {
   if (result.undisclosed.length) {
     console.log(`\nUndisclosed commits (${result.undisclosed.length}):`);
     for (const v of result.undisclosed.slice(0, 20)) {
-      console.log(`  ✗ ${v.ref}  ${v.subject.slice(0, 60)}`);
+      console.log(`  ✗ ${v.ref}  ${v.subject.slice(0, 60)}${v.merge ? "  (merge with changes of its own)" : ""}`);
     }
     if (result.undisclosed.length > 20) console.log(`  … and ${result.undisclosed.length - 20} more`);
     const why = { "other-author": "it names another author's commit", "not-an-ancestor": "it names a commit that isn't before it", "unknown-commit": "it names a commit that isn't here" };
@@ -70,6 +70,13 @@ export function checkCommand(args: string[]): void {
         ` (e.g. madeby me --with-ai <tool> --for origin/main..HEAD): one new commit discloses the earlier ones, nothing rewritten.` +
         ` (Disclosure, not a ban — what this project requires is set in .madeby/policy.json.)`,
     );
+    if (result.undisclosed.some((v) => v.merge)) {
+      console.log(
+        `\nMerges that resolve conflicts are scored too. Say once how you resolve them and merges you finish` +
+          ` locally carry it: 'madeby me --merges' (or 'me --with-ai <tool> --merges', 'ai <tool> --merges').` +
+          ` A merge resolved in the host's web UI doesn't run local hooks — disclose it with --for.`,
+      );
+    }
   }
 
   // `required` gates; `advisory` only reports. Never exit non-zero on our own error (a missing history

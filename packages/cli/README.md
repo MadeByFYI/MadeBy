@@ -181,6 +181,32 @@ write those commits. `check`, `coverage` and `who` read disclosure commits by th
 [ACO §5](https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md#5-carriers-bindings--subsume-dont-compete), and `coverage` counts how many
 disclosures arrived late.
 
+### Merges that resolve conflicts — `--merges`
+
+A merge where you fixed conflicts has changes of its own, so `check` scores it, and git's default
+`Merge branch '…'` message says nothing about who wrote them. Say once how you resolve conflicts:
+
+```sh
+madeby me --merges                          # you resolve them yourself
+madeby me --with-ai "Claude Code" --merges  # you, with AI
+madeby ai "Claude Code" --merges            # the AI does
+```
+
+It saves that in this clone's git config (`madeby.merge`) and installs a small `prepare-commit-msg`
+hook. From then on, a merge you finish in this clone carries the disclosure. The hook only writes
+what you declared; it never guesses:
+
+- Only merges with changes of their own. A clean merge isn't scored and is left alone.
+- A message that already says who wrote it wins, such as Claude Code's own trailer.
+- With no declaration, it offers commented-out lines when an editor opens, and adds nothing when
+  none does.
+- An existing `prepare-commit-msg` hook still runs first. If a hook manager owns your hooks folder
+  (`core.hooksPath`, as with husky), madeby doesn't write into it and prints the line to add.
+
+Hooks aren't part of the repo, so **each developer runs it once in their own clone**
+(`madeby init --hooks` installs the hook without a declaration). Merges resolved in the host's web
+UI don't run local hooks; disclose those with `--for`. `--merges off` clears the declaration.
+
 **The policy file is optional.** With no `.madeby/policy.json`, `check` defaults to **advisory** —
 it reports coverage and never blocks, so you can run it (or add the CI check) with zero config. Add
 the file only when you want to enforce:

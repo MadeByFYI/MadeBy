@@ -27,6 +27,8 @@ export interface DisclosedCommit {
   disclosures: DisclosureKind[];
   /** set when a later disclosure commit supplied the disclosure: that commit's hash */
   late?: string;
+  /** a merge with changes of its own (a conflict resolution) */
+  merge?: true;
 }
 
 /**
@@ -42,12 +44,14 @@ function readDisclosuresWithRejects(root: string, opts: { range?: string; limit?
   // the commits coverage scores: non-merges, plus merges that changed content of their own
   const { authored, merges } = readScoredCommits(root, { range: opts.range, limit: opts.limit ?? 200 });
   const commits = applyLateDisclosures([...authored, ...merges], late);
+  const mergeShas = new Set(merges.map((m) => m.sha));
   return {
     commits: commits.map((c) => ({
       sha: c.sha ?? "",
       subject: c.message.split("\n")[0] ?? "",
       disclosures: commitDisclosureKinds({ message: c.message, signed: c.signed }),
       ...(c.late ? { late: c.late } : {}),
+      ...(mergeShas.has(c.sha) ? { merge: true as const } : {}),
     })),
     rejected: late.rejected,
   };
@@ -59,7 +63,8 @@ export interface RepoDisclosure {
   pass: boolean;
   summary: string;
   total: number;
-  undisclosed: { ref: string; subject: string }[];
+  /** `merge` marks a merge with changes of its own (a conflict resolution) */
+  undisclosed: { ref: string; subject: string; merge?: true }[];
   /** commits in scope a disclosure commit named but couldn't disclose (another author's, not an ancestor) */
   lateRejected: RejectedDisclosure[];
   /** present when the policy file was unreadable and we degraded to the default */
@@ -83,13 +88,13 @@ export function evaluateRepoDisclosure(root: string, opts: { range?: string; lim
   const { commits, rejected } = readDisclosuresWithRejects(root, opts);
   const disclosures = commits.map((c) => ({ ref: (c.sha || "").slice(0, 8) || "(unknown)", kinds: c.disclosures }));
   const result = evaluateDisclosurePolicy(policy, disclosures);
-  const subjectFor = (ref: string) => commits.find((c) => (c.sha || "").startsWith(ref))?.subject ?? "";
+  const byRef = (ref: string) => commits.find((c) => (c.sha || "").startsWith(ref));
   return {
     mode: policy.mode,
     pass: result.pass,
     summary: result.summary,
     total: disclosures.length,
-    undisclosed: result.nonCompliant.map((v) => ({ ref: v.ref, subject: subjectFor(v.ref) })),
+    undisclosed: result.nonCompliant.map((v) => ({ ref: v.ref, subject: byRef(v.ref)?.subject ?? "", ...(byRef(v.ref)?.merge ? { merge: true as const } : {}) })),
     lateRejected: rejected.filter((r) => commits.some((c) => c.sha === r.sha)),
     ...(warning ? { warning } : {}),
   };
