@@ -1,4 +1,4 @@
-# Disclosing after the fact — git notes (design, draft 2026-11-06)
+# Disclosing after the fact — the disclosure commit (design, draft 2026-11-06)
 
 Status: **draft for review**. Nothing here is built yet.
 
@@ -8,103 +8,106 @@ A disclosure counts only when it is in the commit message. Fixing a missed one m
 commit (amend, rebase). In a repo that forbids rebasing and merges one branch into several targets
 (dev, stage, prod), a developer who fails a `required` check has no allowed way to fix it. Found in a
 field evaluation on an Azure DevOps repo of about 15 developers, where this decides whether `required`
-mode can be used at all.
+mode can be used at all. The answer has to work for orgs of thousands.
 
 ## The proposal
 
-Let a disclosure live in a **git note** on the commit, in the ref `refs/notes/madeby`. A note is
-attached to the commit's SHA without changing the commit, so the history, the SHAs and every branch
-the commit was merged into stay as they are. One note covers the commit everywhere it was merged.
-
-This is not a new carrier. ACO §5 and ARCHITECTURE §3 already list git-notes as one; this makes it
-the first one `check` and `coverage` read besides the message.
-
-It fits the invariants: the subject is the commit's own hash (invariant 1, a reference to a native
-content hash), and a note is a self-report like a trailer, so it is **asserted**, never more
-(invariants 3 and 5).
-
-### What a note says
-
-The same trailer lines a commit message carries, so one recognizer reads both and a person can read
-it with `git log --notes=madeby`:
+Disclose earlier commits with a **new, empty commit** whose message says who wrote them:
 
 ```
+Disclose authorship of 3 earlier commits
+
+Discloses: 4f1c2a9e0b7d3c6a5e8f9b1d2c3a4e5f6a7b8c9d
+Discloses: 9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b
+Discloses: 0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c
 Authored-by-human: Wren Ito <wren@example.com>
 Assisted-by: Claude Code
 ```
 
-(The JSON claim envelope the git-notes binding in `packages/core/src/carriers.ts` serializes stays
-for signed claims later. Trailer lines are what a person or an agent writes today.)
+The `Discloses:` lines name the commits by full hash; the trailers after them are the ordinary ACO
+disclosure, and they apply to each commit named. Nothing is rewritten, so it is allowed in a
+no-rebase repo. It is an ordinary commit, so:
+
+- **It goes through review.** It is pushed, reviewed and merged like any other commit, under the
+  same branch policies. No disclosure enters the shared history unreviewed.
+- **The check re-runs by itself.** Pushing it updates the PR, which re-runs the build.
+- **It travels with the branch** into every target the branch is merged into (dev, stage, prod).
+- **Nothing new to operate.** No new refs, no extra fetch step or token in CI, and git hosts already
+  handle commits at any scale.
+
+It fits the invariants: each subject is a commit's own hash (invariant 1, a reference to a native
+content hash), and the disclosure is a self-report like a trailer, so it is **asserted**, never more
+(invariants 3 and 5).
 
 ### Writing one
 
-The disclosing commands gain a target other than HEAD:
+The disclosing commands gain `--for`:
 
 ```sh
-madeby me --with-ai "Claude Code" --note <commit|range>
-madeby ai "Claude Code" --note <commit|range>
-madeby me --note <commit|range>
+madeby me --with-ai "Claude Code" --for origin/dev..HEAD
+madeby ai "Claude Code" --for 4f1c2a9e
+madeby me --for origin/dev..HEAD
 ```
 
-- `--note` writes the note instead of amending. HEAD is the default target; a range covers many
-  commits at once, e.g. `origin/dev..task/1234` for a branch's commits.
+- `--for` takes a commit or a range, and makes the disclosure commit on the current branch instead
+  of amending HEAD. One category per disclosure commit; commits written differently get their own.
 - **Only your own commits.** A commit is skipped unless its author email is yours
-  (`git config user.email`). You can say who wrote your work; you can't say it for someone else.
-  Skipped commits are listed.
-- **Never overwrites.** A commit that already discloses, in its message or a note, is skipped.
-- Then it pushes the notes ref: fetch, merge (`git notes merge -s cat_sort_uniq`), push, retry on a
-  race. Notes refs aren't pushed by default, so this step is what makes the note visible to CI.
-  `--no-push` leaves it local.
+  (`git config user.email`). You can say who wrote your work, not someone else's.
+- **Only undisclosed commits.** A commit whose message already discloses, or that an earlier
+  disclosure commit covers, is skipped. Skipped commits are listed with the reason.
+- **Empty only.** It refuses when changes are staged, so a disclosure commit never carries content.
+- Then the developer pushes as usual.
 
 ### Reading them
 
-- `check`, `coverage` and `who` read `refs/notes/madeby` alongside the message.
-- **The message comes first.** A note only fills in a commit whose message discloses nothing. If both
-  disclose and disagree, the message wins and `coverage` reports the conflict.
-- A note-borne disclosure is labeled as such (`via: note`) in `--json`, and `coverage` counts how
-  many disclosures came by note, so late disclosure is visible rather than blended in.
-- Policy: notes count by default. `"notes": false` in `.madeby/policy.json` turns them off for a
-  project that wants disclosure only in the commit itself.
+`check`, `coverage` and `who` apply a disclosure commit to the commits it names, under these rules:
 
-### CI has to fetch the notes
+- **It can only describe the past.** A named commit counts only if it is an ancestor of the
+  disclosure commit.
+- **Your own commits only.** A named commit counts only if its author email matches the disclosure
+  commit's. Others are ignored and reported.
+- **The commit's own message comes first.** A disclosure commit only fills in a commit whose message
+  discloses nothing. If both disclose and disagree, the message wins and `coverage` reports it.
+- **A later disclosure commit corrects an earlier one** for the same commit (someone wrote
+  `with_ai` and meant `ai`). Both stay in history, so the correction is visible.
+- **It isn't scored itself.** An empty commit with `Discloses:` lines is metadata, like a plain
+  merge, so `coverage` doesn't count it as authored work. One that changes content is scored
+  normally and its `Discloses:` lines are ignored.
+- **Late is labeled.** In `--json` a disclosure applied this way says so (`via: disclosure-commit`,
+  with that commit's hash), and `coverage` counts how many disclosures arrived late.
+- `coverage` looks for disclosure commits across all history reachable from what it scores, not
+  only inside the window, since a disclosure can be newer than the commits it names.
 
-A checkout doesn't fetch notes refs, and the pipelines `init` writes keep no credentials (0.3.13). So
-the generated pipeline fetches the notes ref in a step **before** madeby runs, with the build's token
-passed for that one command only and never written to disk:
+### The spec
 
-- Azure: `git -c http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" fetch origin
-  +refs/notes/madeby:refs/notes/madeby`
-- GitHub: the same with `${{ github.token }}`; on a public repo no token is needed.
+ACO §5 gains the disclosure commit as a carrier: the `Discloses:` trailer, the ancestor and
+same-author rules, message precedence, and late labeling. Any implementation reading ACO applies
+the same rules.
 
-A missing notes ref (nobody has written one yet) is not an error.
+## Costs
 
-A note pushed after the check ran doesn't re-run it; the developer re-queues the build. `check`
-says so in its failure message.
-
-### Locally
-
-`madeby init` offers to add the notes refspec to the clone's fetch config, so `git fetch` brings the
-notes and `coverage` and `who` see them. Local config only, never committed.
+- One extra commit each time someone discloses late.
+- Commits already merged, with no PR open, need a small PR to land the disclosure commit. In
+  practice the same `task/<id>` branch goes to stage and prod later, so the next merge carries it.
 
 ## Open questions
 
-1. ~~**Does Azure Repos accept pushes to `refs/notes/*`?**~~ **Yes** (tested 2026-11-06 with
-   `scripts/probe-notes-push.sh` on an Azure DevOps Services repo: pushed, read back with
-   `ls-remote`, deleted). GitHub accepts them too (it no longer shows them in its UI, which doesn't
-   matter here).
-2. **Branch permissions.** The probe ran on the founder's account, whose permissions may be broader
-   than a contributor's. A repo's permissions may still stop an ordinary contributor from creating
-   the ref; the same probe, run by one, will tell.
-3. **One shared ref or one per person** (`refs/notes/madeby/<id>`)? One ref is what git's tooling
-   expects (`--notes=madeby`) and the merge-and-retry handles contention at this team size. Per-person
-   refs avoid contention entirely and make who-wrote-the-note obvious, at the cost of a custom read.
-   Recommendation: one ref.
-4. **Signed notes.** The notes ref's own commits can be signed, which could lift a note to verified
-   later. Out of scope for the first version; notes are asserted.
+1. **The trailer's name.** `Discloses:` is short and reads well; an ACO-specific name
+   (`ACO-Discloses:`) can't collide with anything another tool writes. Recommendation: `Discloses:`
+   with full hashes only, which no other convention uses.
+2. **Hash length.** Full hashes only (40 hex for SHA-1, 64 for SHA-256), so a reference can never be
+   ambiguous. Costs readability, which the subject line covers.
 
-## Not doing
+## Considered and set aside
 
-- Disclosure in the PR description. It is easy to write, but it is attached to the PR, not the
-  commit, so it doesn't survive the same commit being merged to stage and prod by other PRs, and it
-  isn't in git for `coverage` or `who` to read.
-- Disclosing someone else's commits, including in bulk for a team. Each author discloses their own.
+- **Git notes** (`refs/notes/madeby`). They attach to a commit without changing it, and Azure Repos
+  and GitHub both accept them (tested 2026-11-06 with `scripts/probe-notes-push.sh`). Set aside
+  because they bypass review and branch policies (anyone with push access can add, change or delete
+  any note, or force-push them all away), because uploading one doesn't re-run the PR check, and
+  because a ref per person to contain that runs to thousands of refs in a large org. Still a
+  possible later option for disclosing commits that are already merged.
+- **Disclosure in the PR description.** Attached to the PR, not the commit, so it doesn't survive the
+  same commit being merged to stage and prod by other PRs, and it isn't in git for `coverage` or
+  `who` to read.
+- **Disclosing someone else's commits**, including in bulk for a team. Each author discloses their
+  own.
