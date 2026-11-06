@@ -6,7 +6,7 @@
 
 import { commitDisclosureKinds } from "@madeby/core";
 import { classifyCommit } from "@madeby/classify";
-import { commitTime, readAuthoredMerges, readGitLog, supportsRemergeDiff } from "./git";
+import { readScoredCommits, supportsRemergeDiff } from "./git";
 import { applyLateDisclosures, rangeHead, readDisclosureCommits } from "./late-disclosure";
 
 export type CoverageCategory = "human" | "with_ai" | "ai" | "bot";
@@ -95,13 +95,8 @@ export function agentName(raw: string): string {
  * undisclosed commits are `unknown`, never inferred as human.
  */
 export function repoCoverage(root: string, opts: { range?: string; limit?: number } = {}): CoverageReport {
-  const limit = opts.range ? undefined : opts.limit ?? 500;
-  const authored = readGitLog(root, limit, opts.range);
-  // Merges that author content of their own (conflict resolutions) are scored too, over the same span
-  // of history: the range, or back to the oldest commit in the window (all history if it isn't full).
-  const oldest = authored.at(-1)?.sha;
-  const since = limit && oldest && authored.length >= limit ? commitTime(root, oldest) : undefined;
-  const merges = authored.length > 0 && (!limit || authored.length < limit || since !== undefined) ? readAuthoredMerges(root, { range: opts.range, since }) : [];
+  // Merges that author content of their own (conflict resolutions) are scored too, over the same span.
+  const { authored, merges } = readScoredCommits(root, { range: opts.range, limit: opts.limit ?? 500 });
   // Disclosure commits fill in commits disclosed afterwards; they aren't authored work themselves.
   const commits = applyLateDisclosures([...authored, ...merges], readDisclosureCommits(root, rangeHead(opts.range)));
   const byCategory: Record<CoverageCategory, number> = { human: 0, with_ai: 0, ai: 0, bot: 0 };

@@ -150,3 +150,19 @@ export function commitTime(repoPath: string, sha: string): number | undefined {
     return undefined;
   }
 }
+
+/**
+ * The commits that carry authored work, as `coverage` and `check` both score them: the window's (or
+ * range's) non-merge commits, plus the merges in the same span that changed content of their own
+ * (readAuthoredMerges). One reader, so the scoreboard and the gate always measure the same commits.
+ */
+export function readScoredCommits(repoPath: string, opts: { range?: string; limit?: number }): { authored: CommitMeta[]; merges: CommitMeta[] } {
+  const limit = opts.range ? undefined : opts.limit;
+  const authored = readGitLog(repoPath, limit, opts.range);
+  // the same span of history: the range, or back to the oldest commit in the window (all history if
+  // the window isn't full)
+  const oldest = authored.at(-1)?.sha;
+  const since = limit && oldest && authored.length >= limit ? commitTime(repoPath, oldest) : undefined;
+  const merges = authored.length > 0 && (!limit || authored.length < limit || since !== undefined) ? readAuthoredMerges(repoPath, { range: opts.range, since }) : [];
+  return { authored, merges };
+}

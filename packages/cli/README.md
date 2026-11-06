@@ -75,6 +75,11 @@ A commit **discloses who wrote it** if it carries any of:
 - an **affirmative human-authorship trailer** — `Authored-by-human: <you>` (see below);
 - a **`madeby ai`** attestation (your own AI session's witnessed spans).
 
+It checks the same commits `coverage` scores: every non-merge commit, plus any merge where someone
+changed what git would have produced on its own (a conflict resolved by hand). A merge git made by
+itself authors nothing and is never checked. Disclose a resolution like any commit: `madeby me
+--with-ai <tool>` right after committing it, or `--for` later.
+
 A **DCO `Signed-off-by:`** line or a **commit signature** is recognized too, but on its own it says
 who is accountable for the commit, not who wrote it, so it counts only if the policy's `accept`
 lists it. `check` reports commits that carry only one of those apart from those that carry nothing.
