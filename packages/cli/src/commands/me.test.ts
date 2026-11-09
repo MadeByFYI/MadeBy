@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
 import { repoCoverage } from "@madeby/analyzer";
-import { affirmAuthorship, aiValue, attestAiAuthorship, disclosureTrailers, parseModel } from "./me";
+import { affirmAuthorship, aiValue, attestAiAuthorship, discloseFor, disclosureTrailers, mappedEmail, parseModel } from "./me";
 
 const dirs: string[] = [];
 const git = (dir: string, ...a: string[]): string =>
@@ -187,5 +187,26 @@ describe("--print — the disclosure for the commit message itself (platforms th
     git(d, "commit", "--no-verify", "-q", "-m", "feat: y", "-m", lines);
     expect(git(d, "log", "-1", "--format=%(trailers:key=Authored-by-ai,valueonly)").trim()).toBe("GitHub Copilot:gpt-6-luna");
     expect(repoCoverage(d).byAgent).toEqual([{ name: "GitHub Copilot · gpt-6-luna", provider: "github-copilot", tool: "GitHub Copilot", model: "gpt-6-luna", commits: 1 }]);
+  });
+});
+
+describe("--for and .mailmap (#230)", () => {
+  it("your commits under another address are yours when the repo's .mailmap says so", () => {
+    const d = tmpRepo();
+    writeFileSync(join(d, ".mailmap"), "Dev <dev@example.com> <dev@laptop.local>\n");
+    git(d, "add", "-A");
+    git(d, "commit", "--no-verify", "-q", "-m", "chore: mailmap", "-m", "Authored-by-human: Dev <dev@example.com>");
+    writeFileSync(join(d, "y.txt"), "y\n");
+    git(d, "add", "-A");
+    execFileSync("git", ["-C", d, "-c", "user.email=dev@laptop.local", "commit", "--no-verify", "-q", "-m", "feat: from the laptop"]);
+    expect(mappedEmail(d, "Dev", "dev@laptop.local")).toBe("dev@example.com");
+    const r = discloseFor(d, "HEAD", { category: "with_ai", tool: "Claude Code" });
+    expect(r.ok).toBe(true);
+    expect(r.disclosed).toHaveLength(1);
+    expect(r.skipped).toEqual([]);
+  });
+
+  it("no .mailmap: the email as configured", () => {
+    expect(mappedEmail(tmpRepo(), "Dev", "Dev@Example.com")).toBe("dev@example.com");
   });
 });

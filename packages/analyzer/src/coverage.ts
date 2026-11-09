@@ -37,7 +37,8 @@ export interface CoverageReport {
   readonly byAgent: ReadonlyArray<AgentCount>;
   /**
    * The same picture per commit author, most commits first: who discloses and who doesn't. Keyed by
-   * the author email git records (an identity is never guessed), named by its most recent name.
+   * the author email git records, read through the repo's .mailmap (an identity is never guessed —
+   * only the project's own mapping merges two), named by its most recent name.
    */
   readonly byAuthor: ReadonlyArray<AuthorCount>;
 }
@@ -45,8 +46,10 @@ export interface CoverageReport {
 export interface AuthorCount {
   /** the git author name on the author's most recent commit in scope */
   readonly name: string;
-  /** the git author email, lowercased — the grouping key */
+  /** the git author email (through .mailmap), lowercased — the grouping key */
   readonly email: string;
+  /** the raw `Name <email>` identities .mailmap folded into this author (empty when none differ) */
+  readonly aliases: ReadonlyArray<string>;
   /** commits scored */
   readonly commits: number;
   /** of those, commits with an authorship disclosure on the record */
@@ -104,7 +107,7 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
   let known = 0;
   let late = 0;
   const agents = new Map<string, { name: string; provider: string; tool?: string; model?: string; commits: number }>();
-  const authors = new Map<string, { name: string; email: string; commits: number; known: number; byCategory: Record<CoverageCategory, number> }>();
+  const authors = new Map<string, { name: string; email: string; aliases: Set<string>; commits: number; known: number; byCategory: Record<CoverageCategory, number> }>();
 
   for (const c of commits) {
     const kinds = commitDisclosureKinds({ message: c.message, signed: c.signed });
@@ -117,7 +120,8 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
       cls === "human" && !kinds.includes("human-attestation") ? "unknown" : cls;
     // commits arrive newest first, so the first name seen for an email is its most recent
     const email = (c.authorEmail ?? "").toLowerCase();
-    const author = authors.get(email) ?? { name: c.authorName ?? email, email, commits: 0, known: 0, byCategory: { human: 0, with_ai: 0, ai: 0, bot: 0 } };
+    const author = authors.get(email) ?? { name: c.authorName ?? email, email, aliases: new Set<string>(), commits: 0, known: 0, byCategory: { human: 0, with_ai: 0, ai: 0, bot: 0 } };
+    if (c.rawAuthor && c.rawAuthor !== `${c.authorName} <${c.authorEmail}>`) author.aliases.add(c.rawAuthor);
     author.commits += 1;
     authors.set(email, author);
     if (category === "unknown") continue;
@@ -159,6 +163,6 @@ export function repoCoverage(root: string, opts: { range?: string; limit?: numbe
     byCategory,
     byTier,
     byAgent: [...agents.values()].sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)),
-    byAuthor: [...authors.values()].sort((a, b) => b.commits - a.commits || a.email.localeCompare(b.email)),
+    byAuthor: [...authors.values()].map((a) => ({ ...a, aliases: [...a.aliases].sort() })).sort((a, b) => b.commits - a.commits || a.email.localeCompare(b.email)),
   };
 }

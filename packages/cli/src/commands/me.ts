@@ -277,6 +277,22 @@ export function parseFor(args: string[]): string | undefined {
   return v && !v.startsWith("-") ? v.trim() : "";
 }
 
+/**
+ * Your email as the repo's .mailmap maps it, lowercased — the same mapping the commits' authors are read
+ * through, so a commit made under another of your addresses is still yours. No .mailmap ⇒ unchanged.
+ */
+export function mappedEmail(root: string, name: string, email: string): string {
+  if (!email) return "";
+  try {
+    const out = git(root, ["check-mailmap", `${name} <${email}>`]);
+    const m = /<([^>]*)>\s*$/.exec(out);
+    if (m?.[1]) return m[1].toLowerCase();
+  } catch {
+    /* an old git or an odd name: fall back to the raw email */
+  }
+  return email.toLowerCase();
+}
+
 export interface DiscloseForResult {
   ok: boolean;
   reason?: "no-identity" | "staged-changes" | "bad-target";
@@ -293,7 +309,7 @@ export interface DiscloseForResult {
 /**
  * Disclose EARLIER commits without rewriting them (LATE-DISCLOSURE.md): make one empty disclosure
  * commit on the current branch whose `Discloses:` lines name them and whose ACO trailers say who wrote
- * them. Only the caller's own commits (author email = git config user.email), only ones not yet
+ * them. Only the caller's own commits (author email = git config user.email, both through .mailmap), only ones not yet
  * disclosed, never with staged content. The model is never read from the running session here — the
  * session now isn't the one that wrote those commits — so it is named only when passed (`--model`).
  */
@@ -302,7 +318,7 @@ export function discloseFor(root: string, target: string, opts: { category: "hum
   if (!target.trim()) return { ok: false, reason: "bad-target", ...none };
   let email = "";
   try {
-    email = git(root, ["config", "user.email"]).toLowerCase();
+    email = mappedEmail(root, git(root, ["config", "user.name"]), git(root, ["config", "user.email"]));
   } catch {
     /* fall through */
   }

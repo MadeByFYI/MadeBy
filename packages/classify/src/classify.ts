@@ -12,6 +12,8 @@ export interface CommitMeta {
   message: string;
   authorName?: string;
   authorEmail?: string;
+  /** the author as git recorded it (`Name <email>`), before .mailmap; authorName/authorEmail are mapped */
+  rawAuthor?: string;
   /** commit SHA (used by the mirror to join per-commit provenance signals; classify ignores it) */
   sha?: string;
   /** a cryptographic signature is present on the commit (presence only, not validity) */

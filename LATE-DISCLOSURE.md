@@ -53,7 +53,8 @@ madeby me --for origin/dev..HEAD
 - `--for` takes a commit or a range, and makes the disclosure commit on the current branch instead
   of amending HEAD. One category per disclosure commit; commits written differently get their own.
 - **Only your own commits.** A commit is skipped unless its author email is yours
-  (`git config user.email`). You can say who wrote your work, not someone else's.
+  (`git config user.email`; both read through the repo's `.mailmap`, so your other addresses count).
+  You can say who wrote your work, not someone else's.
 - **Only undisclosed commits.** A commit whose message already discloses, or that an earlier
   disclosure commit covers, is skipped. Skipped commits are listed with the reason.
 - **Empty only.** It refuses when changes are staged, so a disclosure commit never carries content.
@@ -69,7 +70,8 @@ madeby me --for origin/dev..HEAD
 - **It can only describe the past.** A named commit counts only if it is an ancestor of the
   disclosure commit.
 - **Your own commits only.** A named commit counts only if its author email matches the disclosure
-  commit's. Others are ignored and reported.
+  commit's, both read through the repo's `.mailmap`. Others are ignored and reported. (`.mailmap` is
+  a reviewed file in the repo, so mapping someone else's address to yours goes through review too.)
 - **The commit's own message comes first.** A disclosure commit only fills in a commit whose message
   discloses nothing. If both disclose and disagree, the message wins and `coverage` reports it.
 - **A later disclosure commit corrects an earlier one** for the same commit (someone wrote

@@ -11,6 +11,10 @@ const FIELD = "\x1f"; // unit separator between fields
 const RECORD = "\x1e"; // record separator between commits
 const GROUP = "\x1d"; // ends a commit's message where a file list follows it (readAuthoredMerges)
 
+// The author is read through .mailmap (%aN / %aE), so one developer committing under several emails is
+// one author; git falls back to the raw fields with no .mailmap. The raw identity is kept beside it.
+const META_FORMAT = `%H${FIELD}%aN${FIELD}%aE${FIELD}%G?${FIELD}%an <%ae>${FIELD}%B`;
+
 const parseMeta = (rec: string): CommitMeta => {
   const parts = rec.split(FIELD);
   const sig = parts[3] ?? "N";
@@ -18,8 +22,9 @@ const parseMeta = (rec: string): CommitMeta => {
     sha: parts[0] ?? "",
     authorName: parts[1] ?? "",
     authorEmail: parts[2] ?? "",
+    rawAuthor: parts[4] ?? "",
     signed: sig !== "N" && sig !== "",
-    message: parts.slice(4).join(FIELD).trimEnd(),
+    message: parts.slice(5).join(FIELD).trimEnd(),
   };
 };
 
@@ -66,7 +71,7 @@ export function readGitLog(repoPath: string, limit?: number, range?: string): Co
       // (G/U/E/…) = a signature is present (E = present but unverifiable here — no keyring). We only
       // read presence, never validity (that's the verified tier). If gpg is absent git returns 'N',
       // which under-counts disclosure — the fail-safe direction (never a false "disclosed").
-      `--format=%H${FIELD}%an${FIELD}%ae${FIELD}%G?${FIELD}%B${RECORD}`,
+      `--format=${META_FORMAT}${RECORD}`,
       // optional revision range, e.g. "origin/main..HEAD" — the PR's own commits for the gate
       ...(range ? [range] : []),
     ];
@@ -126,7 +131,7 @@ export function readAuthoredMerges(repoPath: string, opts: { range?: string; sin
       "--merges",
       supportsRemergeDiff() ? "--remerge-diff" : "--cc",
       "--name-only",
-      `--format=${RECORD}%H${FIELD}%an${FIELD}%ae${FIELD}%G?${FIELD}%B${GROUP}`,
+      `--format=${RECORD}${META_FORMAT}${GROUP}`,
       ...(opts.since !== undefined && !opts.range ? [`--since=@${opts.since}`] : []),
       ...(opts.range ? [opts.range] : []),
     ];

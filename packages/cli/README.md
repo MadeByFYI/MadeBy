@@ -136,8 +136,10 @@ inferred as human — disclosure, not detection. The human/with_ai/ai mix is rep
 never of the whole repo, and the asserted-vs-verified split shows how much is signed. The agents and
 model versions are listed exactly as the AI commits name them — a commit naming a tool and its model
 (`Assisted-by: Claude Code` + `Co-Authored-By: Claude Opus 5.5`) counts under both, so those rows can
-sum past 100%. `--by author` shows one row per commit author (grouped by email): how many of their
-commits disclose, and the mix — who discloses and who never does. `--json` (which includes `byAuthor`) emits
+sum past 100%. `--by author` shows one row per commit author (grouped by email, through the repo's `.mailmap`, so
+someone who commits under two addresses is one row once `.mailmap` says so): how many of their
+commits disclose, and the mix — who discloses and who never does. In `--json`, each row's `aliases`
+lists the raw identities `.mailmap` folded into it. `--json` (which includes `byAuthor`) emits
 counts only (percentages are derived at the edge, never stored). A merge git made on its own authors nothing
 and isn't scored, even when both sides changed the same file; a merge where someone changed what git
 would have produced (a conflict resolved by hand) is, like any other commit — chosen by what it
@@ -175,7 +177,7 @@ madeby ai "Claude Code" --for 4f1c2a9e                     # one commit
 It makes an empty **disclosure commit** whose `Discloses: <hash>` lines name the commits and whose
 trailers say who wrote them. Nothing is rewritten. Push it as usual: on a pull request the check
 re-runs, and it travels with the branch into every target it's merged into. Only your own commits
-(author email = `git config user.email`) that don't disclose yet are included; the rest are listed
+(author email = `git config user.email`, both read through the repo's `.mailmap`) that don't disclose yet are included; the rest are listed
 as skipped. The model is named only if you pass `--model`, since the session you're in now didn't
 write those commits. `check`, `coverage` and `who` read disclosure commits by the rules in
 [ACO §5](https://github.com/MadeByFYI/MadeBy/blob/main/ACO.md#5-carriers-bindings--subsume-dont-compete), and `coverage` counts how many
