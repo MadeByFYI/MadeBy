@@ -57,8 +57,8 @@ describe("repoCoverage — the honest authorship scoreboard", () => {
     as("Wren Ito", "Wren@Example.com", "d.ts", "feat: d"); // same person, renamed and re-cased
     const r = repoCoverage(d);
     expect(r.byAuthor).toEqual([
-      { name: "Kai", email: "kai@example.com", commits: 2, known: 0, byCategory: { human: 0, with_ai: 0, ai: 0, bot: 0 } },
-      { name: "Wren Ito", email: "wren@example.com", commits: 2, known: 1, byCategory: { human: 0, with_ai: 1, ai: 0, bot: 0 } },
+      { name: "Kai", email: "kai@example.com", aliases: [], commits: 2, known: 0, byCategory: { human: 0, with_ai: 0, ai: 0, bot: 0 } },
+      { name: "Wren Ito", email: "wren@example.com", aliases: [], commits: 2, known: 1, byCategory: { human: 0, with_ai: 1, ai: 0, bot: 0 } },
     ]);
   });
 

@@ -108,3 +108,41 @@ describe("disclosure commits — disclosing earlier commits without rewriting th
     expect(rangeHead("v1.2")).toBe("v1.2");
   });
 });
+
+describe(".mailmap — one developer under several emails is one author (#230)", () => {
+  /** Wren commits as wren@example.com and as Wren-laptop <wren@personal.dev>; .mailmap folds the second in */
+  const mapped = (): { d: string; old: string } => {
+    const d = repo();
+    writeFileSync(join(d, ".mailmap"), "Wren <wren@example.com> Wren-laptop <wren@personal.dev>\n");
+    as(d, "Wren", "add", "-A");
+    as(d, "Wren", "commit", "--no-verify", "-q", "-m", "chore: mailmap\n\nAuthored-by-human: Wren <wren@example.com>");
+    writeFileSync(join(d, "old.ts"), "old\n");
+    as(d, "Wren", "add", "-A");
+    execFileSync("git", ["-C", d, "-c", "user.name=Wren-laptop", "-c", "user.email=wren@personal.dev", "-c", "commit.gpgsign=false", "commit", "--no-verify", "-q", "-m", "feat: from the laptop"]);
+    return { d, old: as(d, "Wren", "rev-parse", "HEAD") };
+  };
+
+  it("coverage --by author shows one row, with the raw identity as an alias", () => {
+    const { d } = mapped();
+    const r = repoCoverage(d);
+    expect(r.byAuthor).toHaveLength(1);
+    expect(r.byAuthor[0]).toMatchObject({ email: "wren@example.com", commits: 2, aliases: ["Wren-laptop <wren@personal.dev>"] });
+  });
+
+  it("a disclosure commit covers the developer's commits under the other address", () => {
+    const { d, old } = mapped();
+    disclose(d, "Wren", [old], WITH_AI);
+    const r = readDisclosureCommits(d);
+    expect(r.rejected).toEqual([]);
+    expect(r.applied.has(old)).toBe(true);
+  });
+
+  it("without a .mailmap, the addresses stay apart", () => {
+    const { d, old } = mapped();
+    as(d, "Wren", "rm", "-q", ".mailmap");
+    as(d, "Wren", "commit", "--no-verify", "-q", "-m", "chore: drop mailmap\n\nAuthored-by-human: Wren <wren@example.com>");
+    disclose(d, "Wren", [old], WITH_AI);
+    expect(readDisclosureCommits(d).rejected.map((x) => x.reason)).toEqual(["other-author"]);
+    expect(repoCoverage(d).byAuthor.map((a) => a.aliases)).toEqual([[], []]);
+  });
+});

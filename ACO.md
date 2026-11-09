@@ -105,7 +105,7 @@ replace them** — an existing disclosure is ingested as a carrier at its suppor
 - **Disclosure commits** — disclosure after the fact, for history that can't be rewritten: an empty
   commit whose `Discloses: <full hash>` lines name earlier commits and whose trailers (§7) say who wrote
   them. A reader applies it to a named commit only if that commit is an ancestor of the disclosure
-  commit and has the same author email, and only when the commit's own message discloses nothing (the
+  commit and has the same author email (both read through the repository's `.mailmap`, if any), and only when the commit's own message discloses nothing (the
   message comes first). A later disclosure commit supersedes an earlier one for the same commit. The
   disclosure commit is not authored work itself; one that changes content is an ordinary commit and its
   `Discloses:` lines are ignored. Disclosure applied this way is labeled late. Asserted tier.

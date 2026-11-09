@@ -5,7 +5,8 @@
 //
 // The rules, applied here once for check, coverage and who:
 // - it describes only the past: a named commit counts only if it is an ancestor of the disclosure;
-// - your own commits only: the named commit's author email must match the disclosure's;
+// - your own commits only: the named commit's author email must match the disclosure's (both read
+//   through .mailmap, so a developer's other addresses count as theirs);
 // - the commit's own message comes first: a disclosure commit only fills in one that discloses nothing;
 // - a later disclosure commit corrects an earlier one for the same commit;
 // - it isn't authored work itself: an empty disclosure commit isn't scored; one that changes content
@@ -62,7 +63,7 @@ export function rangeHead(range?: string): string {
  */
 export function readDisclosureCommits(root: string, head = "HEAD"): DisclosureCommits {
   const out: DisclosureCommits = { applied: new Map(), disclosureCommits: new Set(), rejected: [] };
-  const log = git(root, ["log", "--no-merges", "-E", "--grep=^[ \t]*Discloses[ \t]*:[ \t]*[0-9a-f]{40}", `--format=%H${FIELD}%ae${FIELD}%B${RECORD}`, head]);
+  const log = git(root, ["log", "--no-merges", "-E", "--grep=^[ \t]*Discloses[ \t]*:[ \t]*[0-9a-f]{40}", `--format=%H${FIELD}%aE${FIELD}%B${RECORD}`, head]);
   if (!log) return out;
   const candidates = log
     .split(RECORD)
@@ -83,7 +84,7 @@ export function readDisclosureCommits(root: string, head = "HEAD"): DisclosureCo
     const trailers = disclosureCommitTrailers(d.message);
     const emails = new Map<string, string>();
     // one call for all; if any hash is unknown git fails the lot, so fall back to one at a time
-    const shown = git(root, ["show", "-s", "--format=%H %ae", ...targets]) ?? targets.map((t) => git(root, ["show", "-s", "--format=%H %ae", t]) ?? "").join("\n");
+    const shown = git(root, ["show", "-s", "--format=%H %aE", ...targets]) ?? targets.map((t) => git(root, ["show", "-s", "--format=%H %aE", t]) ?? "").join("\n");
     for (const line of shown.split("\n")) {
       const [sha, email] = line.trim().split(" ");
       if (sha && email !== undefined) emails.set(sha, email.toLowerCase());

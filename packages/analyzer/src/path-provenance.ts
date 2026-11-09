@@ -66,7 +66,7 @@ const US = "\x1f";
 /** message + signature-presence + author for one commit (for last-touch disclosure). Null on failure. */
 function commitMeta(root: string, sha: string): { message: string; signed: boolean; name: string; email: string } | null {
   try {
-    const out = git(root, ["show", "-s", `--format=%G?${US}%an${US}%ae${US}%B`, sha]);
+    const out = git(root, ["show", "-s", `--format=%G?${US}%aN${US}%aE${US}%B`, sha]);
     const parts = out.split(US);
     const sig = parts[0] ?? "N";
     return { signed: sig !== "N" && sig !== "", name: parts[1] ?? "", email: parts[2] ?? "", message: (parts.slice(3).join(US) ?? "").trim() };
