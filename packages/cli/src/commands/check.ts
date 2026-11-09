@@ -37,7 +37,8 @@ export function checkCommand(args: string[]): void {
 
   if (json) {
     console.log(JSON.stringify({ range: range ?? null, autoHost: autoHost ?? null, ...result, pass, ...(problem ? { historyProblem: problem } : {}) }, null, 2));
-    process.exit(pass ? 0 : 1);
+    // exitCode, not process.exit(): exiting at once cuts off output still being written to a pipe (64 KB)
+    process.exitCode = pass ? 0 : 1;
     return;
   }
 
@@ -46,7 +47,7 @@ export function checkCommand(args: string[]): void {
     console.error(`\nmadeby check: ${banner}: ${problem}\n`);
   }
   if (blocked) {
-    process.exit(1);
+    process.exitCode = 1;
     return;
   }
   if (result.warning) console.warn(`madeby check: ${result.warning}`);
@@ -81,5 +82,5 @@ export function checkCommand(args: string[]): void {
 
   // `required` gates; `advisory` only reports. Never exit non-zero on our own error (a missing history
   // is the pipeline's, handled above).
-  process.exit(result.pass ? 0 : 1);
+  process.exitCode = result.pass ? 0 : 1;
 }
