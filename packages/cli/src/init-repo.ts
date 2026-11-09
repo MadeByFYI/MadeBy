@@ -17,7 +17,9 @@ import { VERSION } from "./version";
 // v3: the commands pin the exact madeby release (`npx madeby@<version>`), as the CI file does — agents
 // run them on developers' machines, which hold credentials. A block pinned to an older release reports
 // as outdated too, so `init --update` moves the pin in one reviewed commit, like a dependency update.
-const ACO_VERSION = 3;
+// v4: merges — a developer's agent suggests the per-clone merge declaration (`me --merges`) once. Hooks
+// aren't part of the repo, so this rule, which every developer's agent reads, is what reaches them all.
+const ACO_VERSION = 4;
 const ACO_OPEN = `<!-- madeby:aco v${ACO_VERSION} -->`;
 const ACO_CLOSE = `<!-- /madeby:aco -->`;
 // Matches any ACO open marker: the versioned form (capturing the version) or the legacy unversioned one.
@@ -37,6 +39,11 @@ After you commit, run the command for the honest category (no install, no setup)
 If your platform makes the commit for you (a cloud coding agent that pushes through its own tool),
 amending afterwards can be lost — put the disclosure in the message instead, with \`--print\`:
 \`git commit -m "<message>" -m "$(npx ${PKG} ai [tool] --print)"\`.
+
+**Merges.** A merge where conflicts were fixed by hand is scored like any commit. If
+\`git config madeby.merge\` prints nothing in this clone, tell the developer once that
+\`npx ${PKG} me --merges\` (or \`me --with-ai [tool] --merges\`, \`ai [tool] --merges\`) makes the
+merges they finish here carry their disclosure. It's their declaration: never run it for them.
 
 Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed. (The madeby
 version is pinned on purpose; \`npx madeby@latest init --update\` moves it to the newest release.)
@@ -386,6 +393,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   if (broken.length > 0) {
     nextSteps.push(`${broken.join(", ")} isn't valid JSON, so Claude Code's commit trailer wasn't set there. Fix it and run 'madeby init' again.`);
   }
+  nextSteps.push(`Each developer, once in their own clone: 'npx ${PKG} me --merges' (add --with-ai <tool> if they resolve conflicts with AI, or use 'ai <tool> --merges'). Merges they finish locally then carry their disclosure; hooks aren't part of the repo, so this can't be done for them. The AGENTS.md rule has their agents suggest it.`);
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
   return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, claudeSettings, host, nextSteps };
