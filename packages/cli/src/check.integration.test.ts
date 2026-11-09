@@ -181,6 +181,24 @@ describe("madeby check — the disclosure gate fires per policy", () => {
   });
 
   // A pipeline that didn't fetch the history must not pass by scoring nothing (field report, 2026-11).
+  it("--json is written in full to a pipe, past 64 KB", () => {
+    // 200 undisclosed commits with long subjects, made in one fast-import
+    const d = tmpRepo();
+    git(d, "init", "-q", "-b", "main");
+    const subject = "x".repeat(400);
+    let stream = "";
+    for (let i = 0; i < 200; i++) {
+      const msg = `chore: ${i} ${subject}\n`;
+      stream += `commit refs/heads/main\ncommitter Test <test@example.com> ${1700000000 + i} +0000\ndata ${Buffer.byteLength(msg)}\n${msg}`;
+      stream += `M 644 inline f.txt\ndata ${String(i).length + 1}\n${i}\n\n`;
+    }
+    execFileSync("git", ["-C", d, "fast-import", "--quiet"], { input: stream });
+    git(d, "reset", "-q", "--hard", "main");
+    const r = spawnSync(process.execPath, [BIN, "check", "--json"], { cwd: d, encoding: "utf8", env: cleanEnv(), maxBuffer: 64 * 1024 * 1024 });
+    expect(r.stdout.length).toBeGreaterThan(65536);
+    expect(JSON.parse(r.stdout).undisclosed).toHaveLength(200);
+  });
+
   describe("missing history is reported, never passed silently", () => {
     it("a range endpoint that isn't in the clone: required fails (exit 1), advisory warns (exit 0)", () => {
       writePolicy(repo, "required");
