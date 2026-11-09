@@ -197,9 +197,20 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(acoStatus(readFileSync(join(fresh, "AGENTS.md"), "utf8"))).toBe("current");
     expect(acoStatus("<!-- madeby:aco v999 -->\nx\n<!-- /madeby:aco -->\n")).toBe("newer");
     // same convention version: the pinned release decides
-    expect(acoStatus("<!-- madeby:aco v3 -->\n`npx madeby@0.0.1 me`\n<!-- /madeby:aco -->\n")).toBe("outdated");
-    expect(acoStatus("<!-- madeby:aco v3 -->\n`npx madeby@99.0.0 me`\n<!-- /madeby:aco -->\n")).toBe("newer");
-    expect(acoStatus(`<!-- madeby:aco v3 -->\n\`npx madeby@${VERSION} me\`\n<!-- /madeby:aco -->\n`)).toBe("current");
+    expect(acoStatus("<!-- madeby:aco v4 -->\n`npx madeby@0.0.1 me`\n<!-- /madeby:aco -->\n")).toBe("outdated");
+    expect(acoStatus("<!-- madeby:aco v4 -->\n`npx madeby@99.0.0 me`\n<!-- /madeby:aco -->\n")).toBe("newer");
+    expect(acoStatus(`<!-- madeby:aco v4 -->\n\`npx madeby@${VERSION} me\`\n<!-- /madeby:aco -->\n`)).toBe("current");
+  });
+
+  it("the rule has each developer's agent suggest the merge declaration, never make it (v4)", () => {
+    const d = tmp();
+    const r = initRepo(d);
+    const md = readFileSync(join(d, "AGENTS.md"), "utf8");
+    expect(md).toContain(`npx madeby@${VERSION} me --merges`);
+    expect(md).toContain("never run it for them");
+    expect(acoStatus(md.replace("aco v4", "aco v3"))).toBe("outdated");
+    expect(r.nextSteps.some((s) => s.includes("me --merges"))).toBe(true);
+    expect(existsSync(join(d, ".git", "hooks", "prepare-commit-msg"))).toBe(false); // init leaves hooks alone
   });
 
   it("flags an outdated AGENTS.md but does NOT modify it without --update", () => {
@@ -225,7 +236,7 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(md).toContain("Build: make.");
     expect(md).toContain("## My own notes"); // content AFTER the fenced block preserved
     expect(md).toContain("Keep this.");
-    expect(md).toContain("<!-- madeby:aco v3 -->"); // refreshed to current version
+    expect(md).toContain("<!-- madeby:aco v4 -->"); // refreshed to current version
     expect(md).toContain(`npx madeby@${VERSION} ai [tool]`); // current commands
     expect(md).not.toContain("old ACO");
     // and it's now current + idempotent
@@ -242,7 +253,7 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(r.updated).toContain("AGENTS.md");
     const md = readFileSync(join(root, "AGENTS.md"), "utf8");
     expect(md).toContain("# AGENTS.md"); // original title kept
-    expect(md).toContain("<!-- madeby:aco v3 -->");
+    expect(md).toContain("<!-- madeby:aco v4 -->");
     expect(md).toContain("<!-- /madeby:aco -->");
     expect(md).not.toContain("madeby ai <session-log>"); // stale command gone
     expect(acoStatus(md)).toBe("current");

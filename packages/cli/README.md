@@ -206,7 +206,9 @@ what you declared; it never guesses:
   (`core.hooksPath`, as with husky), madeby doesn't write into it and prints the line to add.
 
 Hooks aren't part of the repo, so **each developer runs it once in their own clone**
-(`madeby init --hooks` installs the hook without a declaration). Merges resolved in the host's web
+(`madeby init --hooks` installs the hook without a declaration). The AGENTS.md rule that `init`
+writes has each developer's agent suggest it once, when the clone has no declaration; the agent
+never declares for them. Merges resolved in the host's web
 UI don't run local hooks; disclose those with `--for`. `--merges off` clears the declaration.
 
 **The policy file is optional.** With no `.madeby/policy.json`, `check` defaults to **advisory** —
