@@ -202,15 +202,45 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(acoStatus(`<!-- madeby:aco v4 -->\n\`npx madeby@${VERSION} me\`\n<!-- /madeby:aco -->\n`)).toBe("current");
   });
 
-  it("the rule has each developer's agent suggest the merge declaration, never make it (v4)", () => {
-    const d = tmp();
-    const r = initRepo(d);
-    const md = readFileSync(join(d, "AGENTS.md"), "utf8");
+  it("the merges line: only where conflicts are resolved in merges, or asked for, and it stays (v4)", () => {
+    const plain = tmp();
+    const r0 = initRepo(plain);
+    expect(readFileSync(join(plain, "AGENTS.md"), "utf8")).not.toContain("--merges");
+    expect(r0.merges).toBe(false);
+    expect(r0.nextSteps.some((s) => s.includes("me --merges"))).toBe(false);
+
+    const asked = tmp();
+    const r = initRepo(asked, { merges: true });
+    const md = readFileSync(join(asked, "AGENTS.md"), "utf8");
     expect(md).toContain(`npx madeby@${VERSION} me --merges`);
     expect(md).toContain("never run it for them");
-    expect(acoStatus(md.replace("aco v4", "aco v3"))).toBe("outdated");
+    expect(r.merges).toBe(true);
     expect(r.nextSteps.some((s) => s.includes("me --merges"))).toBe(true);
-    expect(existsSync(join(d, ".git", "hooks", "prepare-commit-msg"))).toBe(false); // init leaves hooks alone
+    expect(existsSync(join(asked, ".git", "hooks", "prepare-commit-msg"))).toBe(false); // init leaves hooks alone
+    // a refresh keeps it
+    writeFileSync(join(asked, "AGENTS.md"), md.replace(`madeby@${VERSION}`, "madeby@0.0.1"));
+    initRepo(asked, { update: true });
+    expect(readFileSync(join(asked, "AGENTS.md"), "utf8")).toContain(`npx madeby@${VERSION} me --merges`);
+
+    expect(initRepo(tmp(), { host: "azure-devops" }).merges).toBe(true);
+  });
+
+  it("the merges line is added when recent history resolves a conflict in a merge", () => {
+    const d = tmp();
+    const g = (...a: string[]) => execFileSync("git", ["-C", d, "-c", "user.name=W", "-c", "user.email=w@example.com", "-c", "commit.gpgsign=false", ...a], { stdio: "ignore" });
+    g("init", "-q", "-b", "main");
+    writeFileSync(join(d, "a.txt"), "base\n");
+    g("add", "-A"); g("commit", "-q", "-m", "base");
+    g("checkout", "-q", "-b", "task");
+    writeFileSync(join(d, "a.txt"), "task\n");
+    g("commit", "-qam", "task");
+    g("checkout", "-q", "-");
+    writeFileSync(join(d, "a.txt"), "main\n");
+    g("commit", "-qam", "main");
+    try { g("merge", "-q", "--no-edit", "task"); } catch { /* the conflict */ }
+    writeFileSync(join(d, "a.txt"), "both\n");
+    g("commit", "-qam", "merge");
+    expect(initRepo(d).merges).toBe(true);
   });
 
   it("flags an outdated AGENTS.md but does NOT modify it without --update", () => {
