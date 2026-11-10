@@ -46,20 +46,21 @@ const TOOLS: Tool[] = [
     name: "init",
     description:
       "Align a repository with MadeBy in one call: create .madeby/policy.json (advisory by default — " +
-      "reports, never fails) and the CI disclosure check for the host (github default; azure-devops " +
-      "guided). Idempotent — never clobbers an existing policy or workflow; the one change it makes is " +
+      "reports, never fails) and the CI disclosure check for the host (github or azure-devops, worked out " +
+      "from an earlier CI file or the git remote when not given). Idempotent — never clobbers an existing policy or workflow; the one change it makes is " +
       "mode: \"required\" raising an existing advisory policy to required (it never lowers one). Returns the files " +
       "created/skipped and the recommended next steps. Read the resources: madeby://guide/align (full " +
       "workflow), madeby://guide/enforce (make the check required — the host's control plane, exact " +
       "commands), madeby://guide/backfill (account for existing history honestly — never fabricate). The " +
       "ACO convention block is versioned: the result flags an `outdated` AGENTS.md/CLAUDE.md (drift); call " +
-      "again with update:true to refresh just that block in place — how an agent keeps the convention current.",
+      "again with update:true to refresh just that block in place — how an agent keeps the convention current. " +
+      "update:true also moves the madeby pin in the CI file init generated (`pinned`); `pinOutdated` flags one left behind.",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "path to the repo (default: the server's working directory)" },
         mode: { enum: ["advisory", "required"], description: "policy mode to seed (default: advisory)" },
-        host: { type: "string", description: "CI host to wire: github (default) or azure-devops" },
+        host: { type: "string", description: "CI host to wire: github or azure-devops. Omit it to keep the host of a CI file init wrote earlier, else the git remote's; GitHub only when neither says (reported in hostSource)" },
         update: { type: "boolean", description: "refresh an outdated ACO convention block in place (drift update); default false (report only)" },
         record_model: { type: "boolean", description: "opt in: ask AI disclosures to also name the model version (tool:model) — policy recordModel + an AGENTS.md line. Never turned off by init; default false." },
         claude_code: { type: "boolean", description: "set Claude Code's commit trailer in .claude/settings.json even if the repo shows no sign of Claude Code (it is set automatically when there is a CLAUDE.md or .claude/). A value the team already set is never changed." },
