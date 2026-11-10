@@ -31,7 +31,10 @@ The commands `init` writes into `AGENTS.md` pin the exact madeby release (`npx m
 like the CI file does: agents run them on developers' machines, which hold credentials, so they run
 the release the team chose rather than whatever is newest. When a newer release is out, `init`
 reports the rule as outdated, and `npx madeby@latest init --update` moves the pin in one commit to
-review.
+review — in the rule and in the CI file `init` generated, so pull requests are checked by the same
+release the rule names (only the version string in the CI file changes). Without `--host`, `init`
+keeps the host of the CI file it wrote before, else reads it from the git remote (GitHub, Azure
+DevOps); it assumes GitHub only when neither says, and tells you so.
 
 Zero hosted infrastructure — runs against your local git history, on a laptop or in any CI. Nothing
 leaves your machine.
@@ -300,8 +303,8 @@ matter who runs them.
 `madeby mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over stdio, so
 an AI agent can use MadeBy with no human in the loop. It exposes the same primitives as typed tools:
 
-- **`init`** `{ path?, mode?, host? }` — set a repo up: create `.madeby/policy.json` + the CI check
-  (idempotent). The one-call setup. *write*
+- **`init`** `{ path?, mode?, host?, update? }` — set a repo up: create `.madeby/policy.json` + the CI check
+  (idempotent; the host from an earlier CI file or the git remote when not given). The one-call setup. *write*
 - **`check`** `{ path?, range? }` — the gate: do commits meet the policy? Returns `pass`, `mode`,
   `undisclosed[]`. *read (verdict)*
 - **`who`** `{ path?, repo?, startLine?, endLine?, prefix?, commitLimit? }` — made by whom? With a

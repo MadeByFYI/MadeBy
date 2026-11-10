@@ -25,8 +25,9 @@ function help(): void {
 
 Usage:
   madeby init                    Set MadeBy up: write .madeby/policy.json + the ACO AGENTS.md convention
-                                 + the CI disclosure check. --update refreshes an outdated ACO block in
-                                 place; --required to enforce now; --host azure-devops for Azure Pipelines;
+                                 + the CI disclosure check. --update refreshes an outdated ACO block and
+                                 the CI file's madeby pin in place; --required to enforce now; the host
+                                 comes from an earlier CI file or the git remote (--host to say it);
                                  --record-model to also ask agents for the model version (opt-in).
                                  In a repo that uses Claude Code (CLAUDE.md or .claude/; --claude-code to
                                  force) it also turns Claude Code's commit trailer on in .claude/settings.json.

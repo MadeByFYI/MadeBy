@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, it, expect } from "vitest";
-import { initRepo, acoStatus } from "./init-repo";
+import { initRepo, acoStatus, hostFromRemote } from "./init-repo";
 import { VERSION } from "./version";
 
 const dirs: string[] = [];
@@ -287,6 +287,96 @@ describe("initRepo — ACO convention drift detection + update", () => {
     expect(md).toContain("<!-- /madeby:aco -->");
     expect(md).not.toContain("madeby ai <session-log>"); // stale command gone
     expect(acoStatus(md)).toBe("current");
+  });
+});
+
+describe("initRepo — upgrading keeps the host and moves the CI pin (#238)", () => {
+  const git = (d: string, ...a: string[]) => execFileSync("git", ["-C", d, ...a], { stdio: "ignore" });
+  const repoWith = (remote?: string): string => {
+    const d = tmp();
+    git(d, "init", "-q");
+    if (remote) git(d, "remote", "add", "origin", remote);
+    return d;
+  };
+
+  it("without --host, keeps the host of the CI file init wrote earlier", () => {
+    const d = repoWith();
+    initRepo(d, { host: "azure-devops" });
+    for (const update of [false, true]) {
+      const r = initRepo(d, { update });
+      expect(r.host).toBe("azure-devops");
+      expect(r.hostSource).toBe("ci-file");
+      expect(existsSync(join(d, ".github"))).toBe(false);
+    }
+  });
+
+  it("reads the host from the git remote, and wires no GitHub workflow for a host it doesn't know", () => {
+    const az = initRepo(repoWith("https://dev.azure.com/acme/web/_git/web"));
+    expect([az.host, az.hostSource]).toEqual(["azure-devops", "remote"]);
+    expect(az.created).toContain(".madeby/azure-pipelines.yml");
+
+    const d = repoWith("git@git.example.org:team/app.git");
+    const other = initRepo(d);
+    expect(other.host).toBe("git.example.org");
+    expect(existsSync(join(d, ".github"))).toBe(false);
+    expect(other.nextSteps.some((s) => s.includes("for git.example.org"))).toBe(true);
+  });
+
+  it("assumes GitHub only when nothing says otherwise, and says so", () => {
+    const r = initRepo(repoWith());
+    expect([r.host, r.hostSource]).toEqual(["github", "assumed"]);
+    expect(r.nextSteps.some((s) => s.includes("assumed GitHub"))).toBe(true);
+    expect(initRepo(repoWith("git@github.com:wren/slugkit.git")).hostSource).toBe("remote");
+  });
+
+  it("parses the remotes hosts use", () => {
+    expect(hostFromRemote("https://acme@dev.azure.com/acme/web/_git/web")).toBe("azure-devops");
+    expect(hostFromRemote("git@ssh.dev.azure.com:v3/acme/web/web")).toBe("azure-devops");
+    expect(hostFromRemote("https://acme.visualstudio.com/web/_git/web")).toBe("azure-devops");
+    expect(hostFromRemote("https://github.com/wren/slugkit")).toBe("github");
+    expect(hostFromRemote("ssh://git@github.acme.com/wren/slugkit.git")).toBe("github");
+    expect(hostFromRemote("https://gitlab.com/wren/slugkit.git")).toBe("gitlab");
+    expect(hostFromRemote("git@bitbucket.org:wren/slugkit.git")).toBe("bitbucket");
+  });
+
+  it("--update moves only the madeby version in the CI file; plain init flags it", () => {
+    for (const [host, file] of [["azure-devops", ".madeby/azure-pipelines.yml"], ["github", ".github/workflows/disclosure.yml"]] as const) {
+      const d = tmp();
+      initRepo(d, { host });
+      const abs = join(d, file);
+      const old = readFileSync(abs, "utf8").replace(VERSION, "0.0.1") + "# our own note\n";
+      writeFileSync(abs, old);
+
+      const flagged = initRepo(d, { host });
+      expect(flagged.pinOutdated).toEqual([{ file, from: "0.0.1" }]);
+      expect(readFileSync(abs, "utf8")).toBe(old);
+
+      const r = initRepo(d, { host, update: true });
+      expect(r.pinned).toEqual([{ file, from: "0.0.1", to: VERSION }]);
+      expect(readFileSync(abs, "utf8")).toBe(old.replace("0.0.1", VERSION));
+      expect(initRepo(d, { host, update: true }).pinned).toEqual([]);
+    }
+  });
+
+  it("leaves a CI file whose pin it can't find, and says so", () => {
+    const d = tmp();
+    mkdirSync(join(d, ".madeby"), { recursive: true });
+    writeFileSync(join(d, ".madeby", "azure-pipelines.yml"), "steps:\n  - script: npx madeby check\n");
+    const r = initRepo(d, { host: "azure-devops", update: true });
+    expect(r.pinMissing).toEqual([".madeby/azure-pipelines.yml"]);
+    expect(readFileSync(join(d, ".madeby", "azure-pipelines.yml"), "utf8")).toBe("steps:\n  - script: npx madeby check\n");
+  });
+
+  it("reads no history for the merges line when the answer is known", () => {
+    const seen: string[] = [];
+    const progress = (l: string) => seen.push(l);
+    const d = tmp();
+    initRepo(d, { merges: true, progress });
+    initRepo(d, { update: true, progress }); // the rule already has the line
+    initRepo(tmp(), { host: "azure-devops", progress });
+    expect(seen).toEqual([]);
+    initRepo(tmp(), { progress });
+    expect(seen).toHaveLength(1);
   });
 });
 

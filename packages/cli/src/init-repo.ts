@@ -8,7 +8,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { readAuthoredMerges } from "@madeby/analyzer";
+import { hasAuthoredMerge } from "@madeby/analyzer";
 import { parseDisclosurePolicy } from "@madeby/core";
 import { VERSION } from "./version";
 
@@ -72,15 +72,64 @@ const acoBlock = (recordModel: boolean, merges = false): string =>
   `${ACO_OPEN}\n${ACO_BODY}${recordModel ? MODEL_LINE : ""}${merges ? MERGES_LINE : ""}${ACO_CLOSE}\n`;
 
 const RECENT_DAYS = 180;
-/** Has this repo resolved conflicts in merge commits lately? (any merge with changes of its own) */
+/** Has this repo resolved conflicts in merge commits lately? (any merge with changes of its own; stops at the first) */
 export function resolvesConflictsInMerges(root: string): boolean {
-  return readAuthoredMerges(root, { since: Math.floor(Date.now() / 1000) - RECENT_DAYS * 86400 }).length > 0;
+  return hasAuthoredMerge(root, Math.floor(Date.now() / 1000) - RECENT_DAYS * 86400);
 }
+
+// The CI files init writes, by host. The file init wrote earlier is the repo's record of its host, so
+// a later `init` / `init --update` without `--host` keeps wiring the same one (#238).
+const GH_FILE = ".github/workflows/disclosure.yml";
+const AZURE_FILE = ".madeby/azure-pipelines.yml";
+
+/** Where the host came from: --host, a CI file init wrote, the origin URL, or nothing (GitHub assumed). */
+export type HostSource = "flag" | "ci-file" | "remote" | "assumed";
+
+/** The host a remote URL points at; for a host madeby doesn't wire, its hostname. Null if it can't be read. */
+export function hostFromRemote(url: string): string | null {
+  const m = /^(?:[a-z+]+:\/\/)?(?:[^@/]+@)?([^/:]+)/i.exec(url.trim());
+  if (!m) return null;
+  const name = m[1]!.toLowerCase();
+  if (name === "dev.azure.com" || name.endsWith(".dev.azure.com") || name.endsWith(".visualstudio.com")) return "azure-devops";
+  if (/(^|\.)github(\.|$)/.test(name)) return "github";
+  if (/(^|\.)gitlab(\.|$)/.test(name)) return "gitlab";
+  if (/(^|\.)bitbucket(\.|$)/.test(name)) return "bitbucket";
+  return name;
+}
+
+/** Work out the CI host: an explicit --host, then a CI file init wrote, then the origin URL. */
+export function resolveHost(root: string, explicit?: string): { host: string; source: HostSource } {
+  if (explicit) return { host: explicit, source: "flag" };
+  const gh = existsSync(join(root, GH_FILE));
+  const azure = existsSync(join(root, AZURE_FILE));
+  if (gh !== azure) return { host: azure ? "azure-devops" : "github", source: "ci-file" };
+  let url = "";
+  try {
+    const remotes = execFileSync("git", ["-C", root, "remote"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).split("\n").filter(Boolean);
+    const name = remotes.includes("origin") ? "origin" : remotes[0];
+    if (name) url = execFileSync("git", ["-C", root, "remote", "get-url", name], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    /* no remote */
+  }
+  const host = url ? hostFromRemote(url) : null;
+  return host ? { host, source: "remote" } : { host: "github", source: "assumed" };
+}
+
+// The madeby release a generated CI file pins: `madeby@<version>` (Azure) or the action's `version:`.
+const PIN_RE = /(madeby@|version: ")(\d+\.\d+\.\d+)/;
+const older = (v: string): boolean => {
+  const [a, b, c] = VERSION.split(".").map(Number) as [number, number, number];
+  const [x, y, z] = v.split(".").map(Number) as [number, number, number];
+  return (x - a || y - b || z - c) < 0;
+};
 
 export interface InitOptions {
   /** policy mode to seed (default "advisory" — reports, never fails) */
   mode?: "advisory" | "required";
-  /** CI host to wire (default "github"; "azure-devops" is guided; others get a generic next-step) */
+  /**
+   * CI host to wire ("github", "azure-devops" guided; others get a generic next-step). Unset ⇒ the host
+   * of a CI file init wrote earlier, else the origin URL's, else GitHub (reported as assumed)
+   */
   host?: string;
   /** refresh an outdated ACO convention block in place (drift update) rather than just report it */
   update?: boolean;
@@ -97,6 +146,8 @@ export interface InitOptions {
    * host is Azure DevOps
    */
   merges?: boolean;
+  /** told before a step that can take a while (the CLI prints it to stderr; MCP passes nothing) */
+  progress?: (line: string) => void;
 }
 
 /**
@@ -133,6 +184,14 @@ export interface InitResult {
    */
   claudeSettings: { file: string; status: ClaudeSettingsStatus }[];
   host: string;
+  /** how the host was settled (see resolveHost) */
+  hostSource: HostSource;
+  /** a generated CI file whose madeby pin moved to this release (update mode) */
+  pinned: { file: string; from: string; to: string }[];
+  /** a generated CI file pinned to an older release, when not updating */
+  pinOutdated: { file: string; from: string }[];
+  /** a CI file init would have generated, but whose madeby pin can't be found (edited by hand) */
+  pinMissing: string[];
   nextSteps: string[];
 }
 
@@ -332,9 +391,36 @@ function ensureAco(
   }
 }
 
+// Keep a generated CI file's madeby pin in step with the rule's. Absent ⇒ write it (created). An older
+// pin ⇒ move just that version string when `update` (pinned), else flag it (pinOutdated); the rest of
+// the file is the team's. No pin to be found ⇒ say so (pinMissing) rather than guess at their edit.
+function ensureCiFile(root: string, rel: string, content: string, update: boolean, res: Pick<InitResult, "created" | "skipped" | "pinned" | "pinOutdated" | "pinMissing">): void {
+  const abs = join(root, rel);
+  if (!existsSync(abs)) {
+    writeIfAbsent(abs, rel, content, res.created, res.skipped);
+    return;
+  }
+  const text = readFileSync(abs, "utf8");
+  const m = PIN_RE.exec(text);
+  if (!m) {
+    res.pinMissing.push(rel);
+    res.skipped.push(rel);
+  } else if (older(m[2]!)) {
+    if (update) {
+      writeFileSync(abs, text.slice(0, m.index) + m[1] + VERSION + text.slice(m.index + m[0].length));
+      res.pinned.push({ file: rel, from: m[2]!, to: VERSION });
+    } else {
+      res.pinOutdated.push({ file: rel, from: m[2]! });
+      res.skipped.push(rel);
+    }
+  } else {
+    res.skipped.push(rel); // current, or pinned to a newer release on purpose
+  }
+}
+
 export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   const mode = opts.mode ?? "advisory";
-  const host = opts.host ?? "github";
+  const { host, source: hostSource } = resolveHost(root, opts.host);
   const update = opts.update ?? false;
   const created: string[] = [];
   const skipped: string[] = [];
@@ -343,18 +429,28 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   const outdated: string[] = [];
   const raised: string[] = [];
   const modelOn: string[] = [];
-  const res = { created, skipped, merged, updated, outdated, raised, modelOn };
+  const pinned: InitResult["pinned"] = [];
+  const pinOutdated: InitResult["pinOutdated"] = [];
+  const pinMissing: string[] = [];
+  const res = { created, skipped, merged, updated, outdated, raised, modelOn, pinned, pinOutdated, pinMissing };
   const modelRequested = opts.recordModel ?? false;
 
   const policy = ensurePolicy(join(root, ".madeby", "policy.json"), ".madeby/policy.json", { mode, recordModel: modelRequested }, res);
   // The convention follows the policy file, so a later plain `init --update` keeps the model line.
-  const merges = opts.merges === true || host === "azure-devops" || resolvesConflictsInMerges(root);
+  // Detection reads history, so it runs only when nothing else settles it: asked for, Azure DevOps, or a
+  // rule that already has the line (sticky, so the answer can't change).
+  const agentsMd = join(root, "AGENTS.md");
+  const hadLine = existsSync(agentsMd) && readFileSync(agentsMd, "utf8").includes(MERGES_MARK);
+  const detect = (): boolean => {
+    opts.progress?.("madeby init: checking recent merges for resolved conflicts…");
+    return resolvesConflictsInMerges(root);
+  };
+  const merges = opts.merges === true || host === "azure-devops" || hadLine || detect();
   const aco = { update, recordModel: policy.recordModel, modelRequested, merges };
   // AGENTS.md — the cross-tool convention: create it, merge the rule in, or refresh a drifted block.
   ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, ...aco });
   // CLAUDE.md — Claude Code reads this preferentially; merge/refresh if the repo has one (never create).
   ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, ...aco });
-  const agentsMd = join(root, "AGENTS.md");
   const mergesRule = existsSync(agentsMd) && readFileSync(agentsMd, "utf8").includes(MERGES_MARK);
   // Claude Code: the rule in every CLAUDE.md, and the trailer setting beside each place it's used.
   const claudeDirs = claudeCodeDirs(root);
@@ -368,11 +464,8 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
     if (status === "created") created.push(file);
     claudeSettings.push({ file, status });
   }
-  if (host === "github") {
-    writeIfAbsent(join(root, ".github", "workflows", "disclosure.yml"), ".github/workflows/disclosure.yml", GH_WORKFLOW, created, skipped);
-  } else if (host === "azure-devops") {
-    writeIfAbsent(join(root, ".madeby", "azure-pipelines.yml"), ".madeby/azure-pipelines.yml", AZURE_PIPELINE, created, skipped);
-  }
+  if (host === "github") ensureCiFile(root, GH_FILE, GH_WORKFLOW, update, res);
+  else if (host === "azure-devops") ensureCiFile(root, AZURE_FILE, AZURE_PIPELINE, update, res);
 
   const nextSteps: string[] = ["Commit the created files."];
   if (raised.length > 0) {
@@ -395,6 +488,18 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   }
   if (outdated.length > 0) {
     nextSteps.push(`${outdated.join(" + ")} carries an OUTDATED ACO convention (an older convention or an older pinned madeby) — run 'npx madeby@latest init --update' to refresh it in place (only the ACO block changes).`);
+  }
+  if (pinned.length > 0) {
+    nextSteps.push(`Moved the madeby pin in ${pinned.map((p) => p.file).join(" + ")} to ${VERSION}, so pull requests are checked by the same release the rule names. Only the version changed.`);
+  }
+  if (pinOutdated.length > 0) {
+    nextSteps.push(`${pinOutdated.map((p) => `${p.file} (madeby@${p.from})`).join(" + ")} checks pull requests with an older release than the rule names — run 'npx madeby@latest init --update' to move the pin (only the version changes).`);
+  }
+  if (pinMissing.length > 0) {
+    nextSteps.push(`Couldn't find the madeby version in ${pinMissing.join(" + ")} (edited by hand?), so it wasn't changed. Check that it runs madeby@${VERSION}.`);
+  }
+  if (hostSource === "assumed") {
+    nextSteps.push("No git remote or earlier CI file says where this repo is hosted, so init assumed GitHub. For another host, run it again with --host (azure-devops, or the host's name for a generic step).");
   }
   if (host === "azure-devops") {
     nextSteps.push("In Azure DevOps, create a pipeline from .madeby/azure-pipelines.yml (a PR-only pipeline: no credentials kept, madeby pinned) and add it to the protected branch as a build-validation policy.");
@@ -423,7 +528,7 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   if (mergesRule) nextSteps.push(`Each developer, once in their own clone: 'npx ${PKG} me --merges' (add --with-ai <tool> if they resolve conflicts with AI, or use 'ai <tool> --merges'). Merges they finish locally then carry their disclosure; hooks aren't part of the repo, so this can't be done for them. The AGENTS.md rule has their agents suggest it.`);
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
-  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, merges: mergesRule, claudeSettings, host, nextSteps };
+  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, merges: mergesRule, claudeSettings, host, hostSource, pinned, pinOutdated, pinMissing, nextSteps };
 }
 
 // The GitHub Actions workflow (mirrors the quickstart; pinned action tag; fetch-depth:0 so the gate

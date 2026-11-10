@@ -4,9 +4,11 @@
 // thin renderer over the shared `initRepo` — the same one the MCP `init` tool calls. `--hooks` installs
 // the merge hook in this clone only (each developer's own; see ../merge-hook).
 
-import { initRepo } from "../init-repo";
+import { type HostSource, initRepo } from "../init-repo";
 import { installMergeHook, renderHookInstall } from "../merge-hook";
 import { repoRoot } from "../scope";
+
+const HOST_SOURCE: Record<HostSource, string> = { flag: "", "ci-file": " (from its CI file)", remote: " (from the git remote)", assumed: " (assumed — no remote; use --host)" };
 
 export function initCommand(args: string[]): void {
   const root = repoRoot();
@@ -25,7 +27,7 @@ export function initCommand(args: string[]): void {
   const claudeCode = args.includes("--claude-code");
   const merges = args.includes("--merges");
 
-  const r = initRepo(root, { mode, host, update, recordModel, claudeCode, merges });
+  const r = initRepo(root, { mode, host, update, recordModel, claudeCode, merges, progress: (l) => console.error(l) });
 
   for (const f of r.created) console.log(`  + ${f}`);
   for (const f of r.merged) console.log(`  ~ ${f} (merged in the ACO rule)`);
@@ -34,8 +36,11 @@ export function initCommand(args: string[]): void {
   for (const f of r.raised) console.log(`  ↑ ${f} (mode raised to required)`);
   for (const f of r.modelOn) console.log(`  ↑ ${f} (now records the model version)`);
   for (const f of r.outdated) console.log(`  ! ${f} (ACO convention OUTDATED — run 'madeby init --update')`);
+  for (const p of r.pinned) console.log(`  ~ ${p.file} (pin ${p.from} → ${p.to})`);
+  for (const p of r.pinOutdated) console.log(`  ! ${p.file} (pinned to madeby@${p.from} — run 'madeby init --update')`);
+  for (const f of r.pinMissing) console.log(`  ! ${f} (no madeby version found — left as-is)`);
   for (const f of r.skipped) console.log(`  · ${f} (exists — left as-is)`);
-  console.log(`\nmadeby init — policy: ${r.policyMode}${r.recordModel ? " + records model" : ""}, host: ${r.host}`);
+  console.log(`\nmadeby init — policy: ${r.policyMode}${r.recordModel ? " + records model" : ""}, host: ${r.host}${HOST_SOURCE[r.hostSource]}`);
   console.log("Next:");
   for (const s of r.nextSteps) console.log(`  - ${s}`);
   if (args.includes("--hooks")) {
