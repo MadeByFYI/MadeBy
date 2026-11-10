@@ -149,13 +149,14 @@ export function readAuthoredMerges(repoPath: string, opts: { range?: string; sin
 /**
  * Is there any merge since `since` with changes of its own? The yes/no form of readAuthoredMerges for
  * `init`, which only needs the first one: it reads the merges a page at a time, newest first, and stops
- * there. A merge-heavy repo has thousands, and re-merging them all takes half a minute.
+ * there. A merge-heavy repo has thousands, and re-merging them all takes half a minute. `since` 0 is
+ * all history (git reads `--since=@0` unreliably, so it isn't passed).
  */
 export function hasAuthoredMerge(repoPath: string, since: number, page = 25): boolean {
   const diff = supportsRemergeDiff() ? "--remerge-diff" : "--cc";
   try {
     for (let skip = 0; ; skip += page) {
-      const args = ["-C", repoPath, "log", "--merges", diff, "--name-only", `--format=${RECORD}%H${GROUP}`, `--since=@${since}`, `-n${page}`, `--skip=${skip}`];
+      const args = ["-C", repoPath, "log", "--merges", diff, "--name-only", `--format=${RECORD}%H${GROUP}`, ...(since > 0 ? [`--since=@${since}`] : []), `-n${page}`, `--skip=${skip}`];
       const records = execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] })
         .split(RECORD)
         .filter((r) => r.includes(GROUP));
