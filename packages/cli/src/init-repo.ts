@@ -8,6 +8,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { readAuthoredMerges } from "@madeby/analyzer";
 import { parseDisclosurePolicy } from "@madeby/core";
 import { VERSION } from "./version";
 
@@ -40,11 +41,6 @@ If your platform makes the commit for you (a cloud coding agent that pushes thro
 amending afterwards can be lost — put the disclosure in the message instead, with \`--print\`:
 \`git commit -m "<message>" -m "$(npx ${PKG} ai [tool] --print)"\`.
 
-**Merges.** A merge where conflicts were fixed by hand is scored like any commit. If
-\`git config madeby.merge\` prints nothing in this clone, tell the developer once that
-\`npx ${PKG} me --merges\` (or \`me --with-ai [tool] --merges\`, \`ai [tool] --merges\`) makes the
-merges they finish here carry their disclosure. It's their declaration: never run it for them.
-
 Disclose per commit, honestly. Undisclosed content stays *unknown*, never guessed. (The madeby
 version is pinned on purpose; \`npx madeby@latest init --update\` moves it to the newest release.)
 `;
@@ -59,9 +55,27 @@ tool's own record of the session where it can (Cursor, Copilot CLI, Claude Code)
 never guess.
 `;
 
+// The merges line, only for repos that resolve conflicts in merge commits (a no-rebase, merge-heavy
+// workflow). Most projects squash or rebase, so for them it would be noise every agent reads and a
+// hook nobody needs. Included when recent history has such merges, for Azure DevOps, or with
+// `init --merges`; once in a block it stays (a refresh never drops it).
+const MERGES_MARK = "**Merges.**";
+const MERGES_LINE = `
+${MERGES_MARK} A merge where conflicts were fixed by hand is scored like any commit. If
+\`git config madeby.merge\` prints nothing in this clone, tell the developer once that
+\`npx ${PKG} me --merges\` (or \`me --with-ai [tool] --merges\`, \`ai [tool] --merges\`) makes the
+merges they finish here carry their disclosure. It's their declaration: never run it for them.
+`;
+
 /** The delimited, versioned ACO block — the unit init inserts and `--update` replaces. */
-const acoBlock = (recordModel: boolean): string =>
-  `${ACO_OPEN}\n${ACO_BODY}${recordModel ? MODEL_LINE : ""}${ACO_CLOSE}\n`;
+const acoBlock = (recordModel: boolean, merges = false): string =>
+  `${ACO_OPEN}\n${ACO_BODY}${recordModel ? MODEL_LINE : ""}${merges ? MERGES_LINE : ""}${ACO_CLOSE}\n`;
+
+const RECENT_DAYS = 180;
+/** Has this repo resolved conflicts in merge commits lately? (any merge with changes of its own) */
+export function resolvesConflictsInMerges(root: string): boolean {
+  return readAuthoredMerges(root, { since: Math.floor(Date.now() / 1000) - RECENT_DAYS * 86400 }).length > 0;
+}
 
 export interface InitOptions {
   /** policy mode to seed (default "advisory" — reports, never fails) */
@@ -77,6 +91,12 @@ export interface InitOptions {
    * repo uses Claude Code; by default it's done only when there's a CLAUDE.md or a .claude/ folder
    */
   claudeCode?: boolean;
+  /**
+   * add the merges line to the rule (each developer's agent suggests `me --merges`) even without signs
+   * the repo resolves conflicts in merges; by default only when recent history has such merges or the
+   * host is Azure DevOps
+   */
+  merges?: boolean;
 }
 
 /**
@@ -105,6 +125,8 @@ export interface InitResult {
   policyMode: string;
   /** does the repo's policy now ask AI disclosures to name the model version? */
   recordModel: boolean;
+  /** does the rule this call wrote carry the merges line? */
+  merges: boolean;
   /**
    * Claude Code's commit trailer, per `.claude/settings.json` init handled — one beside each place the
    * repo uses Claude Code (a CLAUDE.md or .claude/ folder, at any depth). Empty ⇒ none found.
@@ -274,9 +296,11 @@ function ensureAco(
   abs: string,
   rel: string,
   res: Pick<InitResult, "created" | "skipped" | "merged" | "updated" | "outdated">,
-  opts: { createIfAbsent: boolean; update: boolean; recordModel: boolean; modelRequested: boolean },
+  opts: { createIfAbsent: boolean; update: boolean; recordModel: boolean; modelRequested: boolean; merges: boolean },
 ): void {
-  const block = acoBlock(opts.recordModel);
+  // the merges line is sticky: a block that has it keeps it on refresh
+  const has = existsSync(abs) && readFileSync(abs, "utf8").includes(MERGES_MARK);
+  const block = acoBlock(opts.recordModel, opts.merges || has);
   if (!existsSync(abs)) {
     if (!opts.createIfAbsent) return;
     mkdirSync(dirname(abs), { recursive: true });
@@ -324,11 +348,14 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
 
   const policy = ensurePolicy(join(root, ".madeby", "policy.json"), ".madeby/policy.json", { mode, recordModel: modelRequested }, res);
   // The convention follows the policy file, so a later plain `init --update` keeps the model line.
-  const aco = { update, recordModel: policy.recordModel, modelRequested };
+  const merges = opts.merges === true || host === "azure-devops" || resolvesConflictsInMerges(root);
+  const aco = { update, recordModel: policy.recordModel, modelRequested, merges };
   // AGENTS.md — the cross-tool convention: create it, merge the rule in, or refresh a drifted block.
   ensureAco(join(root, "AGENTS.md"), "AGENTS.md", res, { createIfAbsent: true, ...aco });
   // CLAUDE.md — Claude Code reads this preferentially; merge/refresh if the repo has one (never create).
   ensureAco(join(root, "CLAUDE.md"), "CLAUDE.md", res, { createIfAbsent: false, ...aco });
+  const agentsMd = join(root, "AGENTS.md");
+  const mergesRule = existsSync(agentsMd) && readFileSync(agentsMd, "utf8").includes(MERGES_MARK);
   // Claude Code: the rule in every CLAUDE.md, and the trailer setting beside each place it's used.
   const claudeDirs = claudeCodeDirs(root);
   if (opts.claudeCode && !claudeDirs.includes("")) claudeDirs.unshift("");
@@ -393,10 +420,10 @@ export function initRepo(root: string, opts: InitOptions = {}): InitResult {
   if (broken.length > 0) {
     nextSteps.push(`${broken.join(", ")} isn't valid JSON, so Claude Code's commit trailer wasn't set there. Fix it and run 'madeby init' again.`);
   }
-  nextSteps.push(`Each developer, once in their own clone: 'npx ${PKG} me --merges' (add --with-ai <tool> if they resolve conflicts with AI, or use 'ai <tool> --merges'). Merges they finish locally then carry their disclosure; hooks aren't part of the repo, so this can't be done for them. The AGENTS.md rule has their agents suggest it.`);
+  if (mergesRule) nextSteps.push(`Each developer, once in their own clone: 'npx ${PKG} me --merges' (add --with-ai <tool> if they resolve conflicts with AI, or use 'ai <tool> --merges'). Merges they finish locally then carry their disclosure; hooks aren't part of the repo, so this can't be done for them. The AGENTS.md rule has their agents suggest it.`);
   nextSteps.push("Existing history is accounted for honestly, not fabricated: run 'madeby check' over full history to recognize what's already disclosed; pre-adoption commits stay unknown. See madeby://guide/backfill.");
 
-  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, claudeSettings, host, nextSteps };
+  return { created, skipped, merged, updated, outdated, raised, modelOn, policyMode: policy.mode, recordModel: policy.recordModel, merges: mergesRule, claudeSettings, host, nextSteps };
 }
 
 // The GitHub Actions workflow (mirrors the quickstart; pinned action tag; fetch-depth:0 so the gate

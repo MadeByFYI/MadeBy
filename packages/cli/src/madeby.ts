@@ -31,6 +31,8 @@ Usage:
                                  In a repo that uses Claude Code (CLAUDE.md or .claude/; --claude-code to
                                  force) it also turns Claude Code's commit trailer on in .claude/settings.json.
                                  --hooks installs the merge hook in this clone (see --merges below).
+                                 The rule's merges line is added when recent history has merges that
+                                 resolve conflicts, or for Azure DevOps; --merges adds it regardless.
   madeby check [<range>]         The gate: do commits meet .madeby/policy.json? (a verdict — exit
                                  code gates). <range> e.g. origin/main..HEAD; in CI it's auto-detected.
                                  --json for a machine-readable result.

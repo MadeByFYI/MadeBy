@@ -1,4 +1,4 @@
-// `madeby init [--required] [--record-model] [--claude-code] [--hooks] [--host <id>]` — align this repo with MadeBy: write .madeby/policy.json
+// `madeby init [--required] [--record-model] [--claude-code] [--merges] [--hooks] [--host <id>]` — align this repo with MadeBy: write .madeby/policy.json
 // (advisory by default) and the CI disclosure check. Idempotent (never clobbers existing files; the
 // one deliberate change is --required raising an existing advisory policy to required). A
 // thin renderer over the shared `initRepo` — the same one the MCP `init` tool calls. `--hooks` installs
@@ -23,8 +23,9 @@ export function initCommand(args: string[]): void {
   const host = hostIdx >= 0 ? args[hostIdx + 1] : undefined;
 
   const claudeCode = args.includes("--claude-code");
+  const merges = args.includes("--merges");
 
-  const r = initRepo(root, { mode, host, update, recordModel, claudeCode });
+  const r = initRepo(root, { mode, host, update, recordModel, claudeCode, merges });
 
   for (const f of r.created) console.log(`  + ${f}`);
   for (const f of r.merged) console.log(`  ~ ${f} (merged in the ACO rule)`);
